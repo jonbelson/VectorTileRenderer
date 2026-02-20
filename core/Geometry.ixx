@@ -1,0 +1,101 @@
+export module core.geometry;
+
+import std;
+
+export namespace core::geometry
+{
+	extern struct Vector
+	{
+		float i{};
+		float j{};
+
+		Vector operator*(float f) const
+		{
+			return Vector{ i * f,  j * f };
+		}
+	};
+
+	export struct Point
+	{
+		float x;
+		float y;
+
+		static float Distance(const Point& p1, const Point& p2)
+		{
+			return std::sqrt((p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y));
+		}
+
+		Vector operator-(const Point& p) const
+		{
+			return Vector{x - p.x, y - p.y};
+		}
+
+		Point operator+(const Vector& v) const
+		{
+			return Point { x + v.i, y + v.j };
+		}
+	};
+
+	export struct Rect
+	{
+		float x{};
+		float y{};
+		float width{};
+		float height{};
+
+		Rect() {}
+
+		Rect(const Point& centre, float width, float height) : Rect(centre.x, centre.y, width, height) {}
+
+		Rect(float _x, float _y, float _width, float _height) : x(_x), y(_y), width(_width), height(_height) {}
+
+		static Rect CreateCentred(const Point& centre, float w, float h)
+		{
+			return Rect(centre.x - w/2, centre.y - h/2, w, h);
+		}
+
+		void Offset(float dx, float dy)
+		{
+			x -= dx;
+			y -= dy;
+		}
+
+		Point Centre(void) const { return { x + width/2, y + height/2 }; }
+
+		bool IsInside(const Point& p) const
+		{
+			return p.x >= x && p.x < x+width && p.y >= y && p.y < y+height;
+		}
+
+	};
+
+	export enum struct GeometryType
+	{
+		None, MultiPoint, LineString, MultiPolygon
+	};
+
+	export using PointArray = std::vector<Point>;
+
+	export struct MultiPoint
+	{
+		PointArray points;
+	};
+
+	export struct LineString
+	{
+		std::vector<PointArray> lines;
+	};
+
+	export struct Polygon
+	{
+		PointArray exteriorRing;
+
+		std::vector<PointArray> interiorRings;
+	};
+
+	export struct MultiPolygon
+	{
+		std::vector<Polygon> polygons;
+	};
+
+}

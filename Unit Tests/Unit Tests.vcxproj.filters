@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="test.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\core\Bitmap.cpp">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\Bitmap.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\Color.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\D2DRenderTarget.cpp">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\D2DRenderTarget.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\D2DRenderTarget-Impl.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\Geometry.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\RenderTarget.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io\Gzip.cpp">
+      <Filter>Project Modules\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io\Gzip.ixx">
+      <Filter>Project Modules\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io\Resource.cpp">
+      <Filter>Project Modules\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io\Resource.ixx">
+      <Filter>Project Modules\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Expressions.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Expressions-Operators.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Layer.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Renderer.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Style.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Expressions.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Expressions-Operators.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Feature.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Filter.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Layer.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Parser.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Renderer.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Style.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Symbol.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\TileCache.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\TileFetcher.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Types.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Tile.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Tile.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\sqlite3.c">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\vector_tile.pb.cc">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="..\io\stb_image.h">
+      <Filter>Project Modules\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\formats\mvt\vector_tile.pb.h">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Project Modules">
+      <UniqueIdentifier>{bee050f0-d478-4855-8354-670c5bfa9133}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\core">
+      <UniqueIdentifier>{e7b89200-8721-4053-8fc2-2ec3be246233}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\io">
+      <UniqueIdentifier>{fd5ff003-fa8b-4ffe-bee3-9bbe4c6f5fff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\formats">
+      <UniqueIdentifier>{39c4eb46-e30e-404a-8269-cc8b704b9c25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\formats\mvt">
+      <UniqueIdentifier>{372d18b0-167e-49f2-8e64-ac3356b54b4e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

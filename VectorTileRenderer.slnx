@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Unit Tests/Unit Tests.vcxproj" Id="6cc26087-0f3b-407f-8c4d-1bea1b45f09a" />
+  <Project Path="VectorTileRenderer.vcxproj" />
+</Solution>

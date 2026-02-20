@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6cc26087-0f3b-407f-8c4d-1bea1b45f09a}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgConfiguration>Debug</VcpkgConfiguration>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>X64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)\External\</AdditionalIncludeDirectories>
+      <AdditionalModuleDependencies>%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);windowscodecs.lib;d2d1.lib;d3d11.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\formats\mvt\vector_tile.pb.h" />
+    <ClInclude Include="..\io\stb_image.h" />
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\core\Bitmap.cpp" />
+    <ClCompile Include="..\core\Bitmap.ixx" />
+    <ClCompile Include="..\core\Color.ixx" />
+    <ClCompile Include="..\core\D2DRenderTarget-Impl.ixx" />
+    <ClCompile Include="..\core\D2DRenderTarget.cpp" />
+    <ClCompile Include="..\core\D2DRenderTarget.ixx" />
+    <ClCompile Include="..\core\Geometry.ixx" />
+    <ClCompile Include="..\core\RenderTarget.ixx" />
+    <ClCompile Include="..\formats\mvt\Expressions-Operators.cpp" />
+    <ClCompile Include="..\formats\mvt\Expressions-Operators.ixx" />
+    <ClCompile Include="..\formats\mvt\Expressions.cpp" />
+    <ClCompile Include="..\formats\mvt\Expressions.ixx" />
+    <ClCompile Include="..\formats\mvt\Feature.ixx" />
+    <ClCompile Include="..\formats\mvt\Filter.ixx" />
+    <ClCompile Include="..\formats\mvt\Layer.cpp" />
+    <ClCompile Include="..\formats\mvt\Layer.ixx" />
+    <ClCompile Include="..\formats\mvt\Parser.ixx" />
+    <ClCompile Include="..\formats\mvt\Renderer.cpp" />
+    <ClCompile Include="..\formats\mvt\Renderer.ixx" />
+    <ClCompile Include="..\formats\mvt\sqlite3.c" />
+    <ClCompile Include="..\formats\mvt\Style.cpp" />
+    <ClCompile Include="..\formats\mvt\Style.ixx" />
+    <ClCompile Include="..\formats\mvt\Symbol.ixx" />
+    <ClCompile Include="..\formats\mvt\Tile.cpp" />
+    <ClCompile Include="..\formats\mvt\Tile.ixx" />
+    <ClCompile Include="..\formats\mvt\TileCache.ixx" />
+    <ClCompile Include="..\formats\mvt\TileFetcher.ixx" />
+    <ClCompile Include="..\formats\mvt\Types.ixx" />
+    <ClCompile Include="..\formats\mvt\vector_tile.pb.cc" />
+    <ClCompile Include="..\io\Gzip.cpp" />
+    <ClCompile Include="..\io\Gzip.ixx" />
+    <ClCompile Include="..\io\Resource.cpp" />
+    <ClCompile Include="..\io\Resource.ixx" />
+    <ClCompile Include="test.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp23</LanguageStandard>
+      <AdditionalModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)VectorTi.5BE6E0B2\x64\Debug\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VectorTileRenderer.vcxproj">
+      <Project>{5be6e0b2-c412-5f98-2a6d-ada898279ebf}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
+  </Target>
+</Project>

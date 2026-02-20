@@ -1,0 +1,109 @@
+module;
+//#include <string>
+
+#include "json.hpp"
+
+#include <fstream>
+
+export module formats.mvt.parser;
+
+import std;
+import formats.mvt.layer;
+import formats.mvt.style;
+
+using json = nlohmann::json;
+
+
+export bool TryReadString(const json& data, const std::string& name, std::string& value)
+{
+	if (data.contains(name))
+	{
+		if (const auto& node = data[name]; node.is_string())
+		{
+			value = node.get<std::string>();
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+export bool TryReadString(const json& data, std::string& value)
+{
+	if (data.is_string())
+	{
+		value = data.get<std::string>();
+		return true;
+	}
+
+	return false;
+}
+
+export bool TryReadInt(const json& data, const std::string& name, int& value)
+{
+	if (data.contains(name))
+	{
+		if (const auto& node = data[name]; node.is_number_integer())
+		{
+			value = node.get<int>();
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+export bool TryReadFloat(const json& data, const std::string& name, float& value)
+{
+	if (data.contains(name))
+	{
+		if (const auto& node = data[name]; node.is_number())
+		{
+			value = node.get_to(value);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+export bool TryReadFloat(const json& data, float& value)
+{
+	if (data.is_number())
+	{
+		data.get_to(value);
+		return true;
+	}
+
+	return false;
+}
+
+export bool TryReadBool(const json& data, bool& value)
+{
+	if (data.is_boolean())
+	{
+		data.get_to(value);
+		return true;
+	}
+
+	return false;
+}
+
+
+#if 0
+export bool LoadStyleFromFile(const std::string& fileName)
+{
+	std::ifstream f(fileName.c_str());
+	if (f.is_open())
+	{
+		const json data = json::parse(f /*"{ \"array\": [ 1, 2, 3] }"*/);
+
+		int i{};
+	}
+
+	return false;
+};
+#endif
