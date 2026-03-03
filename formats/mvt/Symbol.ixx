@@ -11,6 +11,8 @@ import core.color;
 import core.geometry;
 import core.rendertarget;
 import formats.mvt.layer;
+import formats.mvt.renderer;
+import formats.mvt.rendercontext;
 import formats.mvt.style;
 import formats.mvt.feature;
 
@@ -21,6 +23,7 @@ export namespace mvt::symbol
 	using namespace core::rendertarget;
 	using namespace mvt;
 
+	// Track lines and bounding boxes for symbols that have been placed to avoid overlapping.
 	export class PlacedSymbols
 	{
 		struct Entry
@@ -97,6 +100,7 @@ export namespace mvt::symbol
 		std::vector<std::string> textFont;
 		Color textHaloColor { "rgba(0, 0, 0, 0)" };
 		float textHaloWidth { 0.0f };
+		float textSize { 16.0f };
 
 		// Replace tokens in '{}' with Feature values.
 		void ReplaceTokens(const feature::Feature& feature, std::string& value)
@@ -146,6 +150,7 @@ export namespace mvt::symbol
 			textFont = layer->mTextFont.GetValue(feature, zoom);
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
+			textSize = layer->mTextSize.GetValue(feature, zoom);
 
 			// icon-image and text-field can use '{}' substitution for Feature fields.
 			ReplaceTokens(feature, iconImage);
@@ -153,6 +158,7 @@ export namespace mvt::symbol
 		}
 	};
 
+	// Utility class for interpolating along a line geometry.
 	class LineWalker
 	{
 		const PointArray& mPointArray;
@@ -184,14 +190,16 @@ export namespace mvt::symbol
 			}
 		}
 
+		// Return the total distance of the line geometry.
 		float GetTotalDist(void) const { return mTotalDist; }
 
-		// Return the interpolated point at specified distance from start of line.
-		Point GetPointOffset(float offset)
+		// Return the interpolated point at specified distance from start of line geometry.
+//		Point GetPointOffset(float offset)
+		std::pair<Point, float> GetPointOffset(float offset)
 		{
 			namespace ranges = std::ranges;
 
-			if (offset >= mTotalDist) return mPointArray.back();
+			//if (offset >= mTotalDist) return mPointArray.back();
 
 			// Find last point less than 'offset'.
 
@@ -199,7 +207,7 @@ export namespace mvt::symbol
 
 			for (int i=static_cast<int>(mDistances.size()) - 1; i>=0; i--)
 			{
-				if (mDistances[i] < offset)
+				if (mDistances[i] <= offset)
 				{
 					index = i;
 					break;
@@ -216,37 +224,43 @@ export namespace mvt::symbol
 				
 				Point point = mPointArray[index] + v*(distanceOnSection/distanceWholeSection);
 
-				return point;
+				float angle = std::atan2(-v.j, v.i);
+
+				return std::make_pair(point, angle);
 			}
 
-			return Point {};
+			return std::make_pair(Point{}, 0.0f);
 		}
 	};
 
 	// Represents a Symbol from a Feature.
 	export class Symbol
 	{
+		float RadiansToDegrees(float angleRadians)
+		{
+			static constexpr float Factor = 180.0f/std::numbers::pi_v<float>;
+			return angleRadians*Factor;
+		}
 
-
-		void RenderMultiPoint(RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
+		void RenderMultiPoint(RenderTarget* renderTarget, mvt::renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
 			for (const auto& point : multiPoint.points)
 			{
-				RenderPoint(renderTarget, sprites, attribs, point, placedSymbols);
+				RenderPoint(renderTarget, context, attribs, point, placedSymbols);
 			}
 		}
 
-		void RenderPoint(RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
+		void RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 		{
 			if (!attribs.iconImage.empty())
 			{
-				auto spriteSpec = sprites.Lookup(attribs.iconImage);
+				auto spriteSpec = context.sprites.Lookup(attribs.iconImage);
 
 				if (spriteSpec)
 				{
 					const auto& spec = spriteSpec.value();
 
-					float scaler = sprites.GetScaler();
+					float scaler = context.sprites.GetScaler();
 					float width = spec->width/scaler;
 					float height = spec->height/scaler;
 
@@ -260,14 +274,22 @@ export namespace mvt::symbol
 					}
 				}
 			}
+
+			if (!attribs.textField.empty())
+			{
+				//auto glyphs = context.glyphs.Lookup(attribs.textFont, 0);
+				//if (glyphs)
+				//{
+				//}
+			}
 		}
 
 
-		void RenderAlongPointArray(RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols)
+		void RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols)
 		{
 			if (!attribs.iconImage.empty())
 			{
-				auto spriteSpec = sprites.Lookup(attribs.iconImage);
+				auto spriteSpec = context.sprites.Lookup(attribs.iconImage);
 
 				if (spriteSpec)
 				{
@@ -292,20 +314,18 @@ export namespace mvt::symbol
 
 					for (float offset = start; offset < lineWalker.GetTotalDist(); offset += minSpacing)
 					{
-						Point offsetPoint = lineWalker.GetPointOffset(offset);
+						auto [ point, angle ] = lineWalker.GetPointOffset(offset);
 				
 						const auto& spec = spriteSpec.value();
 
-						float scaler = sprites.GetScaler();
+						float scaler = context.sprites.GetScaler();
 						float width = spec->width/scaler;
 						float height = spec->height/scaler;
 
 						width *= attribs.iconSize;
 						height *= attribs.iconSize;
 
-						Point p{ offsetPoint.x, offsetPoint.y };
-
-						Rect r = Rect::CreateCentred(p, width, height);
+						Rect r = Rect::CreateCentred(point, width, height);
 
 						if (placedSymbols.TryPlace(r))
 						{
@@ -314,13 +334,74 @@ export namespace mvt::symbol
 					}
 				}
 			}
+
+			if (!attribs.textField.empty())
+			{
+				for (const auto& font : attribs.textFont)
+				{
+					auto atlas = context.glyphs.Lookup(font, 0);
+					if (atlas)
+					{
+						auto handle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+
+						float textScale = attribs.textSize/24.0f;
+
+						textScale *= 2.0f;
+
+						float offset{};
+						LineWalker lineWalker(pointArray);
+
+						for (int i = 0; i<attribs.textField.length(); i++)
+						{
+							uint32_t ch = attribs.textField[i];
+
+							if (atlas.value()->glyphs.contains(ch))
+							{
+								const auto& glyphSpec = atlas.value()->glyphs.at(ch);
+
+								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
+
+								auto [point, angleRad] = lineWalker.GetPointOffset(offset);
+
+								float x = point.x;
+								float y = point.y;
+
+								float ypos = y - textScale*(26 + glyphSpec.top + 4);
+								Point p{ x, ypos };
+
+								Rect destRect = Rect(p, glyphSpec.width*textScale, glyphSpec.height*textScale);
+
+								float angleDeg = RadiansToDegrees(angleRad);
+								angleDeg = -angleDeg;
+								////angleDeg = angleDeg - 90.0f;
+
+								///angleDeg = 45.0f;
+
+								Point rotCentre = destRect.Centre();
+								renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
+								renderTarget->PushRotation(angleDeg);
+								renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
+
+								renderTarget->DrawBitmap(srcRect, destRect);
+
+								renderTarget->PopTransform();
+								renderTarget->PopTransform();
+								renderTarget->PopTransform();
+
+								offset += glyphSpec.advance*textScale;
+							}
+						}
+						break;
+					}
+				}
+			}
 		}
 
-		void RenderAlongLineString(RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
+		void RenderAlongLineString(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
 		{
 			for (const auto& line : lineString.lines)
 			{
-				RenderAlongPointArray(renderTarget, sprites, attribs, line, placedSymbols);
+				RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols);
 
 			}
 		}
@@ -328,27 +409,27 @@ export namespace mvt::symbol
 	public:
 		Symbol() {}
 
-		bool Render(core::rendertarget::RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
+		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
 			if (attribs.symbolPlacement == "point")
 			{
-				RenderMultiPoint(renderTarget, sprites, attribs, multiPoint, placedSymbols);
+				RenderMultiPoint(renderTarget, context, attribs, multiPoint, placedSymbols);
 			}
 
 			return true;
 		}
 
-		bool Render(core::rendertarget::RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
+		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
 		{
 			if (attribs.symbolPlacement == "line")
 			{
-				RenderAlongLineString(renderTarget, sprites, attribs, lineString, placedSymbols);
+				RenderAlongLineString(renderTarget, context, attribs, lineString, placedSymbols);
 			}
 
 			return true;
 		}
 
-		bool Render(core::rendertarget::RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const MultiPolygon& multiPolygon, PlacedSymbols& placedSymbols)
+		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPolygon& multiPolygon, PlacedSymbols& placedSymbols)
 		{
 			if (attribs.symbolPlacement == "line")
 			{

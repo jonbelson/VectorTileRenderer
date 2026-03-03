@@ -115,7 +115,8 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 
 //	Color c("#F5F5F0");
-	Color c("rgba(220,215,198,0.3)");
+	//Color c("rgba(220,215,198,0.3)");
+
 
 
 	auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
@@ -123,7 +124,27 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	renderTarget->SetFillColor(Color("#ff0000"));
 	//renderTarget->FillBackground();
 
+#if 0
+	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Documents\Projects\OS-Open-Zoomstack-Stylesheets\fonts\Open Sans Regular\0-255.pbf)");
+//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\0-255.pbf)");
+	if (data)
+	{
+		auto glyphs = mvt::style::DecodeGlyph(data.value());
+		if (glyphs.has_value())
+		{
+			auto atlas = mvt::style::CreateAtlas(glyphs->stacks[0]);
+			if (atlas)
+			{
+				auto handle = renderTarget->RegisterBitmap(atlas->bitmap);
+				renderTarget->SetActiveBitmap(handle);
+				renderTarget->DrawBitmap(core::geometry::Rect(0, 0, 1000, 1000));
+				renderTarget->Save("C:\\Users\\jon\\GlyphImage.png");
+				int i{};
 
+			}
+		}
+	}
+#endif
 
 #if 0
 	// Render a Tile from an MBTiles database.

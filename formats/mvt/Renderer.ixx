@@ -6,9 +6,10 @@ import core.geometry;
 import core.rendertarget;
 import formats.mvt.feature;
 import formats.mvt.layer;
-import formats.mvt.tile;
+import formats.mvt.rendercontext;
 import formats.mvt.style;
-import formats.mvt.symbol;
+//import formats.mvt.symbol;
+import formats.mvt.tile;
 import formats.mvt.tilecache;
 import formats.mvt.tilefetcher;
 
@@ -17,18 +18,6 @@ using namespace mvt;
 
 namespace mvt::renderer
 {
-	export struct RenderContext
-	{
-		int TileSize { 512 };
-		
-		const style::Sprites& sprites;
-		//const style::Glyphs& glyphs;
-
-		core::rendertarget::BitmapHandle spritesHandle {};
-		core::rendertarget::BitmapHandle glyphsHandle {};
-
-		RenderContext(const style::Sprites& sprites) : sprites(sprites) {}
-	};
 
 	// Renderer class to handle the rendering of Tiles to a RenderContext.
 	export class Renderer
@@ -38,7 +27,6 @@ namespace mvt::renderer
 		rendertarget::RenderTarget* mRenderTarget = nullptr;
 		TileCache* mTileCache = nullptr;
 		style::Style* mStyle = nullptr;
-		mvt::symbol::PlacedSymbols mPlacedSymbols;
 
 		geometry::MultiPolygon TileToWorld(const geometry::MultiPolygon& multiPolygon) const;
 		geometry::Polygon TileToWorld(const geometry::Polygon& polygon) const;

@@ -86,6 +86,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -96,6 +99,7 @@
       <LanguageStandard>stdcpp23</LanguageStandard>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)\External\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -188,6 +192,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="formats\mvt\glyphs.pb.h" />
     <ClInclude Include="formats\mvt\vector_tile.pb.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -210,13 +215,16 @@
     <ClCompile Include="formats\mvt\Expressions.ixx" />
     <ClCompile Include="formats\mvt\Feature.ixx" />
     <ClCompile Include="formats\mvt\Filter.ixx" />
+    <ClCompile Include="formats\mvt\glyphs.pb.cc" />
     <ClCompile Include="formats\mvt\Layer.cpp" />
     <ClCompile Include="formats\mvt\Layer.ixx" />
     <ClCompile Include="formats\mvt\MBTilesFetcher.cpp" />
     <ClCompile Include="formats\mvt\Parser.ixx" />
+    <ClCompile Include="formats\mvt\RenderContext.ixx" />
     <ClCompile Include="formats\mvt\Renderer.cpp" />
     <ClCompile Include="formats\mvt\Renderer.ixx" />
     <ClCompile Include="formats\mvt\sqlite3.c" />
+    <ClCompile Include="formats\mvt\Style-Glyphs.ixx" />
     <ClCompile Include="formats\mvt\Style.cpp" />
     <ClCompile Include="formats\mvt\Style.ixx" />
     <ClCompile Include="formats\mvt\Symbol.ixx" />
@@ -244,7 +252,6 @@
     <ResourceCompile Include="VectorTileRenderer.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Formats\Mapbox\glyphs.proto" />
     <None Include="formats\mvt\vector_tile.proto" />
     <None Include="res\VectorTileRenderer.rc2" />
   </ItemGroup>

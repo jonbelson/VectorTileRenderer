@@ -24,7 +24,7 @@ namespace core::bitmap
 		{
 			int size = x*y*4;
 
-			std::span<const std::byte> span { reinterpret_cast<const std::byte*>(bitmapData), static_cast<size_t>(size) };
+			std::span<const std::uint32_t> span { reinterpret_cast<const std::uint32_t*>(bitmapData), static_cast<size_t>(size) };
 			Bitmap bitmap(x, y, Format::RGBA, span);
 
 			stbi_image_free(bitmapData);

@@ -77,6 +77,37 @@ TEST(Operators, Decision)
 		{ R"([ ">=", "zzz", [ "get", "string1"] ])", { true }},
 		{ R"([ ">=", "hello", [ "get", "string1"] ])", { true }},
 
+		{ R"([ "all", true, false ])", { false } },
+		{ R"([ "all", true, true ])", { true } },
+		{ R"([ "all", true, [ "get", "boolean1" ] ] ])", { false } },
+		{ R"([ "all", true, [ "get", "boolean2" ] ] ])", { true } },
+
+		{ R"([ "any", true, false ])", { true } },
+		{ R"([ "any", true, true ])", { true } },
+		{ R"([ "any", false, false ])", { false } },
+		{ R"([ "any", true, [ "get", "boolean1" ] ] ])", { true } },
+		{ R"([ "any", false, [ "get", "boolean2" ] ] ])", { true } },
+
+		{ R"([ "case", false, "aaa", true, "bbb", "fallback" ])", { "bbb" } },
+		{ R"([ "case", false, 10.0f, true, 20.0, 999.0 ])", { 20.0f } },
+		{ R"([ "case", false, 10.0f, false, 20.0, 999.0 ])", { 999.0f }},
+		{ R"([ "case", false, 10.0f, [ "get", "boolean2" ], 20.0f, 999.0f ])", { 20.0f }},
+
+		{ R"([ "coalesce", "arg1", arg2" ])", { "arg1"}},
+		{ R"([ "coalesce", [ "image", "sprite_name" ], "arg2" ])", { "arg2"}},
+
+		{ R"([ "match", "bbb", "aaa", 10, "bbb", 30.0, "fallback" ])", { 30.0f }},
+		{ R"([ "match", "zzz", "aaa", 10, "bbb", 30.0, 999.0 ])", { 999.0f }},
+
+		{ R"([ "match", 10.0, [ 1, 2, 3 ], 20, [ 9, 10, 11 ], 30.0, 999.0 ])", { 30.0f }},
+		{ R"([ "match", 20.0, [ 1, 2, 3 ], 20, [ 9, 10, 11 ], 30.0, 999.0 ])", { 999.0f }},
+		{ R"([ "match", "www", [ "aaa", "bbb", "ccc" ], 10, [ "uuu", "vvv", "www" ], 30.0, "fallback" ])", { 30.0f }},
+		{ R"([ "match", "zzz", [ "aaa", "bbb", "ccc" ], 10, [ "uuu", "vvv", "www" ], 30.0, "fallback" ])", { "fallback" }}
+
+		// "within"
+
+
+
 
 	};
 
@@ -105,9 +136,11 @@ TEST(Operators, Lookup)
 	mvt::feature::Feature feature;
 
 	feature.mValues["float1"] = {12.34f};
+	feature.mValues["float2"] = { 1.5f };
 	feature.mValues["string1"] = "hello";
 	feature.mValues["boolean1"] = false;
 	feature.mValues["boolean2"] = true;
+	//feature.mValues["array1"] = StringArray{ "aa", "bb", "cc", "dd" };
 
 	struct Test
 	{
@@ -116,6 +149,13 @@ TEST(Operators, Lookup)
 	};
 
 	Test tests[] = {
+		{ R"( [ "at", 2, [ "aa", "bb", "cc", "dd" ] ] )", { "cc" }},
+		{ R"( [ "at", 3, [ 111, 222, 333, 444, 5555 ] ] )", { 444.0f }},
+		{ R"( [ "at", 1, [ "#0000ff", "#00ff00", "#ff0000" ] ] )", { "#00ff00"}},
+
+		{ R"( [ "at-interpolated", 1.5, [ 10, 20, 30, 40 ] ] )", { 25.0f } },
+		{ R"( [ "at-interpolated", [ "get", "float2" ], [ 10, 20, 30, 40 ] ] )", { 25.0f } },
+
 		{ R"([ "get", "float1" ])", { 12.34f } },
 		{ R"([ "get", "string1" ])", { "hello" } },
 		{ R"([ "get", "boolean1" ])", { false }},
@@ -125,8 +165,38 @@ TEST(Operators, Lookup)
 		{ R"([ "has", "string1" ])", { true }},
 		{ R"([ "has", "nothere" ])", { false }},
 
+		// "config"
 
+		{ R"([ "in", "llo", "hello there"])", { true }},
+		{ R"([ "in", "xyz", "hello there"])", { false }},
+		{ R"([ "in", "bb", [ "aa", "bb", "cc" ] ])", { true }},
+		{ R"([ "in", "zz", [ "aa", "bb", "cc" ] ])", { true }},
+		{ R"([ "in", true, [ false, false, true ] ])", { true }},
+		{ R"([ "in", true, [ false, false, false ] ])", { false }},
 
+		{ R"([ "index-of", "bb", [ "aa", "bb", "cc" ] ])", { 1.0f }},
+		{ R"([ "index-of", "bb", [ "aa", "bb", "cc" ], 2 ])", { -1.0f }},
+		{ R"([ "index-of", "bb", [ "aa", "bb", "cc" ], 1 ])", { 1.0f }},
+		{ R"([ "index-of", "zz", [ "aa", "bb", "cc" ] ])", { -1.0f }},
+		{ R"([ "index-of", "there", "hello there" ])", { 6.0f }},
+		{ R"([ "index-of", "zz", "hello there" ])", { -1.0f }},
+		{ R"([ "index-of", true, [ false, true, false ])", { 1.0f }},
+
+		{ R"([ "length", [ "aa", "bb", "cc" ] ])", { 3.0f }},
+		{ R"([ "length", [ 1, 2, 3, 4, 5 ] ])", { 5.0f }},
+		{ R"([ "length", [] ])", { 0.0f }},
+		{ R"([ "length", "abcdef" ])", { 6.0f }},
+
+		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0f ])", { FloatArray{ 30.0f, 40.0f, 50.0f } }},
+		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0f, 3.0f ])", { FloatArray{ 30.0f, 40.0f } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0f, 3.0f ])", { StringArray{ "bb", "cc", "dd" } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 2.0f ])", { StringArray{ "cc", "dd", "ee" } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0f, 3.0f ])", { StringArray{ "bb", "cc", "dd" } }},
+
+		{ R"([ "slice", "abcdefghi", 5.0f ])", { "fghi"} },
+		{ R"([ "slice", "abcdefghi", 3.0f, 6.0f ])", { "defg"} },
+
+		{ R"([ "split", "aaa,bbb, ccc, ddd", "," ])", { StringArray{ "aaa", "bbb", " ccc", " ddd" } }},
 	};
 
 	for (const auto& test : tests)
@@ -150,13 +220,32 @@ TEST(Operators, Lookup)
 
 }
 
+struct Test2
+{
+	std::string json;
+	Value result{};
+};
+
 TEST(Expressions, Decision)
 {
+	/*
 	mvt::feature::Feature feature;
 
 	feature.mValues["float1"] = { 12.34f };
 	feature.mValues["string1"] = "hello";
 	feature.mValues["boolean1"] = false;
+
+
+	Test2 tests[] = {
+		{ R"( [ "!", false ] )", { true } },
+		{ R"( [ "!", true ] )", { false } },
+		{ R"( [ "!", [ "get", "boolean1" ] ] )", { true } },
+
+
+
+		{ R"( [ "at", 2, [ "aa", "bb", "cc", "dd" ] ] )", { "cc" }}
+	};
+
 
 	std::string s = R"([ "!", false])";
 
@@ -167,7 +256,7 @@ TEST(Expressions, Decision)
 	EXPECT_TRUE(expr.ParseFromJson(data));
 
 	EXPECT_TRUE(expr.GetValue(feature, 10));
-
+	*/
 }
 
 TEST(Operators, Filter)

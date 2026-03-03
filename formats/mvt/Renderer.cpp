@@ -11,7 +11,9 @@ import formats.mvt.symbol;
 
 using namespace core;
 using namespace core::rendertarget;
+
 using namespace mvt::layer;
+using namespace mvt::renderer;
 
 using LineCap = core::rendertarget::LineCap;
 using LineJoin = core::rendertarget::LineJoin;
@@ -233,6 +235,7 @@ namespace mvt::renderer
 		return true;
 	}
 
+/*
 	bool Renderer::RenderSymbol(const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom)
 	{
 		Visibility visibility = VisibilityToEnum(layer->mSymbolVisibility.GetValue(feature, zoom));
@@ -276,7 +279,7 @@ namespace mvt::renderer
 
 		return true;
 	}
-
+*/
 
 
 	bool Renderer::RenderTile(int x, int y, float zoom)
@@ -289,20 +292,34 @@ namespace mvt::renderer
 
 	bool Renderer::RenderTile(mvt::tile::Tile* tile, float zoom)
 	{
-		RenderContext renderContext(mStyle->mSprites);
+		if (!mStyle) return false;
+		if (!tile) return false;
+
+		RenderContext renderContext(*mStyle);
 
 		renderContext.spritesHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
 
-		mRenderTarget->SetActiveBitmap(renderContext.spritesHandle);
+		//mRenderTarget->SetActiveBitmap(renderContext.spritesHandle);
 
-		mRenderTarget->SetScale(2 /*1024*/ /*renderContext.TileSize*/);
+		mTileSize = 1024;
+////////		mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
+
+//		mRenderTarget->PushTranslation(100, 100);
+//		mRenderTarget->PushRotation(45.0f);
+
+		//geometry::Point p{500.0f, 500.0f};
+		//mRenderTarget->PushTranslation(-p.x, -p.y);
+		//mRenderTarget->PushRotation(45.0f);
+		//mRenderTarget->PushTranslation(p.x, p.y);
+		//mRenderTarget->PopTransform();
+		//mRenderTarget->PopTransform();
+		//mRenderTarget->PopTransform();
 
 		for (const auto& background : mStyle->mBackground)
 		{
 			RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
 		}
 
-		//std::vector<mvt::symbol::Symbol> symbols;
 		std::vector< std::pair<const feature::Feature*, layer::Layer*> > symbols;
 
 		for (const auto& layer : mStyle->mLayers)
@@ -377,7 +394,7 @@ namespace mvt::renderer
 
 		mvt::symbol::Symbol s;
 
-		mPlacedSymbols.Clear();
+		mvt::symbol::PlacedSymbols placedSymbols;
 
 		for (const auto& symbol : symbols)
 		{
@@ -386,13 +403,13 @@ namespace mvt::renderer
 			switch (symbol.first->mGeometryType)
 			{
 				case geometry::GeometryType::MultiPoint:
-					s.Render(mRenderTarget, mStyle->mSprites, attribs, TileToWorld(symbol.first->mMultiPoint), mPlacedSymbols);
+					s.Render(mRenderTarget, renderContext, attribs, TileToWorld(symbol.first->mMultiPoint), placedSymbols);
 					break;
 				case geometry::GeometryType::LineString:
-					s.Render(mRenderTarget, mStyle->mSprites, attribs, TileToWorld(symbol.first->mLineString), mPlacedSymbols);
+					s.Render(mRenderTarget, renderContext, attribs, TileToWorld(symbol.first->mLineString), placedSymbols);
 					break;
 				case geometry::GeometryType::MultiPolygon:
-					s.Render(mRenderTarget, mStyle->mSprites, attribs, TileToWorld(symbol.first->mMultiPolygon), mPlacedSymbols);
+					s.Render(mRenderTarget, renderContext, attribs, TileToWorld(symbol.first->mMultiPolygon), placedSymbols);
 					break;
 			}
 		}

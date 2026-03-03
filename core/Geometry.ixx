@@ -4,7 +4,7 @@ import std;
 
 export namespace core::geometry
 {
-	extern struct Vector
+	export struct Vector
 	{
 		float i{};
 		float j{};

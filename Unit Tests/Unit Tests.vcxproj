@@ -35,6 +35,9 @@
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgConfiguration>Debug</VcpkgConfiguration>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,15 +106,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\formats\mvt\glyphs.pb.h" />
     <ClInclude Include="..\formats\mvt\vector_tile.pb.h" />
-    <ClInclude Include="..\io\stb_image.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\core\Bitmap.cpp" />
     <ClCompile Include="..\core\Bitmap.ixx" />
     <ClCompile Include="..\core\Color.ixx" />
-    <ClCompile Include="..\core\D2DRenderTarget-Impl.ixx" />
     <ClCompile Include="..\core\D2DRenderTarget.cpp" />
     <ClCompile Include="..\core\D2DRenderTarget.ixx" />
     <ClCompile Include="..\core\Geometry.ixx" />
@@ -122,12 +124,15 @@
     <ClCompile Include="..\formats\mvt\Expressions.ixx" />
     <ClCompile Include="..\formats\mvt\Feature.ixx" />
     <ClCompile Include="..\formats\mvt\Filter.ixx" />
+    <ClCompile Include="..\formats\mvt\glyphs.pb.cc" />
     <ClCompile Include="..\formats\mvt\Layer.cpp" />
     <ClCompile Include="..\formats\mvt\Layer.ixx" />
     <ClCompile Include="..\formats\mvt\Parser.ixx" />
+    <ClCompile Include="..\formats\mvt\RenderContext.ixx" />
     <ClCompile Include="..\formats\mvt\Renderer.cpp" />
     <ClCompile Include="..\formats\mvt\Renderer.ixx" />
     <ClCompile Include="..\formats\mvt\sqlite3.c" />
+    <ClCompile Include="..\formats\mvt\Style-Glyphs.ixx" />
     <ClCompile Include="..\formats\mvt\Style.cpp" />
     <ClCompile Include="..\formats\mvt\Style.ixx" />
     <ClCompile Include="..\formats\mvt\Symbol.ixx" />

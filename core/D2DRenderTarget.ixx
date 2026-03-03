@@ -5,7 +5,7 @@ import core.rendertarget;
 namespace core::rendertarget
 {
 	// RenderTarget that renders a bitmap using D2D.
-	export class D2DRenderTarget : public /*Stateful*/ RenderTarget
+	export class D2DRenderTarget : public RenderTarget
 	{
 		int mWidth {};
 		int mHeight {};
@@ -46,7 +46,11 @@ namespace core::rendertarget
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override;
 		virtual void DrawSymbol(const geometry::MultiPoint* multiPoint) override;
 
-		virtual void SetScale(float scale) override;
+		virtual void PushScale(float scale) override;
+		virtual void PushTranslation(float x, float y) override;
+		virtual void PushRotation(float angleRad) override;
+		virtual void PopTransform(void) override;
+		virtual void ClearTransforms(void) override;
 
 		virtual void Save(const std::string& outputName) override;
 	};

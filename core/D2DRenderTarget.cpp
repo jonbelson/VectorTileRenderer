@@ -144,6 +144,18 @@ namespace core::rendertarget
 
 		ComPtr<ID2D1SolidColorBrush> mSolidBrush;
 
+		using Matrix = D2D1_MATRIX_3X2_F;
+		std::stack<Matrix> mTransforms;
+
+		void PushTransform(const Matrix& matrix)
+		{
+			Matrix current{};
+			mRenderTarget->GetTransform(&current);
+			mTransforms.push(current);
+
+			mRenderTarget->SetTransform(current*matrix);
+		}
+
 		// Initialise the D2D objects.
 		bool Initialise(void)
 		{
@@ -440,7 +452,7 @@ namespace core::rendertarget
 									const BYTE* src = mappedRect.bits;
 									BYTE* dest = wicData;
 
-									for (UINT row = 0; row<mHeight; row++)
+									for (int row = 0; row<mHeight; row++)
 									{
 										std::memcpy(dest, src, mWidth*4);
 										src += mappedRect.pitch;dest += wicStride;
@@ -577,6 +589,7 @@ namespace core::rendertarget
 			{
 				BitmapHandle handle = ++mBitmapHandle;
 				mBitmaps[handle] = d2dBitmap;
+				SetActiveBitmap(handle);
 				return handle;
 			}
 
@@ -602,6 +615,7 @@ namespace core::rendertarget
 
 		ComPtr<ID2D1Bitmap> CreateBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap)
 		{
+			if (!bitmap) return nullptr;
 			if (bitmap->GetBitmapData().empty()) return nullptr;
 
 			ComPtr<ID2D1Bitmap> d2dBitmap;
@@ -612,7 +626,7 @@ namespace core::rendertarget
 			D2D1_BITMAP_PROPERTIES props{ pixelFormat, 96.0f, 96.0f  };
 	
 			ComPtr<IWICBitmap> wicBitmap;
-			HRESULT hr = mImagingFactory->CreateBitmapFromMemory(bitmap->GetWidth(), bitmap->GetHeight(), GUID_WICPixelFormat32bppRGBA, pitch, (UINT) bitmap->GetBitmapData().size(), (BYTE*) bitmap->GetBitmapData().data(), wicBitmap.GetAddressOf());
+			HRESULT hr = mImagingFactory->CreateBitmapFromMemory(bitmap->GetWidth(), bitmap->GetHeight(), GUID_WICPixelFormat32bppRGBA, pitch, (UINT) bitmap->GetBitmapData().size()*core::bitmap::BytesPerPixel, (BYTE*) bitmap->GetBitmapData().data(), wicBitmap.GetAddressOf());
 			if (SUCCEEDED(hr))
 			{
 				ComPtr<IWICFormatConverter> formatConverter;
@@ -772,9 +786,17 @@ namespace core::rendertarget
 
 		void DrawBitmap(const geometry::Rect& dest)
 		{
-			if (mRenderTarget && mBitmap)
+			if (mBitmapHandle == InvalidHandle) return;
+
+			auto it = mBitmaps.find(mBitmapHandle);
+			if (it == mBitmaps.end()) return;
+
+			auto bitmap = it->second;
+			if (!bitmap) return;
+
+			if (mRenderTarget && bitmap)
 			{
-				mRenderTarget->DrawBitmap(mBitmap.Get(), ToRectF(dest));
+				mRenderTarget->DrawBitmap(bitmap.Get(), ToRectF(dest));
 			}
 		}
 
@@ -802,16 +824,42 @@ namespace core::rendertarget
 			}
 		}
 
-		void SetScale(float scale)
+		void PushScale(float scale)
 		{
 			mScale = scale;
 
-			if (mRenderTarget)
-			{
-				mRenderTarget->SetTransform(D2D1::Matrix3x2F::Scale(scale, scale));
-			}
+			PushTransform(Matrix3x2F::Scale(scale, scale));
 		}
 
+		void PushTranslation(float x, float y)
+		{
+			PushTransform(Matrix3x2F::Translation(x, y));
+		}
+
+		void PushRotation(float angleRad)
+		{
+			PushTransform(Matrix3x2F::Rotation(angleRad));
+		}
+
+		void ClearTransforms(void)
+		{
+			std::stack<Matrix>().swap(mTransforms);
+
+			mRenderTarget->SetTransform(Matrix3x2F::Identity());
+		}
+
+		bool PopTransform()
+		{
+			if (!mTransforms.empty())
+			{
+				mRenderTarget->SetTransform(mTransforms.top());
+
+				mTransforms.pop();
+				return true;
+			}
+
+			return false;
+		}
 
 	};
 
@@ -942,11 +990,30 @@ namespace core::rendertarget
 		//}
 	}
 
-	void D2DRenderTarget::SetScale(float scale)
+	void D2DRenderTarget::PushScale(float scale)
 	{
-		if (mImpl) mImpl->SetScale(scale);
+		if (mImpl) mImpl->PushScale(scale);
 	}
 
+	void D2DRenderTarget::PushTranslation(float x, float y)
+	{
+		if (mImpl) mImpl->PushTranslation(x, y);
+	}
+
+	void D2DRenderTarget::PushRotation(float angleRad)
+	{
+		if (mImpl) mImpl->PushRotation(angleRad);
+	}
+
+	void D2DRenderTarget::PopTransform(void)
+	{
+		if (mImpl) mImpl->PopTransform();
+	}
+
+	void D2DRenderTarget::ClearTransforms(void)
+	{
+		if (mImpl) mImpl->ClearTransforms();
+	}
 
 	void D2DRenderTarget::Save(const std::string& outputName)
 	{

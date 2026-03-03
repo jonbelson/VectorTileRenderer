@@ -18,9 +18,6 @@
     <ClCompile Include="..\core\D2DRenderTarget.ixx">
       <Filter>Project Modules\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\core\D2DRenderTarget-Impl.ixx">
-      <Filter>Project Modules\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\core\Geometry.ixx">
       <Filter>Project Modules\core</Filter>
     </ClCompile>
@@ -102,13 +99,22 @@
     <ClCompile Include="..\formats\mvt\vector_tile.pb.cc">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\Style-Glyphs.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\glyphs.pb.cc">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\RenderContext.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="..\io\stb_image.h">
-      <Filter>Project Modules\io</Filter>
-    </ClInclude>
     <ClInclude Include="..\formats\mvt\vector_tile.pb.h">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\formats\mvt\glyphs.pb.h">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClInclude>
   </ItemGroup>
@@ -128,5 +134,8 @@
     <Filter Include="Project Modules\formats\mvt">
       <UniqueIdentifier>{372d18b0-167e-49f2-8e64-ac3356b54b4e}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

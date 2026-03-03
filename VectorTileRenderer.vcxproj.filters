@@ -54,6 +54,9 @@
     <ClInclude Include="formats\mvt\vector_tile.pb.h">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClInclude>
+    <ClInclude Include="formats\mvt\glyphs.pb.h">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorTileRenderer.cpp">
@@ -167,6 +170,15 @@
     <ClCompile Include="formats\mvt\Symbol.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\glyphs.pb.cc">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Style-Glyphs.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\RenderContext.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">
@@ -176,9 +188,6 @@
   <ItemGroup>
     <None Include="res\VectorTileRenderer.rc2">
       <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Formats\Mapbox\glyphs.proto">
-      <Filter>Source Files\Formats\Mvt</Filter>
     </None>
     <None Include="formats\mvt\vector_tile.proto">
       <Filter>Source Files\Formats\Mvt</Filter>

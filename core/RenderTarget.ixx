@@ -23,11 +23,6 @@ namespace core::rendertarget
 		Bevel, Round, Miter, None
 	};
 
-	// Curretn rendering state that can be used for stateful subclasses.
-	//export class RenderState
-	//{
-	//};
-
 	export using BitmapHandle = uint32_t;
 
 	// Interface for an abstract render target.
@@ -67,7 +62,11 @@ namespace core::rendertarget
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) = 0;
 		virtual void DrawSymbol(const geometry::MultiPoint* multiPoint) = 0;
 
-		virtual void SetScale(float scale) = 0;
+		virtual void PushScale(float scale) = 0;
+		virtual void PushTranslation(float x, float y) = 0;
+		virtual void PushRotation(float angleRad) = 0;
+		virtual void PopTransform(void) = 0;
+		virtual void ClearTransforms(void) = 0;
 
 		virtual void Save(const std::string& outputName) = 0;
 	};

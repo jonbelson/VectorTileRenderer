@@ -16,10 +16,6 @@ import formats.mvt.filter;
 using namespace core;
 using namespace mvt;
 
-//namespace mvt::style
-//{
-//	export class Style;
-//};
 
 // https://docs.mapbox.com/style-spec/reference/layers/
 export namespace mvt::layer

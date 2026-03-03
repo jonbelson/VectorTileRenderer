@@ -6,6 +6,8 @@ module;
 
 export module formats.mvt.style;
 
+export import :glyphs;
+
 import std;
 import core.bitmap;
 import core.geometry;
@@ -13,6 +15,9 @@ import core.rendertarget;
 import formats.mvt.feature;
 import formats.mvt.layer;
 //import formats.mvt.tile;
+
+import io.resource;
+
 
 using namespace mvt;
 
@@ -90,6 +95,9 @@ namespace mvt::style
 	};
 
 
+
+
+
 	// OS Data Hub
 	// Styles:
 	// https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=bCj3UGjYGGyJzX9bQY9TssviLhFpuAtS
@@ -117,6 +125,7 @@ namespace mvt::style
 		std::string mSourceTileUrl;
 
 		Sprites mSprites;
+		Glyphs mGlyphs;
 
 		using LayerPtr = std::shared_ptr<layer::Layer>;
 		std::vector<LayerPtr> mLayers;

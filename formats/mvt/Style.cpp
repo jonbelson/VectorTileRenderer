@@ -161,6 +161,8 @@ namespace mvt::style
 			ATLTRACE("Failed to load sprites\n");
 		}
 
+		mGlyphs = Glyphs(mGlyphUrl);
+
 		return true;
 	}
 
