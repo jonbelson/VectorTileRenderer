@@ -15,14 +15,14 @@ namespace io::gzip
 
 		z_stream stream{};
 		stream.next_in = reinterpret_cast<uint8_t*>(input.data());
-		stream.avail_in = input.size();
+		stream.avail_in = static_cast<uInt>(input.size());
 
 		if (inflateInit2(&stream, 16 + MAX_WBITS) == Z_OK)
 		{
 			output.resize(input.size()*2);
 
 			stream.next_out = reinterpret_cast<uint8_t*>(output.data());
-			stream.avail_out = output.size();
+			stream.avail_out = static_cast<uInt>(output.size());
 
 			while (true)
 			{
@@ -46,7 +46,7 @@ namespace io::gzip
 				output.resize(outputSize*2);
 
 				stream.next_out = reinterpret_cast<uint8_t*>(output.data() + outputSize);
-				stream.avail_out = outputSize;
+				stream.avail_out = static_cast<uInt>(outputSize);
 
 			}
 

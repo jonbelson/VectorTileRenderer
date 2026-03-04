@@ -1,5 +1,7 @@
 export module formats.mvt.rendercontext;
 
+import std;
+
 import formats.mvt.layer;
 import formats.mvt.style;
 import core.rendertarget;
@@ -15,7 +17,9 @@ namespace mvt::renderer
 		const mvt::style::Glyphs& glyphs;
 
 		core::rendertarget::BitmapHandle spritesHandle{};
-		core::rendertarget::BitmapHandle glyphsHandle{};
+
+		// Map font names to BitmapHandles.
+		std::unordered_map<std::string, core::rendertarget::BitmapHandle> glyphHandles;
 
 		RenderContext(const mvt::style::Style& style) : sprites(style.mSprites), glyphs(style.mGlyphs) {}
 	};

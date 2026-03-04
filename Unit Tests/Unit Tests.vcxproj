@@ -118,6 +118,7 @@
     <ClCompile Include="..\core\D2DRenderTarget.ixx" />
     <ClCompile Include="..\core\Geometry.ixx" />
     <ClCompile Include="..\core\RenderTarget.ixx" />
+    <ClCompile Include="..\formats\mvt\Debug.ixx" />
     <ClCompile Include="..\formats\mvt\Expressions-Operators.cpp" />
     <ClCompile Include="..\formats\mvt\Expressions-Operators.ixx" />
     <ClCompile Include="..\formats\mvt\Expressions.cpp" />

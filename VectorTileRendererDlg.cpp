@@ -212,16 +212,23 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 #if 1
 	// Render a single ESRI OSM Tile.
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-style.json)");
+	if (style)
+	{
+	//	std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
+		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
 
-//	std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
-	std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
+		auto tileData = fetcher->FetchTile(0, 0, 0);
+		if (!tileData.empty())
+		{
+			auto tile = mvt::tile::DecodeTile(tileData);
+			if (tile)
+			{
+				mvt::renderer::Renderer tileRenderer(renderTarget, nullptr, style.get());
 
-	auto tileData = fetcher->FetchTile(0, 0, 0);
-	auto tile = mvt::tile::DecodeTile(tileData);
-
-	mvt::renderer::Renderer tileRenderer(renderTarget, nullptr, style.get());
-
-	tileRenderer.RenderTile(tile.get(), 13);
+				tileRenderer.RenderTile(tile.get(), 13);
+			}
+		}
+	}
 
 #endif
 

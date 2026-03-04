@@ -297,23 +297,13 @@ namespace mvt::renderer
 
 		RenderContext renderContext(*mStyle);
 
-		renderContext.spritesHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+		renderContext.spritesHandle = spriteHandle;
 
 		//mRenderTarget->SetActiveBitmap(renderContext.spritesHandle);
 
 		mTileSize = 1024;
 ////////		mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
-
-//		mRenderTarget->PushTranslation(100, 100);
-//		mRenderTarget->PushRotation(45.0f);
-
-		//geometry::Point p{500.0f, 500.0f};
-		//mRenderTarget->PushTranslation(-p.x, -p.y);
-		//mRenderTarget->PushRotation(45.0f);
-		//mRenderTarget->PushTranslation(p.x, p.y);
-		//mRenderTarget->PopTransform();
-		//mRenderTarget->PopTransform();
-		//mRenderTarget->PopTransform();
 
 		for (const auto& background : mStyle->mBackground)
 		{

@@ -179,6 +179,9 @@
     <ClCompile Include="formats\mvt\RenderContext.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\Debug.ixx">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

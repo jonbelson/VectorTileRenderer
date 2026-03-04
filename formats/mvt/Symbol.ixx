@@ -1,5 +1,6 @@
 module;
 
+#include <atltrace.h>
 #include <cassert>
 #include <cstdint>
 
@@ -10,6 +11,7 @@ import std;
 import core.color;
 import core.geometry;
 import core.rendertarget;
+import formats.mvt.debug;
 import formats.mvt.layer;
 import formats.mvt.renderer;
 import formats.mvt.rendercontext;
@@ -114,6 +116,12 @@ export namespace mvt::symbol
 					{
 						std::string key(value.begin() + start + 1, value.begin() + end);
 
+						// Sometimes the key is '_name' but the Feature only has 'name'.
+						if (key == "_name" && !feature.mValues.contains(key) && feature.mValues.contains("name"))
+						{
+							key = "name";
+						}
+
 						if (feature.mValues.contains(key))
 						{
 							value.erase(start, end - start + 1);
@@ -125,6 +133,7 @@ export namespace mvt::symbol
 						}
 						else
 						{
+							ATLTRACE("Could not substitute '{%s}' \n", key.c_str());
 							break;
 						}
 					}
@@ -233,6 +242,7 @@ export namespace mvt::symbol
 		}
 	};
 
+
 	// Represents a Symbol from a Feature.
 	export class Symbol
 	{
@@ -240,6 +250,16 @@ export namespace mvt::symbol
 		{
 			static constexpr float Factor = 180.0f/std::numbers::pi_v<float>;
 			return angleRadians*Factor;
+		}
+
+		void DrawRect(RenderTarget* renderTarget, Point p, float width, float height)
+		{
+			LineString lineString;
+			PointArray line = { {p.x, p.y}, {p.x + width, p.y}, {p.x + width, p.y + height}, {p.x, p.y + height}, {p.x, p.y}};
+			lineString.lines.push_back(line);
+			renderTarget->SetLineColor(Color("#0000ff"));
+			renderTarget->SetDashArray({});
+			renderTarget->DrawLine(&lineString);
 		}
 
 		void RenderMultiPoint(RenderTarget* renderTarget, mvt::renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
@@ -258,6 +278,8 @@ export namespace mvt::symbol
 
 				if (spriteSpec)
 				{
+					renderTarget->SetActiveBitmap(context.spritesHandle);
+
 					const auto& spec = spriteSpec.value();
 
 					float scaler = context.sprites.GetScaler();
@@ -274,14 +296,60 @@ export namespace mvt::symbol
 					}
 				}
 			}
-
+#if 1
 			if (!attribs.textField.empty())
 			{
-				//auto glyphs = context.glyphs.Lookup(attribs.textFont, 0);
-				//if (glyphs)
-				//{
-				//}
+				for (const auto& font : attribs.textFont)
+				{
+					auto atlas = context.glyphs.Lookup(font, 0);
+					if (atlas)
+					{
+						auto it = context.glyphHandles.find(font);
+						if (it == context.glyphHandles.end())
+						{
+							auto bitmapHandle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+
+							context.glyphHandles[font] = bitmapHandle;
+						}
+						else
+						{
+							renderTarget->SetActiveBitmap(it->second);
+						}
+
+						float textScale = attribs.textSize/24.0f;
+
+						textScale *= 2.0f;	// XXX debugging purposes.
+
+						Point p{ point.x, point.y };
+
+						for (int i = 0; i<attribs.textField.length(); i++)
+						{
+							uint32_t ch = attribs.textField[i];
+
+							if (atlas.value()->glyphs.contains(ch))
+							{
+								const auto& glyphSpec = atlas.value()->glyphs.at(ch);
+
+								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
+
+								float x = p.x;
+								float y = p.y;
+
+								float ypos = y - textScale*(26 + glyphSpec.top + 4);
+								ypos += textScale*12;
+								Point topLeft{ x, ypos };
+
+								Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
+
+								renderTarget->DrawBitmap(srcRect, destRect);
+
+								p.x += glyphSpec.advance*textScale;
+							}
+						}
+					}
+				}
 			}
+#endif
 		}
 
 
@@ -293,6 +361,8 @@ export namespace mvt::symbol
 
 				if (spriteSpec)
 				{
+					renderTarget->SetActiveBitmap(context.spritesHandle);
+
 					const auto& spec = spriteSpec.value();
 
 					//float scaler = sprites.GetScaler();
@@ -342,11 +412,21 @@ export namespace mvt::symbol
 					auto atlas = context.glyphs.Lookup(font, 0);
 					if (atlas)
 					{
-						auto handle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+						auto it = context.glyphHandles.find(font);
+						if (it == context.glyphHandles.end())
+						{
+							auto bitmapHandle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+							
+							context.glyphHandles[font] = bitmapHandle;
+						}
+						else
+						{
+							renderTarget->SetActiveBitmap(it->second);
+						}
 
 						float textScale = attribs.textSize/24.0f;
 
-						textScale *= 2.0f;
+						textScale *= 2.0f;	// XXX debugging purposes.
 
 						float offset{};
 						LineWalker lineWalker(pointArray);
@@ -367,26 +447,43 @@ export namespace mvt::symbol
 								float y = point.y;
 
 								float ypos = y - textScale*(26 + glyphSpec.top + 4);
+								ypos += textScale*12;
 								Point p{ x, ypos };
 
 								Rect destRect = Rect(p, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
 								float angleDeg = RadiansToDegrees(angleRad);
-								angleDeg = -angleDeg;
-								////angleDeg = angleDeg - 90.0f;
-
-								///angleDeg = 45.0f;
 
 								Point rotCentre = destRect.Centre();
-								renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
-								renderTarget->PushRotation(angleDeg);
-								renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
+//								rotCentre.y = y - textScale*(glyphSpec.top/4.0f);
+
+								if constexpr (!debug::visual::NoGlyphRotation)
+								{
+									renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
+									renderTarget->PushRotation(-angleDeg);
+									renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
+								}
+
+								if constexpr (debug::visual::DrawGlyphOutline)
+								{
+									DrawRect(renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
+
+									//LineString lineString;
+									//PointArray line = { {p.x, p.y}, {p.x + glyphSpec.width*textScale, p.y}, {p.x + glyphSpec.width*textScale, p.y + glyphSpec.height*textScale}, {p.x, p.y + glyphSpec.height*textScale}, {p.x, p.y}};
+									//lineString.lines.push_back(line);
+									//renderTarget->SetLineColor(Color("#0000ff"));
+									//renderTarget->SetDashArray({});
+									//renderTarget->DrawLine(&lineString);
+								}
 
 								renderTarget->DrawBitmap(srcRect, destRect);
 
-								renderTarget->PopTransform();
-								renderTarget->PopTransform();
-								renderTarget->PopTransform();
+								if constexpr (!debug::visual::NoGlyphRotation)
+								{
+									renderTarget->PopTransform();
+									renderTarget->PopTransform();
+									renderTarget->PopTransform();
+								}
 
 								offset += glyphSpec.advance*textScale;
 							}

@@ -135,6 +135,7 @@ namespace core::rendertarget
 		D2D1_CAP_STYLE mCapStyle{ D2D1_CAP_STYLE_FLAT };
 		std::vector<float> mDashes;
 
+		core::rendertarget::BitmapHandle mNextBitmapHandle = InvalidHandle;
 		core::rendertarget::BitmapHandle mBitmapHandle = InvalidHandle;
 
 		std::map<BitmapHandle, ComPtr<ID2D1Bitmap> > mBitmaps;
@@ -587,7 +588,7 @@ namespace core::rendertarget
 			auto d2dBitmap = CreateBitmap(bitmap);
 			if (d2dBitmap)
 			{
-				BitmapHandle handle = ++mBitmapHandle;
+				BitmapHandle handle = ++mNextBitmapHandle;
 				mBitmaps[handle] = d2dBitmap;
 				SetActiveBitmap(handle);
 				return handle;
