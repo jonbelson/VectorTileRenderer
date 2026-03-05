@@ -137,7 +137,7 @@ bool Layer::ParseFromJson(const nlohmann::json& data)
 		ReadProperty(mIconTranslate, paint, "icon-translate");
 		ReadProperty(mIconTranslateAnchor, paint, "icon-translate-anchor");
 
-		ReadProperty(mTextColour, paint, "text-color");
+		ReadProperty(mTextColor, paint, "text-color");
 		ReadProperty(mTextHaloBlur, paint, "text-halo-blur");
 		ReadProperty(mTextHaloColor, paint, "text-halo-color");
 		ReadProperty(mTextHaloWidth, paint, "text-halo-width");

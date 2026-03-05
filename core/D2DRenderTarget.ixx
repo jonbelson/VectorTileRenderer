@@ -44,7 +44,7 @@ namespace core::rendertarget
 		virtual void FillCircle(const geometry::MultiPoint* multiPoint) override;
 		virtual void DrawBitmap(const geometry::Rect& dest) override;
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override;
-		virtual void DrawSymbol(const geometry::MultiPoint* multiPoint) override;
+		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) override;
 
 		virtual void PushScale(float scale) override;
 		virtual void PushTranslation(float x, float y) override;

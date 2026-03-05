@@ -103,7 +103,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>windowscodecs.lib;d2d1.lib;d3d11.lib</AdditionalDependencies>
+      <AdditionalDependencies>windowscodecs.lib;d2d1.lib;d3d11.lib;dxguid.lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

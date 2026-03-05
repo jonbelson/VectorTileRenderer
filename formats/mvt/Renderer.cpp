@@ -161,7 +161,7 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderFill(const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
+	bool Renderer::RenderFill(RenderContext& context, const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		Visibility visibility = VisibilityToEnum(layer->mFillVisibility.GetValue(feature, zoom));
 		bool visible = visibility == Visibility::Visible;
@@ -172,8 +172,19 @@ namespace mvt::renderer
 
 			if (!fillPattern.empty())
 			{
-				// TODO Load pattern here?
-				//  mRenderTarget.SetFillPattern(fillPattern);
+				auto spriteSpec = context.sprites.Lookup(fillPattern);
+
+				if (spriteSpec)
+				{
+					const auto& spec = spriteSpec.value();
+
+					mRenderTarget->SetActiveBitmap(context.spritesHandle);
+					mRenderTarget->SetFillPattern(spec->rect);
+
+					auto transformed = TileToWorld(feature.mMultiPolygon);
+					mRenderTarget->FillPolygon(&transformed);
+				}
+					
 			}
 			else
 			{
@@ -186,11 +197,11 @@ namespace mvt::renderer
 
 				mRenderTarget->SetFillColor(fillColor);
 				mRenderTarget->SetLineColor(outlineColor);
-			}
 
-			auto transformed = TileToWorld(feature.mMultiPolygon);
-			mRenderTarget->FillPolygon(&transformed);
-			mRenderTarget->DrawPolygon(&transformed);
+				auto transformed = TileToWorld(feature.mMultiPolygon);
+				mRenderTarget->FillPolygon(&transformed);
+				mRenderTarget->DrawPolygon(&transformed);
+			}
 		}
 
 		return true;
@@ -357,7 +368,7 @@ namespace mvt::renderer
 					case LayerType::Fill:
 						if (feature.mGeometryType == geometry::GeometryType::MultiPolygon)
 						{
-							RenderFill(layer.get(), feature, zoom);
+							RenderFill(renderContext, layer.get(), feature, zoom);
 						}
 						break;
 					case LayerType::Line:

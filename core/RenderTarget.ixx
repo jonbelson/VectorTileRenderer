@@ -60,7 +60,7 @@ namespace core::rendertarget
 		virtual void FillCircle(const geometry::MultiPoint* multiPoint) = 0;
 		virtual void DrawBitmap(const geometry::Rect& dest) = 0;
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) = 0;
-		virtual void DrawSymbol(const geometry::MultiPoint* multiPoint) = 0;
+		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) = 0;
 
 		virtual void PushScale(float scale) = 0;
 		virtual void PushTranslation(float x, float y) = 0;

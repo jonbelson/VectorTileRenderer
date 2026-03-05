@@ -10,6 +10,7 @@ module;
 #include <d3d11_1.h>
 #include <wincodec.h>
 #include <shlwapi.h>
+#include <d2d1effects.h>
 
 module core.d2drendertarget;
 
@@ -140,10 +141,15 @@ namespace core::rendertarget
 
 		std::map<BitmapHandle, ComPtr<ID2D1Bitmap> > mBitmaps;
 
-		ComPtr<ID2D1Bitmap> mBitmap;
+		//ComPtr<ID2D1Bitmap> mBitmap;
 		ComPtr<ID2D1BitmapBrush> mBitmapBrush;
 
 		ComPtr<ID2D1SolidColorBrush> mSolidBrush;
+
+		ComPtr<ID2D1Effect> mColorMatrixEffect;
+
+		enum FillMode { Solid, Pattern };
+		FillMode mFillMode { Solid };
 
 		using Matrix = D2D1_MATRIX_3X2_F;
 		std::stack<Matrix> mTransforms;
@@ -195,7 +201,9 @@ namespace core::rendertarget
 
 									if (SUCCEEDED(hr))
 									{
-										mRenderTarget->CreateSolidColorBrush(D2D1::ColorF(ColorF::Yellow), mSolidBrush.GetAddressOf());
+										hr = mRenderTarget->CreateSolidColorBrush(D2D1::ColorF(ColorF::Yellow), mSolidBrush.GetAddressOf());
+
+										hr = mRenderTarget->CreateEffect(CLSID_D2D1ColorMatrix, mColorMatrixEffect.GetAddressOf());
 
 										mRenderTarget->BeginDraw();
 
@@ -574,7 +582,7 @@ namespace core::rendertarget
 		}
 
 		void SetLineColor(const Color& color) { mLineColor = ToColorF(color); }
-		void SetFillColor(const Color& color) { mFillColor = ToColorF(color); }
+		void SetFillColor(const Color& color) { mFillColor = ToColorF(color); mFillMode = Solid; }
 		void SetFillOutlineColor(const Color& color) { mFillOutlineColor = ToColorF(color); }
 		void SetLineWidth(float lineWidth) { mStrokeWidth = lineWidth; }
 		void SetCircleRadius(float circleRadius) { mCircleRadius = circleRadius; }
@@ -679,6 +687,11 @@ namespace core::rendertarget
 						D2D1_EXTEND_MODE_WRAP,
 						D2D1_BITMAP_INTERPOLATION_MODE_LINEAR), mBitmapBrush.GetAddressOf());
 
+					if (SUCCEEDED(hr))
+					{
+						mFillMode = Pattern;
+					}
+
 					//if (SUCCEEDED(hr))
 					//{
 					//	mBitmapBrush->SetSourceRectangle();
@@ -750,8 +763,15 @@ namespace core::rendertarget
 
 			if (pathGeometry)
 			{
-				mSolidBrush->SetColor(mFillColor);
-				mRenderTarget->FillGeometry(pathGeometry.Get(), mSolidBrush.Get());
+				if (mFillMode == Solid)
+				{
+					mSolidBrush->SetColor(mFillColor);
+					mRenderTarget->FillGeometry(pathGeometry.Get(), mSolidBrush.Get());
+				}
+				else if (mFillMode == Pattern)
+				{
+					mRenderTarget->FillGeometry(pathGeometry.Get(), mBitmapBrush.Get());
+				}
 			}
 		}
 
@@ -822,6 +842,60 @@ namespace core::rendertarget
 				geometry::Rect scaledDest(centreX - width/2, centreY - height/2, width, height);
 
 				mRenderTarget->DrawBitmap(bitmap.Get(), ToRectF(scaledDest), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, ToRectF(src));
+			}
+		}
+
+		void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour)
+		{
+			if (mBitmapHandle == InvalidHandle) return;
+
+			auto it = mBitmaps.find(mBitmapHandle);
+			if (it == mBitmaps.end()) return;
+
+			auto bitmap = it->second;
+			if (!bitmap) return;
+
+			if (mRenderTarget)
+			{
+				mColorMatrixEffect->SetInput(0, bitmap.Get());
+
+				//D2D1_MATRIX_5X4_F colorMatrix = D2D1::Matrix5x4F
+				//{
+				//	0, 0, 0, 0,
+				//	0, 0, 0, 0,
+				//	0, 0, 0, 0,
+				//	0, 0, 0, 1,
+				//	colour.Red, colour.Green, colour.Blue, 0
+				//};
+
+				D2D1_MATRIX_5X4_F colorMatrix = D2D1::Matrix5x4F
+				{
+					0, 0, 0, 0,
+					0, 0, 0, 0,
+					0, 0, 0, 0,
+					colour.Red, colour.Green, colour.Blue, 1,
+					0, 0, 0, 0
+				};
+
+				mColorMatrixEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, colorMatrix);
+
+				float scaleX = dest.width/src.width;
+				float scaleY = dest.height/src.height;
+
+				// Get current transform, since we need to apply our transform first.
+				D2D1_MATRIX_3X2_F current;
+				mRenderTarget->GetTransform(&current);
+
+				auto transform = 
+					D2D1::Matrix3x2F::Translation(-src.x, -src.y)*
+					D2D1::Matrix3x2F::Scale(scaleX, scaleY)*
+					D2D1::Matrix3x2F::Translation(dest.x, dest.y);
+						
+				mRenderTarget->SetTransform(transform * current);
+
+				mRenderTarget->DrawImage(mColorMatrixEffect.Get(), ToPointF(src.x, src.y), ToRectF(src), D2D1_INTERPOLATION_MODE_LINEAR);
+
+				mRenderTarget->SetTransform(current);
 			}
 		}
 
@@ -981,9 +1055,14 @@ namespace core::rendertarget
 		if (mImpl) mImpl->DrawBitmap(src, dest);
 	}
 
-	void D2DRenderTarget::DrawSymbol(const geometry::MultiPoint* multiPoint)
+	void D2DRenderTarget::DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour)
 	{
-		DrawCircle(multiPoint);
+		if (mImpl)
+		{
+			mImpl->DrawSymbolWithRGB(src, dest, colour);
+		}
+
+		//DrawCircle(multiPoint);
 
 		//for (const auto& point : multiPoint->points)
 		//{

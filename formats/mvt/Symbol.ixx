@@ -155,6 +155,7 @@ export namespace mvt::symbol
 			symbolPlacement = layer->mSymbolPlacement.GetValue(feature, zoom);
 			symbolSpacing = layer->mSymbolSpacing.GetValue(feature, zoom);
 
+			textColor = layer->mTextColor.GetValue(feature, zoom);
 			textField = layer->mTextField.GetValue(feature, zoom);
 			textFont = layer->mTextFont.GetValue(feature, zoom);
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
@@ -184,36 +185,48 @@ export namespace mvt::symbol
 	public:
 		LineWalker(const PointArray& pointArray) : mPointArray(pointArray)
 		{
-			if (!pointArray.empty())
+			mTotalDist = 0;
+
+			const size_t numPoints = pointArray.size();
+			if (numPoints == 0)
 			{
-				mDistances.resize(pointArray.size());
-				mDistances[0] = 0;
-
-				//float distSoFar{};
-
-				for (size_t i=1; i<pointArray.size(); i++)
-				{
-					mTotalDist += Distance(pointArray[i - 1], pointArray[i]);
-					mDistances[i] = mTotalDist;
-				}
+				return;
 			}
+
+			mDistances.resize(numPoints);
+			mAngles.resize(numPoints);
+
+			mDistances[0] = 0;
+
+			for (size_t i=1; i<numPoints; i++)
+			{
+				mTotalDist += Distance(pointArray[i - 1], pointArray[i]);
+				mDistances[i] = mTotalDist;
+
+				Vector v = mPointArray[i] - mPointArray[i - 1];
+				mAngles[i - 1] = std::atan2(-v.j, v.i);;
+			}
+
+			// Make last angle the same as the previous for convenience.
+			mAngles.back() = numPoints > 1 ? mAngles[numPoints - 2] : 0.0f;
 		}
 
 		// Return the total distance of the line geometry.
 		float GetTotalDist(void) const { return mTotalDist; }
 
 		// Return the interpolated point at specified distance from start of line geometry.
-//		Point GetPointOffset(float offset)
 		std::pair<Point, float> GetPointOffset(float offset)
 		{
 			namespace ranges = std::ranges;
 
-			//if (offset >= mTotalDist) return mPointArray.back();
-
-			// Find last point less than 'offset'.
+			if (offset >= mTotalDist)
+			{
+				return std::make_pair(mPointArray.back(), mAngles.back());
+			}
 
 			int index{-1};
 
+			// Find last point less than 'offset'.
 			for (int i=static_cast<int>(mDistances.size()) - 1; i>=0; i--)
 			{
 				if (mDistances[i] <= offset)
@@ -222,7 +235,6 @@ export namespace mvt::symbol
 					break;
 				}
 			}
-
 
 			if (index >= 0)
 			{
@@ -233,9 +245,7 @@ export namespace mvt::symbol
 				
 				Point point = mPointArray[index] + v*(distanceOnSection/distanceWholeSection);
 
-				float angle = std::atan2(-v.j, v.i);
-
-				return std::make_pair(point, angle);
+				return std::make_pair(point, mAngles[index]);
 			}
 
 			return std::make_pair(Point{}, 0.0f);
@@ -341,7 +351,8 @@ export namespace mvt::symbol
 
 								Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
-								renderTarget->DrawBitmap(srcRect, destRect);
+								//renderTarget->DrawBitmap(srcRect, destRect);
+								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
 
 								p.x += glyphSpec.advance*textScale;
 							}
@@ -467,16 +478,10 @@ export namespace mvt::symbol
 								if constexpr (debug::visual::DrawGlyphOutline)
 								{
 									DrawRect(renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
-
-									//LineString lineString;
-									//PointArray line = { {p.x, p.y}, {p.x + glyphSpec.width*textScale, p.y}, {p.x + glyphSpec.width*textScale, p.y + glyphSpec.height*textScale}, {p.x, p.y + glyphSpec.height*textScale}, {p.x, p.y}};
-									//lineString.lines.push_back(line);
-									//renderTarget->SetLineColor(Color("#0000ff"));
-									//renderTarget->SetDashArray({});
-									//renderTarget->DrawLine(&lineString);
 								}
 
-								renderTarget->DrawBitmap(srcRect, destRect);
+//								renderTarget->DrawBitmap(srcRect, destRect);
+								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
 
 								if constexpr (!debug::visual::NoGlyphRotation)
 								{

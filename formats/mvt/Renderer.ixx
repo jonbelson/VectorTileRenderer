@@ -36,7 +36,7 @@ namespace mvt::renderer
 
 		bool RenderBackground(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 		bool RenderCircle(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
-		bool RenderFill(const layer::Layer* layer , const feature::Feature& feature, float zoom) const;
+		bool RenderFill(RenderContext& context, const layer::Layer* layer , const feature::Feature& feature, float zoom) const;
 		bool RenderLine(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 		bool RenderSymbol(const layer::Layer* layer, const feature::Feature& feature, float zoom);
 

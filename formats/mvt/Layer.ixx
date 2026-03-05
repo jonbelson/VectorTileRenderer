@@ -218,7 +218,7 @@ export namespace mvt::layer
 		StringExpression mSymbolZOrder{ "auto" };
 		BoolExpression mTextAllowOverlap{ false };
 		StringExpression mTextAnchor{ "center" };
-		ColorExpression mTextColour{ "#000000" };
+		ColorExpression mTextColor{ "#000000" };
 		StringExpression mTextField;
 		StringArrayExpression mTextFont{ StringArray({"Open Sans Regular", "Arial Unicode MS"}) };
 		FloatExpression mTextHaloBlur{ 0.0f };
