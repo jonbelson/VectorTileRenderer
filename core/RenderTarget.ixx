@@ -24,14 +24,15 @@ namespace core::rendertarget
 	};
 
 	export using BitmapHandle = uint32_t;
+	export constexpr BitmapHandle InvalidHandle = 0;
 
 	// Interface for an abstract render target.
 	export class RenderTarget
 	{
 	protected:
-		static constexpr BitmapHandle InvalidHandle = 0;
 
 	public:
+
 		RenderTarget() = default;
 		virtual ~RenderTarget() = default;
 

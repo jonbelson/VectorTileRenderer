@@ -272,6 +272,26 @@ export namespace mvt::symbol
 			renderTarget->DrawLine(&lineString);
 		}
 
+		BitmapHandle GetGlyphBitmapHandle(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
+		{
+			BitmapHandle glyphHandle = context.GetBitmapHandle(font, /*start,*/ haloWidth);
+
+			if (glyphHandle == InvalidHandle)
+			{
+				auto atlas = context.glyphs.Lookup(font, start, haloWidth);
+				if (atlas)
+				{
+					glyphHandle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+				}
+				if (glyphHandle != InvalidHandle)
+				{
+					context.glyphHandles[font][haloWidth] = glyphHandle;
+				}
+			}
+
+			return glyphHandle;
+		}
+
 		void RenderMultiPoint(RenderTarget* renderTarget, mvt::renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
 			for (const auto& point : multiPoint.points)
@@ -309,22 +329,19 @@ export namespace mvt::symbol
 #if 1
 			if (!attribs.textField.empty())
 			{
+				//float haloWidth = lround(attribs.textHaloWidth*10.0f);
+
+				float haloScale = attribs.textSize/24.0f;
+
 				for (const auto& font : attribs.textFont)
 				{
-					auto atlas = context.glyphs.Lookup(font, 0);
-					if (atlas)
-					{
-						auto it = context.glyphHandles.find(font);
-						if (it == context.glyphHandles.end())
-						{
-							auto bitmapHandle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
+					BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);
 
-							context.glyphHandles[font] = bitmapHandle;
-						}
-						else
-						{
-							renderTarget->SetActiveBitmap(it->second);
-						}
+					if (haloHandle != InvalidHandle && glyphHandle != InvalidHandle)
+					{
+//						auto glyphAtlas = context.glyphs.Lookup(font, 0, haloWidth);
+						auto glyphAtlas = context.glyphs.Lookup(font, 0);
 
 						float textScale = attribs.textSize/24.0f;
 
@@ -336,9 +353,9 @@ export namespace mvt::symbol
 						{
 							uint32_t ch = attribs.textField[i];
 
-							if (atlas.value()->glyphs.contains(ch))
+							if (glyphAtlas.value()->glyphs.contains(ch))
 							{
-								const auto& glyphSpec = atlas.value()->glyphs.at(ch);
+								const auto& glyphSpec = glyphAtlas.value()->glyphs.at(ch);
 
 								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
@@ -352,11 +369,17 @@ export namespace mvt::symbol
 								Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
 								//renderTarget->DrawBitmap(srcRect, destRect);
+
+								renderTarget->SetActiveBitmap(haloHandle);
+								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
+								renderTarget->SetActiveBitmap(glyphHandle);
 								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
 
 								p.x += glyphSpec.advance*textScale;
 							}
 						}
+
+						break;
 					}
 				}
 			}
@@ -418,22 +441,17 @@ export namespace mvt::symbol
 
 			if (!attribs.textField.empty())
 			{
+				//float haloWidth = lround(attribs.textHaloWidth*10.0f);
+
 				for (const auto& font : attribs.textFont)
 				{
-					auto atlas = context.glyphs.Lookup(font, 0);
-					if (atlas)
+					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
+					BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);
+
+					if (haloHandle != InvalidHandle && glyphHandle != InvalidHandle)
 					{
-						auto it = context.glyphHandles.find(font);
-						if (it == context.glyphHandles.end())
-						{
-							auto bitmapHandle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
-							
-							context.glyphHandles[font] = bitmapHandle;
-						}
-						else
-						{
-							renderTarget->SetActiveBitmap(it->second);
-						}
+//						auto glyphAtlas = context.glyphs.Lookup(font, 0, haloWidth);
+						auto glyphAtlas = context.glyphs.Lookup(font, 0);
 
 						float textScale = attribs.textSize/24.0f;
 
@@ -446,9 +464,9 @@ export namespace mvt::symbol
 						{
 							uint32_t ch = attribs.textField[i];
 
-							if (atlas.value()->glyphs.contains(ch))
+							if (glyphAtlas.value()->glyphs.contains(ch))
 							{
-								const auto& glyphSpec = atlas.value()->glyphs.at(ch);
+								const auto& glyphSpec = glyphAtlas.value()->glyphs.at(ch);
 
 								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
@@ -470,9 +488,9 @@ export namespace mvt::symbol
 
 								if constexpr (!debug::visual::NoGlyphRotation)
 								{
-									renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
-									renderTarget->PushRotation(-angleDeg);
 									renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
+									renderTarget->PushRotation(-angleDeg);
+									renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
 								}
 
 								if constexpr (debug::visual::DrawGlyphOutline)
@@ -481,6 +499,10 @@ export namespace mvt::symbol
 								}
 
 //								renderTarget->DrawBitmap(srcRect, destRect);
+
+								renderTarget->SetActiveBitmap(haloHandle);
+								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
+								renderTarget->SetActiveBitmap(glyphHandle);
 								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
 
 								if constexpr (!debug::visual::NoGlyphRotation)
@@ -527,6 +549,10 @@ export namespace mvt::symbol
 			{
 				RenderAlongLineString(renderTarget, context, attribs, lineString, placedSymbols);
 			}
+			else if (attribs.symbolPlacement == "line-center")
+			{
+			//	RenderAtLineStringCentre(renderTarget, context, attribs, lineString, placedSymbols);
+			}
 
 			return true;
 		}
@@ -536,6 +562,10 @@ export namespace mvt::symbol
 			if (attribs.symbolPlacement == "line")
 			{
 				//RenderAlongLineString(renderTarget, sprites, attribs, lineString, placedSymbols);
+			}
+			else if (attribs.symbolPlacement == "line-center")
+			{
+				//RenderAtLineStringCentre(renderTarget, context, attribs, lineString, placedSymbols);
 			}
 
 			return true;

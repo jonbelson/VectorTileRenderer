@@ -230,6 +230,11 @@ namespace mvt::renderer
 
 			auto dashArray = layer->mLineDashArray.GetValue(feature, zoom);
 
+			for (float& dash : dashArray)
+			{
+				dash *= lineWidth;
+			}
+
 			LineCap lineCap = LineCapToEnum(layer->mLineCap.GetValue(feature, zoom));
 			LineJoin lineJoin = LineJoinToEnum(layer->mLineJoin.GetValue(feature, zoom));
 			

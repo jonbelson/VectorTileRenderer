@@ -254,6 +254,9 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 */
 
 	renderTarget->Save("C:\\Users\\jon\\MapImage.png");
+
+	//google::protobuf::ShutdownProtobufLibrary();
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 

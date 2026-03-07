@@ -1,6 +1,11 @@
 module;
 
+#include <cassert>
+
+#pragma warning(push)
+#pragma warning(disable : 4018 4244 4251 4267)
 #include "glyphs.pb.h"
+#pragma warning(pop)
 
 export module formats.mvt.style:glyphs;
 
@@ -39,6 +44,7 @@ namespace mvt::style
 		};
 	}
 
+	// Represents a single glyph in a glyph atlas.
 	export struct GlyphSpec
 	{
 		uint32_t id{};
@@ -52,14 +58,15 @@ namespace mvt::style
 		int top{};
 	};
 
+	// Represent a decoded glyph PBF.
 	export struct GlyphAtlas
 	{
-		//std::vector<GlyphSpec> glyphs;
 		std::map<uint32_t, GlyphSpec> glyphs;	// Map of glyph id to spec.
 
 		int start{};	// Index of first glyph in block.
 
-		uint32_t threshold{ 192 };
+		//uint32_t threshold{ 192 };
+		uint32_t haloSize;	// Halo size as lround(text-halo-width*10.0f)
 
 		std::shared_ptr<core::bitmap::Bitmap> bitmap;
 	};
@@ -127,23 +134,19 @@ namespace mvt::style
 		return {};
 	}
 
-	static float clamp(float x, float lower = 0.0f, float higher = 1.0f)
-	{
-		if (x < lower) return lower;
-		if (x > higher) return higher;
-		return x;
-	}
-
 	static float smoothstep(float f1, float f2, float x)
 	{
-		x = clamp((x - f1)/(f2 - f1));
+		/*std::*/ assert(f1 != f2);
 
-		return x * x * (3.0f - 2.0f*x);
+		float t = std::clamp((x - f1)/(f2 - f1), 0.0f, 1.0f);
+
+		return t*t*(3.0f - 2.0f*t);
 	}
 
 	// Transfer the glyph SDF values to the alpha of a Bitmap atlas.
+	// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
 	// https://observablehq.com/@jjhembd/mapbox-glyph-pbfs
-	export std::optional<GlyphAtlas> CreateAtlas(proto::GlyphFontStack& fontStack, int thresh = 192)
+	export std::optional<GlyphAtlas> CreateAtlas(const proto::GlyphFontStack& fontStack, int haloSize)
 	{
 		using namespace core::bitmap;
 
@@ -151,6 +154,11 @@ namespace mvt::style
 		constexpr int height = 1000;
 		constexpr int GlyphPbfPadding = 3;
 		constexpr int GlyphPadding = 1;
+
+		constexpr int GlyphSize = 24;	// Pixel size of MVT glyphs.
+
+		constexpr float Edge = 192.0f/255.0f;
+		constexpr float PixelsPerUnit = 255.0f/32.0f;
 
 		float aa = 2.0f;
 
@@ -211,6 +219,14 @@ namespace mvt::style
 				{
 					std::uint8_t val = glyph.field[y*glyphWidth + x];
 
+					float sdf = val/255.0f;
+
+					float distPx = (sdf - Edge)*PixelsPerUnit;
+
+					uint8_t alpha = static_cast<uint8_t>(smoothstep(-0.5f, 0.5f, distPx + haloSize)*255.0f);
+					*row++ = MakeRGBA(255, 0, 0, alpha);
+
+/*
 					//std::uint8_t alpha = val >= thresh ? 255 : 0;
 
 					//float alpha = smoothstep(thresh - aa, thresh + aa, val);
@@ -219,6 +235,7 @@ namespace mvt::style
 					float alpha = std::min(std::max(0.0f, 0.5f - distance), 1.0f);
 
 					*row++ = MakeRGBA(255, 0, 0, static_cast<uint8_t>(alpha*255.0f));
+*/
 				}
 
 				dest += width;
@@ -235,20 +252,31 @@ namespace mvt::style
 	}
 
 
-
+	// Interface to Glyphs referenced by the Style.
 	export class Glyphs
 	{
 		// Template for glyphs containing {fontstack} and {range} placeholders.
 		std::string mGlyphUri;
 
-		struct Entry
-		{
-			std::string fontStack;
-			int rangeStart;
-			//int size; ?
-		};
+		using StartMap = std::unordered_map<int /*start*/, std::shared_ptr<GlyphAtlas> >;
+		using SizeMap = std::unordered_map<int /*size*/, StartMap>;
+		using FontMap = std::unordered_map<std::string /*font*/, SizeMap>;
 
-		mutable std::unordered_map<std::string, std::shared_ptr<GlyphAtlas> > mAtlases;
+		// Map of glyph atlases.
+		mutable FontMap mFontMap;
+
+		// Map of decoded glyph PBFs (from which the glyph atlases are made).
+		mutable std::unordered_map<std::string /*uri*/, proto::Glyphs> mUriMap;
+
+		// Check for existing GlyphAtlas entry.
+		std::optional<std::shared_ptr<const GlyphAtlas> > _Lookup(const std::string& font, int size, int start) const
+		{
+			if (!mFontMap.contains(font)) return {};
+			if (!mFontMap.at(font).contains(size)) return {};
+			if (!mFontMap.at(font).at(size).contains(start)) return {};
+
+			return { mFontMap.at(font).at(size).at(start) };
+		}
 
 		std::optional<std::string> MakeUri(std::string_view fontStack, int rangeStart) const
 		{
@@ -290,19 +318,55 @@ namespace mvt::style
 		Glyphs(const std::string& glyphUri) : mGlyphUri(glyphUri) {}
 
 		// Fetch glyph Bitmap with specified name and block start number (e.g. 1024 for 1024-1279 range).
-		std::optional<std::shared_ptr<const GlyphAtlas> > Lookup(const std::string& font, int start) const
+		// font			Name of font.
+		// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
+		std::optional<std::shared_ptr<const GlyphAtlas> > Lookup(const std::string& font, int start, float haloSizePx = 0.0f) const
 		{
+			uint32_t haloSize = lround(haloSizePx*10.0f);
+
+			auto result = _Lookup(font, haloSize, start);
+			if (result) return result;
+
+			// Required GlyphAtlas is not cached, so create it.
 			auto uri = MakeUri(font, start);
 			if (uri)
 			{
-				//Entry entry{ .fontStack = font, .rangeStart=start };
-
-				auto it = mAtlases.find(uri.value());
-				if (it != std::end(mAtlases))
+				// Fetch the glyph PBF if not already cached.
+				if (!mUriMap.contains(uri.value()))
 				{
-					return it->second;
+					auto data = io::resource::LoadFromUri(uri.value());
+					if (data)
+					{
+						auto glyphs = DecodeGlyph(data.value());
+						if (glyphs)
+						{
+							mUriMap[uri.value()] = std::move(glyphs.value());
+						}
+					}
 				}
 
+
+				if (mUriMap.contains(uri.value()))
+				{
+					const auto& glyphs = mUriMap.at(uri.value());
+
+					//constexpr float GlyphSize = 24.0f;
+					//const float scale = fontSize/GlyphSize;
+
+					auto atlas = CreateAtlas(glyphs.stacks[0], haloSizePx);
+					if (atlas)
+					{
+						auto atlasPtr = std::make_shared<GlyphAtlas>(std::move(atlas.value()));
+						//mAtlases[uri.value()] = atlasPtr;
+
+						mFontMap[font][haloSize][start] = atlasPtr;
+
+						return atlasPtr;
+					}
+
+
+				}
+/*
 				auto data = io::resource::LoadFromUri(uri.value());
 				if (data)
 				{
@@ -319,6 +383,7 @@ namespace mvt::style
 						}
 					}
 				}
+	*/
 			}
 
 			return {};

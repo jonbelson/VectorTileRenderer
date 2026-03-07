@@ -125,7 +125,9 @@
     <ClCompile Include="..\formats\mvt\Expressions.ixx" />
     <ClCompile Include="..\formats\mvt\Feature.ixx" />
     <ClCompile Include="..\formats\mvt\Filter.ixx" />
-    <ClCompile Include="..\formats\mvt\glyphs.pb.cc" />
+    <ClCompile Include="..\formats\mvt\glyphs.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
+    </ClCompile>
     <ClCompile Include="..\formats\mvt\Layer.cpp" />
     <ClCompile Include="..\formats\mvt\Layer.ixx" />
     <ClCompile Include="..\formats\mvt\Parser.ixx" />
@@ -142,7 +144,9 @@
     <ClCompile Include="..\formats\mvt\TileCache.ixx" />
     <ClCompile Include="..\formats\mvt\TileFetcher.ixx" />
     <ClCompile Include="..\formats\mvt\Types.ixx" />
-    <ClCompile Include="..\formats\mvt\vector_tile.pb.cc" />
+    <ClCompile Include="..\formats\mvt\vector_tile.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
+    </ClCompile>
     <ClCompile Include="..\io\Gzip.cpp" />
     <ClCompile Include="..\io\Gzip.ixx" />
     <ClCompile Include="..\io\Resource.cpp" />

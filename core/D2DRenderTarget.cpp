@@ -160,7 +160,8 @@ namespace core::rendertarget
 			mRenderTarget->GetTransform(&current);
 			mTransforms.push(current);
 
-			mRenderTarget->SetTransform(current*matrix);
+//			mRenderTarget->SetTransform(current*matrix);
+			mRenderTarget->SetTransform(matrix*current);
 		}
 
 		// Initialise the D2D objects.
@@ -302,7 +303,7 @@ namespace core::rendertarget
 			return strokeStyle;
 		}
 
-		// Add a PointArray to a GeoemtrySink. For filled figures, clockwise implies external, anticlockwise internal (i.e. a hole).
+		// Add a PointArray to a GeometrySink. For filled figures, clockwise implies external, anticlockwise internal (i.e. a hole).
 		// closed	True if shape should be closed between first and last point.
 		// filled	True if shape should be filled.
 		void AddPointArray(ComPtr<ID2D1GeometrySink> sink, const geometry::PointArray& pointArray, bool closed, bool filled)

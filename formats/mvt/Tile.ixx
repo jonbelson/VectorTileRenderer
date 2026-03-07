@@ -1,6 +1,9 @@
 module;
 
+#pragma warning(push)
+#pragma warning(disable : 4018 4244 4251 4267)
 #include "vector_tile.pb.h"
+#pragma warning(pop)
 
 #include <cstdint>
 #include <atltrace.h>
@@ -37,10 +40,6 @@ namespace mvt::tile
 
 		// Map of Tile layer name to Feature list.
 		std::map<std::string, FeatureList> mFeatures;
-
-		//std::string mLayerName;
-
-		//std::vector<mvt::feature::Feature> mFeatures;
 	};
 
 	export void MyFunc();
