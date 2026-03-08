@@ -14,6 +14,8 @@ import io.resource;
 
 namespace mvt::style
 {
+	export constexpr float GlyphSize = 24.0f;
+
 	namespace proto
 	{
 		// Raw SDF for glyphs in a block.
@@ -269,7 +271,7 @@ namespace mvt::style
 		mutable std::unordered_map<std::string /*uri*/, proto::Glyphs> mUriMap;
 
 		// Check for existing GlyphAtlas entry.
-		std::optional<std::shared_ptr<const GlyphAtlas> > _Lookup(const std::string& font, int size, int start) const
+		std::shared_ptr<const GlyphAtlas> _Lookup(const std::string& font, int size, int start) const
 		{
 			if (!mFontMap.contains(font)) return {};
 			if (!mFontMap.at(font).contains(size)) return {};
@@ -320,7 +322,7 @@ namespace mvt::style
 		// Fetch glyph Bitmap with specified name and block start number (e.g. 1024 for 1024-1279 range).
 		// font			Name of font.
 		// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
-		std::optional<std::shared_ptr<const GlyphAtlas> > Lookup(const std::string& font, int start, float haloSizePx = 0.0f) const
+		std::shared_ptr<const GlyphAtlas> Lookup(const std::string& font, int start, float haloSizePx = 0.0f) const
 		{
 			uint32_t haloSize = lround(haloSizePx*10.0f);
 
@@ -350,7 +352,6 @@ namespace mvt::style
 				{
 					const auto& glyphs = mUriMap.at(uri.value());
 
-					//constexpr float GlyphSize = 24.0f;
 					//const float scale = fontSize/GlyphSize;
 
 					auto atlas = CreateAtlas(glyphs.stacks[0], haloSizePx);

@@ -1,12 +1,14 @@
 module;
 
+#include <vector>
+
 #include <atltrace.h>
 #include <cassert>
 #include <cstdint>
 
 export module formats.mvt.symbol;
 
-import std;
+//import std;
 
 import core.color;
 import core.geometry;
@@ -102,6 +104,9 @@ export namespace mvt::symbol
 		std::vector<std::string> textFont;
 		Color textHaloColor { "rgba(0, 0, 0, 0)" };
 		float textHaloWidth { 0.0f };
+		std::string textJustify { "center" };
+		float textLineHeight { 1.2f };
+		float textMaxWidth { 10.0f };
 		float textSize { 16.0f };
 
 		// Replace tokens in '{}' with Feature values.
@@ -160,6 +165,8 @@ export namespace mvt::symbol
 			textFont = layer->mTextFont.GetValue(feature, zoom);
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
+			textJustify = layer->mTextJustify.GetValue(feature, zoom);
+			textMaxWidth = layer->mTextMaxWidth.GetValue(feature, zoom);
 			textSize = layer->mTextSize.GetValue(feature, zoom);
 
 			// icon-image and text-field can use '{}' substitution for Feature fields.
@@ -262,6 +269,130 @@ export namespace mvt::symbol
 			return angleRadians*Factor;
 		}
 
+		struct Word
+		{
+			std::string_view text;
+			float lengthPx { 0.0f };
+		};
+
+		struct Line
+		{
+//			std::vector<std::string_view> text;
+			std::string_view text;
+			float widthPx { 0.0f };
+		};
+
+		// Represents a piece of text split into lines of individual words.
+		struct FormattedText
+		{
+//			std::vector<Word> line;
+//			std::vector<std::string_view> line;
+			std::vector<Line> lines;
+			float widthPx { 0.0f };
+		};
+
+		// Get word length in pixels when drawn using glyphs from specified GlyphAtlas.
+		float GetWordLength(const mvt::style::GlyphAtlas* glyphAtlas, std::string_view word)
+		{
+			float lengthPx { 0.0f };
+			for (const auto& ch : word)
+			{
+				if (glyphAtlas->glyphs.contains(ch))
+				{
+					lengthPx += glyphAtlas->glyphs.at(ch).advance;
+				}
+			}
+			return lengthPx;
+		}
+
+		// Add charcters to a line until it exceeds max-text-length, when search backwards for somewhere to split onto a new line.
+		FormattedText FormatText(const mvt::style::GlyphAtlas* glyphAtlas, SymbolAttribs& attribs, std::string_view textField)
+		{
+			FormattedText ft;
+
+			float width { 0.0f };
+
+			Line line;
+
+			float maxTextWidthPx = attribs.textMaxWidth*style::GlyphSize;
+
+			size_t start{} , end{};
+
+			for (size_t i=0; i<textField.size(); i++)
+			{
+				char ch = textField.at(i);
+				float advance{};
+
+				if (glyphAtlas->glyphs.contains(ch))
+					advance = glyphAtlas->glyphs.at(ch).advance;
+
+				if (width + advance > maxTextWidthPx)
+				{
+					// Search backwards for the last point we can split at (either a space or hyphen).
+					for (size_t j=end; j>=start; j--)
+					{
+						if (textField[j] == ' ' || textField[j] == '-' || textField[j] == '\n')
+						{
+							std::string_view text = textField.substr(start, j - start);
+							line = { text, GetWordLength(glyphAtlas, text) };
+							ft.lines.push_back(line);
+
+							line = {};
+							width = 0.0f;
+
+							i = j;
+							start = i;
+							end = i;
+
+							if ((textField[j] == ' ' || textField[j] == '\n') && j < textField.size() - 1)
+							{
+								start++;
+								end++;
+							}
+							break;
+						}
+
+						if (j == start) break;
+					}
+
+					continue;
+				}
+				else
+				{
+					width += advance;
+					end++;
+				}
+			}
+
+			line = { textField.substr(start, end - start), width };
+			ft.lines.push_back(line);
+
+			return ft;
+		}
+
+		// Split a string into an array of Words using a delimiter of ' '.
+		std::vector<Word> SplitToWords(const mvt::style::GlyphAtlas* glyphAtlas, std::string_view textField)
+		{
+			std::vector<Word> words;
+			size_t start{}, end{};
+			float lengthPx { 0.0f };
+
+			while ((end = textField.find(' ', start)) != std::string::npos)
+			{
+				std::string_view word { textField.substr(start, end - start) };
+
+				words.push_back(Word { word, GetWordLength(glyphAtlas, word) });
+
+				start = end + 1;
+			}
+
+			std::string_view word { textField.substr(start, textField.length() - start) };
+
+			words.push_back(Word { word, GetWordLength(glyphAtlas, word) });
+
+			return words;
+		}
+
 		void DrawRect(RenderTarget* renderTarget, Point p, float width, float height)
 		{
 			LineString lineString;
@@ -281,7 +412,7 @@ export namespace mvt::symbol
 				auto atlas = context.glyphs.Lookup(font, start, haloWidth);
 				if (atlas)
 				{
-					glyphHandle = renderTarget->RegisterBitmap(atlas.value()->bitmap);
+					glyphHandle = renderTarget->RegisterBitmap(atlas->bitmap);
 				}
 				if (glyphHandle != InvalidHandle)
 				{
@@ -326,7 +457,7 @@ export namespace mvt::symbol
 					}
 				}
 			}
-#if 1
+
 			if (!attribs.textField.empty())
 			{
 				//float haloWidth = lround(attribs.textHaloWidth*10.0f);
@@ -347,35 +478,66 @@ export namespace mvt::symbol
 
 						textScale *= 2.0f;	// XXX debugging purposes.
 
+						float textLineHeight = textScale*attribs.textLineHeight*style::GlyphSize;
+
 						Point p{ point.x, point.y };
 
-						for (int i = 0; i<attribs.textField.length(); i++)
+						FormattedText formattedText = FormatText(glyphAtlas.get(), attribs, attribs.textField);
+
+						float firstLinePx = formattedText.lines.empty() ? 0.0f : formattedText.lines[0].widthPx;
+
+						for (size_t i=0; i<formattedText.lines.size(); i++)
 						{
-							uint32_t ch = attribs.textField[i];
+							const auto& line = formattedText.lines[i];
 
-							if (glyphAtlas.value()->glyphs.contains(ch))
+							if (i != 0)
 							{
-								const auto& glyphSpec = glyphAtlas.value()->glyphs.at(ch);
+								if (attribs.textJustify == "left")
+								{
+									p.x = point.x;
+								}
+								else if (attribs.textJustify == "center")
+								{
+									p.x = point.x + textScale*(firstLinePx/2.0f - line.widthPx/2.0f);
+								}
+								else if (attribs.textJustify == "right")
+								{
+									p.x = point.x + textScale*(firstLinePx - line.widthPx);
+								}
+								else
+								{
+									p.x = point.x;
+								}
 
-								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
+								p.y += textLineHeight;
+							}
 
-								float x = p.x;
-								float y = p.y;
+							for (int j = 0; j<line.text.length(); j++)
+							{
+								uint32_t ch = line.text[j];
 
-								float ypos = y - textScale*(26 + glyphSpec.top + 4);
-								ypos += textScale*12;
-								Point topLeft{ x, ypos };
+								if (glyphAtlas->glyphs.contains(ch))
+								{
+									const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
 
-								Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
+									Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
-								//renderTarget->DrawBitmap(srcRect, destRect);
+									float x = p.x;
+									float y = p.y;
 
-								renderTarget->SetActiveBitmap(haloHandle);
-								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
-								renderTarget->SetActiveBitmap(glyphHandle);
-								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
+									float ypos = y - textScale*(26 + glyphSpec.top + 4);
+									ypos += textScale*12;
+									Point topLeft{ x, ypos };
 
-								p.x += glyphSpec.advance*textScale;
+									Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
+
+									renderTarget->SetActiveBitmap(haloHandle);
+									renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
+									renderTarget->SetActiveBitmap(glyphHandle);
+									renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
+
+									p.x += glyphSpec.advance*textScale;
+								}
 							}
 						}
 
@@ -383,7 +545,6 @@ export namespace mvt::symbol
 					}
 				}
 			}
-#endif
 		}
 
 
@@ -398,13 +559,6 @@ export namespace mvt::symbol
 					renderTarget->SetActiveBitmap(context.spritesHandle);
 
 					const auto& spec = spriteSpec.value();
-
-					//float scaler = sprites.GetScaler();
-					//float width = spec->width/scaler;
-					//float height = spec->height/scaler;
-
-					//width *= attribs.iconSize;
-					//height *= attribs.iconSize;
 
 					float minSpacing = attribs.symbolSpacing;
 
@@ -464,9 +618,9 @@ export namespace mvt::symbol
 						{
 							uint32_t ch = attribs.textField[i];
 
-							if (glyphAtlas.value()->glyphs.contains(ch))
+							if (glyphAtlas->glyphs.contains(ch))
 							{
-								const auto& glyphSpec = glyphAtlas.value()->glyphs.at(ch);
+								const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
 
 								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
@@ -570,45 +724,6 @@ export namespace mvt::symbol
 
 			return true;
 		}
-
-/*
-		bool Render(core::rendertarget::RenderTarget* renderTarget, style::Sprites& sprites, SymbolAttribs& attribs, const mvt::feature::Feature& feature, PlacedSymbols& placedSymbols)
-		{
-			switch (feature.mGeometryType)
-			{
-				case core::geometry::GeometryType::MultiPoint:
-					if (attribs.symbolPlacement == "point")
-					{
-						RenderMultiPoint(renderTarget, sprites, attribs, feature.mMultiPoint, placedSymbols);
-					}
-					break;
-				case core::geometry::GeometryType::LineString:
-					if (attribs.symbolPlacement == "line")
-					{
-						RenderAlongLineString(renderTarget, sprites, attribs, feature.mLineString, placedSymbols);
-					}
-					break;
-				case core::geometry::GeometryType::MultiPolygon:
-					break;
-
-
-			}
-
-			//switch (attribs.symbolPlacement)
-			//{
-			//	case SymbolPlacement::Point:
-			//		break;
-
-			//	case SymbolPlacement::Line:
-			//		break;
-			//	case SymbolPlacement::Point:
-			//		break;
-
-			//}
-
-			return true;
-		}
-*/
 
 	};
 

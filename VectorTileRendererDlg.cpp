@@ -214,8 +214,8 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-style.json)");
 	if (style)
 	{
-		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
-		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
+		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
+		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
 
 		auto tileData = fetcher->FetchTile(0, 0, 0);
 		if (!tileData.empty())
