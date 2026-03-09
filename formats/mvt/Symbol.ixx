@@ -1,14 +1,14 @@
 module;
 
-#include <vector>
+//#include <vector>
 
-#include <atltrace.h>
+//#include <atltrace.h>
 #include <cassert>
 #include <cstdint>
 
 export module formats.mvt.symbol;
 
-//import std;
+import std;
 
 import core.color;
 import core.geometry;
@@ -20,58 +20,14 @@ import formats.mvt.rendercontext;
 import formats.mvt.style;
 import formats.mvt.feature;
 
+export import :placedsymbols;
 
 export namespace mvt::symbol
 {
 	using namespace core::geometry;
 	using namespace core::rendertarget;
 	using namespace mvt;
-
-	// Track lines and bounding boxes for symbols that have been placed to avoid overlapping.
-	export class PlacedSymbols
-	{
-		struct Entry
-		{
-			PointArray line;
-			float width{ 0.0f };
-			Rect boundingBox;
-		};
-
-		std::vector<Entry> mPlaced;
-
-		bool HasIntersection(const Entry& entry)
-		{
-			return false;
-		}
-
-	public:
-
-		void Clear(void) { mPlaced.clear(); }
-
-		bool TryPlace(const core::geometry::PointArray& line)
-		{
-			return true;
-		}
-
-		bool TryPlace(const core::geometry::Rect& r)
-		{
-			Entry entry{ .boundingBox = r };
-
-			if (!HasIntersection(entry))
-			{
-				mPlaced.push_back(Entry{});
-
-				return true;
-			}
-
-			return false;
-		}
-
-		bool HasOverlap(const core::geometry::Rect& r)
-		{
-			return false;
-		}
-	};
+	using namespace mvt::layer;
 
 	struct FeatureValueToString
 	{
@@ -87,7 +43,7 @@ export namespace mvt::symbol
 	export struct SymbolAttribs
 	{
 		// Icon
-		std::string iconAnchor { "centre" };
+		IconAnchor iconAnchor { IconAnchor::Centre };
 		std::string iconImage;
 		std::vector<float> iconOffset { 0.0f, 0.0f };
 		float iconOpacity{ 1.0f };
@@ -95,19 +51,22 @@ export namespace mvt::symbol
 		float iconRotate{ 0.0f };
 
 		// Symbol
-		std::string symbolPlacement;
+		SymbolPlacement symbolPlacement { SymbolPlacement::Point };
 		float symbolSpacing{ 250.0f };
 
 		// Text
+		TextAnchor textAnchor {};
 		Color textColor { "#000000" };
 		std::string textField;
 		std::vector<std::string> textFont;
 		Color textHaloColor { "rgba(0, 0, 0, 0)" };
 		float textHaloWidth { 0.0f };
-		std::string textJustify { "center" };
+		TextJustify textJustify { TextJustify::Center };
 		float textLineHeight { 1.2f };
 		float textMaxWidth { 10.0f };
 		float textSize { 16.0f };
+
+		float textScale { 1.0f };	// Calculated font size scaler compared with GlyphSize.
 
 		// Replace tokens in '{}' with Feature values.
 		void ReplaceTokens(const feature::Feature& feature, std::string& value)
@@ -138,7 +97,7 @@ export namespace mvt::symbol
 						}
 						else
 						{
-							ATLTRACE("Could not substitute '{%s}' \n", key.c_str());
+							//ATLTRACE("Could not substitute '{%s}' \n", key.c_str());
 							break;
 						}
 					}
@@ -150,28 +109,33 @@ export namespace mvt::symbol
 		// Constructor.
 		SymbolAttribs(const layer::Layer* layer, const feature::Feature& feature, float zoom)
 		{
-			iconAnchor = layer->mIconAnchor.GetValue(feature, zoom);
+			iconAnchor = IconAnchorToEnum(layer->mIconAnchor.GetValue(feature, zoom));
 			iconImage = layer->mIconImage.GetValue(feature, zoom);
 			iconOffset = layer->mIconOffset.GetValue(feature, zoom);
 			iconOpacity = layer->mIconOpacity.GetValue(feature, zoom);
 			iconSize = layer->mIconSize.GetValue(feature, zoom);
 			iconRotate = layer->mIconRotate.GetValue(feature, zoom);
 
-			symbolPlacement = layer->mSymbolPlacement.GetValue(feature, zoom);
+			symbolPlacement = SymbolPlacementToEnum(layer->mSymbolPlacement.GetValue(feature, zoom));
 			symbolSpacing = layer->mSymbolSpacing.GetValue(feature, zoom);
 
+			textAnchor = TextAnchorToEnum(layer->mTextAnchor.GetValue(feature, zoom));
 			textColor = layer->mTextColor.GetValue(feature, zoom);
 			textField = layer->mTextField.GetValue(feature, zoom);
 			textFont = layer->mTextFont.GetValue(feature, zoom);
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
-			textJustify = layer->mTextJustify.GetValue(feature, zoom);
+			textJustify = TextJustifyToEnum(layer->mTextJustify.GetValue(feature, zoom));
 			textMaxWidth = layer->mTextMaxWidth.GetValue(feature, zoom);
 			textSize = layer->mTextSize.GetValue(feature, zoom);
 
 			// icon-image and text-field can use '{}' substitution for Feature fields.
 			ReplaceTokens(feature, iconImage);
 			ReplaceTokens(feature, textField);
+
+			textScale = textSize/style::GlyphSize;
+			textScale *= 2.0f;	// XXX debugging purposes.
+
 		}
 	};
 
@@ -285,10 +249,9 @@ export namespace mvt::symbol
 		// Represents a piece of text split into lines of individual words.
 		struct FormattedText
 		{
-//			std::vector<Word> line;
-//			std::vector<std::string_view> line;
 			std::vector<Line> lines;
 			float widthPx { 0.0f };
+			float heightPx { 0.0f };
 		};
 
 		// Get word length in pixels when drawn using glyphs from specified GlyphAtlas.
@@ -306,7 +269,7 @@ export namespace mvt::symbol
 		}
 
 		// Add charcters to a line until it exceeds max-text-length, when search backwards for somewhere to split onto a new line.
-		FormattedText FormatText(const mvt::style::GlyphAtlas* glyphAtlas, SymbolAttribs& attribs, std::string_view textField)
+		FormattedText FormatText(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, std::string_view textField)
 		{
 			FormattedText ft;
 
@@ -324,7 +287,9 @@ export namespace mvt::symbol
 				float advance{};
 
 				if (glyphAtlas->glyphs.contains(ch))
-					advance = glyphAtlas->glyphs.at(ch).advance;
+				{
+					advance = static_cast<float>(glyphAtlas->glyphs.at(ch).advance);
+				}
 
 				if (width + advance > maxTextWidthPx)
 				{
@@ -367,6 +332,21 @@ export namespace mvt::symbol
 			line = { textField.substr(start, end - start), width };
 			ft.lines.push_back(line);
 
+			// Calculate bounding box.
+			if (!ft.lines.empty())
+			{
+				for (const auto& line : ft.lines)
+				{
+					ft.widthPx = std::max(ft.widthPx, line.widthPx);
+				}
+
+				ft.widthPx += style::GlyphPbfPadding;
+
+				float rowHeightPx = attribs.textLineHeight*style::GlyphSize;
+
+				ft.heightPx = ft.lines.size()*rowHeightPx + style::DefaultDecender;
+			}
+
 			return ft;
 		}
 
@@ -393,14 +373,28 @@ export namespace mvt::symbol
 			return words;
 		}
 
-		void DrawRect(RenderTarget* renderTarget, Point p, float width, float height)
+		void DrawRect(RenderTarget* renderTarget, Point p, float width, float height, Color c = Color("#0000ff"))
 		{
 			LineString lineString;
 			PointArray line = { {p.x, p.y}, {p.x + width, p.y}, {p.x + width, p.y + height}, {p.x, p.y + height}, {p.x, p.y}};
 			lineString.lines.push_back(line);
-			renderTarget->SetLineColor(Color("#0000ff"));
+			renderTarget->SetLineColor(c);
 			renderTarget->SetDashArray({});
 			renderTarget->DrawLine(&lineString);
+		}
+
+		void DrawDot(RenderTarget* renderTarget, Point p, Color c = Color("#0000ff"))
+		{
+			//LineString lineString;
+			//PointArray line = { {p.x, p.y}, {p.x + width, p.y}, {p.x + width, p.y + height}, {p.x, p.y + height}, {p.x, p.y}};
+			//lineString.lines.push_back(line);
+			renderTarget->SetFillColor(c);
+			renderTarget->SetDashArray({});
+			renderTarget->SetCircleRadius(3.0f);
+
+			MultiPoint multiPoint;
+			multiPoint.points.push_back(p);
+			renderTarget->FillCircle(&multiPoint);
 		}
 
 		BitmapHandle GetGlyphBitmapHandle(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
@@ -423,7 +417,79 @@ export namespace mvt::symbol
 			return glyphHandle;
 		}
 
-		void RenderMultiPoint(RenderTarget* renderTarget, mvt::renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
+		// Adjust Point x coordinate relative to starting reference based on TextJustify.
+		Point AdjustForTextJustify(const FormattedText& formattedText, size_t lineNum, const SymbolAttribs& attribs, const Point& p)
+		{
+			Point point { p };
+
+			if (lineNum < formattedText.lines.size())
+			{
+				float textWidth = formattedText.widthPx*attribs.textScale;
+				float lineWidth = formattedText.lines[lineNum].widthPx*attribs.textScale;
+
+				switch (attribs.textJustify)
+				{
+					case TextJustify::Left:
+						;
+						break;
+					case TextJustify::Center:
+						point.x += textWidth/2.0f - lineWidth/2.0f;
+						break;
+					case TextJustify::Right:
+						point.x += textWidth - lineWidth;
+						break;
+				}
+			}
+
+			return point;
+		}
+
+		// Adjust rendering position based on TextAnchor.
+		Point AdjustForTextAnchor(const FormattedText& formattedText, const SymbolAttribs& attribs, const Point& p)
+		{
+			Point point { p };
+
+			float widthPx = formattedText.widthPx*attribs.textScale;
+			float heightPx = formattedText.heightPx*attribs.textScale;
+
+			// X axis
+			switch (attribs.textAnchor)
+			{
+				case TextAnchor::Center:
+				case TextAnchor::Top:
+				case TextAnchor::Bottom:
+					point.x -= widthPx/2.0f;
+					break;
+				case TextAnchor::Right:
+				case TextAnchor::TopRight:
+				case TextAnchor::BottomRight:
+					point.x -= widthPx;
+					break;
+				default:
+					break;
+			}
+
+			// Y axis
+			switch (attribs.textAnchor)
+			{
+				case TextAnchor::Center:
+				case TextAnchor::Left:
+				case TextAnchor::Right:
+					point.y -= heightPx/2.0f;
+					break;
+				case TextAnchor::Bottom:
+				case TextAnchor::BottomLeft:
+				case TextAnchor::BottomRight:
+					point.y -= heightPx;
+					break;
+				default:
+					break;
+			}
+
+			return point;
+		}
+
+		void RenderMultiPoint(RenderTarget* renderTarget, mvt::renderer::RenderContext& context, const SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
 			for (const auto& point : multiPoint.points)
 			{
@@ -431,7 +497,7 @@ export namespace mvt::symbol
 			}
 		}
 
-		void RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
+		void RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 		{
 			if (!attribs.iconImage.empty())
 			{
@@ -474,43 +540,31 @@ export namespace mvt::symbol
 //						auto glyphAtlas = context.glyphs.Lookup(font, 0, haloWidth);
 						auto glyphAtlas = context.glyphs.Lookup(font, 0);
 
-						float textScale = attribs.textSize/24.0f;
-
-						textScale *= 2.0f;	// XXX debugging purposes.
+						float textScale = attribs.textScale;
 
 						float textLineHeight = textScale*attribs.textLineHeight*style::GlyphSize;
 
-						Point p{ point.x, point.y };
-
 						FormattedText formattedText = FormatText(glyphAtlas.get(), attribs, attribs.textField);
 
-						float firstLinePx = formattedText.lines.empty() ? 0.0f : formattedText.lines[0].widthPx;
+						//float firstLinePx = formattedText.lines.empty() ? 0.0f : formattedText.lines[0].widthPx;
+
+
+						Point cursor{ point.x, point.y };
+
+						cursor = AdjustForTextAnchor(formattedText, attribs, cursor);
+
+						const Point start = cursor;
 
 						for (size_t i=0; i<formattedText.lines.size(); i++)
 						{
-							const auto& line = formattedText.lines[i];
+							cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
 
 							if (i != 0)
 							{
-								if (attribs.textJustify == "left")
-								{
-									p.x = point.x;
-								}
-								else if (attribs.textJustify == "center")
-								{
-									p.x = point.x + textScale*(firstLinePx/2.0f - line.widthPx/2.0f);
-								}
-								else if (attribs.textJustify == "right")
-								{
-									p.x = point.x + textScale*(firstLinePx - line.widthPx);
-								}
-								else
-								{
-									p.x = point.x;
-								}
-
-								p.y += textLineHeight;
+								cursor.y += textLineHeight;
 							}
+
+							const auto& line = formattedText.lines[i];
 
 							for (int j = 0; j<line.text.length(); j++)
 							{
@@ -522,11 +576,12 @@ export namespace mvt::symbol
 
 									Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
-									float x = p.x;
-									float y = p.y;
+									float x = cursor.x;
+									float y = cursor.y;
 
-									float ypos = y - textScale*(26 + glyphSpec.top + 4);
-									ypos += textScale*12;
+	//								float ypos = y - textScale*(26 + glyphSpec.top + 4);
+									float ypos = y /* + textScale*style::GlyphSize*/ - textScale*(/*descender +*/ glyphSpec.top /*+ 4*/);
+//									ypos += textScale*12;
 									Point topLeft{ x, ypos };
 
 									Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
@@ -536,9 +591,20 @@ export namespace mvt::symbol
 									renderTarget->SetActiveBitmap(glyphHandle);
 									renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
 
-									p.x += glyphSpec.advance*textScale;
+									cursor.x += glyphSpec.advance*textScale;
 								}
 							}
+						}
+
+						if constexpr (debug::visual::DrawPointLabelOrigin)
+						{
+							DrawDot(renderTarget, point, Color("#00ff00"));
+						}
+						if constexpr (debug::visual::DrawPointLabelOutline)
+						{
+							Point pp { AdjustForTextAnchor(formattedText, attribs, point) };
+							//pp.y -= textScale*(style::GlyphSize*0.75f);
+							DrawRect(renderTarget, pp, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 						}
 
 						break;
@@ -607,9 +673,9 @@ export namespace mvt::symbol
 //						auto glyphAtlas = context.glyphs.Lookup(font, 0, haloWidth);
 						auto glyphAtlas = context.glyphs.Lookup(font, 0);
 
-						float textScale = attribs.textSize/24.0f;
+						float textScale = attribs.textScale;
 
-						textScale *= 2.0f;	// XXX debugging purposes.
+						//textScale *= 2.0f;	// XXX debugging purposes.
 
 						float offset{};
 						LineWalker lineWalker(pointArray);
@@ -689,7 +755,7 @@ export namespace mvt::symbol
 
 		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
-			if (attribs.symbolPlacement == "point")
+			if (attribs.symbolPlacement == SymbolPlacement::Point)
 			{
 				RenderMultiPoint(renderTarget, context, attribs, multiPoint, placedSymbols);
 			}
@@ -699,11 +765,11 @@ export namespace mvt::symbol
 
 		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
 		{
-			if (attribs.symbolPlacement == "line")
+			if (attribs.symbolPlacement == SymbolPlacement::Line)
 			{
 				RenderAlongLineString(renderTarget, context, attribs, lineString, placedSymbols);
 			}
-			else if (attribs.symbolPlacement == "line-center")
+			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)
 			{
 			//	RenderAtLineStringCentre(renderTarget, context, attribs, lineString, placedSymbols);
 			}
@@ -713,11 +779,11 @@ export namespace mvt::symbol
 
 		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPolygon& multiPolygon, PlacedSymbols& placedSymbols)
 		{
-			if (attribs.symbolPlacement == "line")
+			if (attribs.symbolPlacement == SymbolPlacement::Line)
 			{
 				//RenderAlongLineString(renderTarget, sprites, attribs, lineString, placedSymbols);
 			}
-			else if (attribs.symbolPlacement == "line-center")
+			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)
 			{
 				//RenderAtLineStringCentre(renderTarget, context, attribs, lineString, placedSymbols);
 			}

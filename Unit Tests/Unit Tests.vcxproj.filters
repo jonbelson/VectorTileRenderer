@@ -111,6 +111,9 @@
     <ClCompile Include="..\formats\mvt\Debug.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\Symbols-PlacedSymbols.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

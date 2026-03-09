@@ -40,47 +40,47 @@ export namespace mvt::layer
 		Symbol
 	};
 
-	enum struct IconAnchor
+	export enum struct IconAnchor
 	{
 		Centre, Left, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight
 	};
 
-	enum struct IconTextFit
+	export enum struct IconTextFit
 	{
 		None, Width, Height, Both
 	};
 
-	enum struct IconTranslateAnchor
+	export enum struct IconTranslateAnchor
 	{
 		Map, Viewport
 	};
 
-	enum struct SymbolPlacement
+	export enum struct SymbolPlacement
 	{
 		Point, Line, LineCenter
 	};
 
-	enum struct SymbolZOrder
+	export enum struct SymbolZOrder
 	{
 		Auto, ViewportY, Source
 	};
 
-	enum struct TextAnchor
+	export enum struct TextAnchor
 	{
-		Center, Left, Right, Top, Bottom, TopLEft, TopRight, BottomLeft, BottomRight
+		Center, Left, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight
 	};
 
-	enum struct TextJustify
+	export enum struct TextJustify
 	{
 		Auto, Left, Center, Right
 	};
 
-	enum struct TextTransform
+	export enum struct TextTransform
 	{
 		None, Uppercase, Lowercase
 	};
 
-	enum struct TextVariableAnchor
+	export enum struct TextVariableAnchor
 	{
 		Center, Left, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight
 	};
@@ -90,12 +90,17 @@ export namespace mvt::layer
 		Visible, None
 	};
 
-	enum struct CircleTranslateAnchor
+	export enum struct CircleTranslateAnchor
 	{
 		Map, Viewport
 	};
 
+	export IconAnchor IconAnchorToEnum(std::string_view iconAnchor);
+	export SymbolPlacement SymbolPlacementToEnum(std::string_view symbolPlacement);
+	export TextAnchor TextAnchorToEnum(std::string_view textAnchor);
+	export TextJustify TextJustifyToEnum(std::string_view textJustify);
 	export Visibility VisibilityToEnum(const std::string_view visibility);
+
 
 	// https://docs.mapbox.com/style-spec/reference/layers/
 	export class Layer

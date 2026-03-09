@@ -39,15 +39,6 @@ namespace mvt::renderer
 		return LineJoin::Miter;
 	}
 
-	Visibility VisibilityToEnum(const std::string_view visibility)
-	{
-		if (visibility == "visible") return Visibility::Visible;
-		if (visibility == "none") return Visibility::None;
-
-		return Visibility::Visible;
-	}
-
-
 	geometry::MultiPolygon Renderer::TileToWorld(const geometry::MultiPolygon& multiPolygon) const
 	{
 		geometry::MultiPolygon transformed;
@@ -250,53 +241,6 @@ namespace mvt::renderer
 		
 		return true;
 	}
-
-/*
-	bool Renderer::RenderSymbol(const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom)
-	{
-		Visibility visibility = VisibilityToEnum(layer->mSymbolVisibility.GetValue(feature, zoom));
-		bool visible = visibility == Visibility::Visible;
-
-		if (visible)
-		{
-			//mRenderTarget->SetBitmap(mStyle->mSprites.GetBitmap());
-			///mRenderTarget->SetActiveBitmap();
-			mvt::symbol::SymbolAttribs attribs(layer, feature, zoom);
-
-			if (!attribs.iconImage.empty())
-			{
-				mvt::symbol::Symbol symbol;
-
-				switch (feature.mGeometryType)
-				{
-					case core::geometry::GeometryType::MultiPoint:
-						{
-							auto transformed = TileToWorld(feature.mMultiPoint);
-							symbol.Render(mRenderTarget, mStyle->mSprites, attribs, transformed, mPlacedSymbols);
-						}
-						break;
-					case core::geometry::GeometryType::LineString:
-						{
-							auto transformed = TileToWorld(feature.mLineString);
-							symbol.Render(mRenderTarget, mStyle->mSprites, attribs, transformed, mPlacedSymbols);
-						}
-						break;
-					case core::geometry::GeometryType::MultiPolygon:
-						{
-							auto transformed = TileToWorld(feature.mMultiPolygon);
-							symbol.Render(mRenderTarget, mStyle->mSprites, attribs, transformed, mPlacedSymbols);
-						}
-						break;
-				}
-
-			}
-
-		}
-
-		return true;
-	}
-*/
-
 
 	bool Renderer::RenderTile(int x, int y, float zoom)
 	{

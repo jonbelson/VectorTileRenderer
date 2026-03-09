@@ -231,6 +231,7 @@
     <ClCompile Include="formats\mvt\Style.cpp" />
     <ClCompile Include="formats\mvt\Style.ixx" />
     <ClCompile Include="formats\mvt\Symbol.ixx" />
+    <ClCompile Include="formats\mvt\Symbols-PlacedSymbols.ixx" />
     <ClCompile Include="formats\mvt\Tile.cpp" />
     <ClCompile Include="formats\mvt\Tile.ixx" />
     <ClCompile Include="formats\mvt\TileCache.ixx" />

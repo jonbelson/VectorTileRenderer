@@ -15,6 +15,10 @@ import io.resource;
 namespace mvt::style
 {
 	export constexpr float GlyphSize = 24.0f;
+	export constexpr float DefaultAscender = GlyphSize*0.75f;
+	export constexpr float DefaultDecender = GlyphSize*0.25f;
+	export constexpr int GlyphPbfPadding = 3;
+	export constexpr int GlyphPadding = 1;
 
 	namespace proto
 	{
@@ -148,14 +152,12 @@ namespace mvt::style
 	// Transfer the glyph SDF values to the alpha of a Bitmap atlas.
 	// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
 	// https://observablehq.com/@jjhembd/mapbox-glyph-pbfs
-	export std::optional<GlyphAtlas> CreateAtlas(const proto::GlyphFontStack& fontStack, int haloSize)
+	export std::optional<GlyphAtlas> CreateAtlas(const proto::GlyphFontStack& fontStack, float haloSize)
 	{
 		using namespace core::bitmap;
 
 		constexpr int width = 240;
 		constexpr int height = 1000;
-		constexpr int GlyphPbfPadding = 3;
-		constexpr int GlyphPadding = 1;
 
 		constexpr int GlyphSize = 24;	// Pixel size of MVT glyphs.
 
