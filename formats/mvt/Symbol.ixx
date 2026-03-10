@@ -39,7 +39,7 @@ export namespace mvt::symbol
 		std::string operator()(auto) const { return ""; }
 	};
 
-	// Symbol attributes for specific feature in a specific feature layer.
+	// Symbol attributes for specific feature in a specific feature layer at a specific zoom level.
 	export struct SymbolAttribs
 	{
 		// Icon
@@ -146,6 +146,7 @@ export namespace mvt::symbol
 
 		std::vector<float> mAngles;	// Angles for each line segment (0 - first segment, 1 - second segment, ...)
 		std::vector<float> mDistances;
+
 		float mTotalDist{};
 
 		float Distance(const Point& p1, const Point& p2)
@@ -184,6 +185,31 @@ export namespace mvt::symbol
 
 		// Return the total distance of the line geometry.
 		float GetTotalDist(void) const { return mTotalDist; }
+
+		// Return a vector of all points between offset 'start' and offset 'end' inclusive.
+		std::vector<Point> GetPointList(float start, float end)
+		{
+			std::vector<Point> points;
+
+			if (start <= end)
+			{
+				auto firstPos = GetPointOffset(start);
+				points.push_back(firstPos.first);
+
+				for (size_t i=0; i<mDistances.size(); i++)
+				{
+					if (mDistances[i] > start && mDistances[i] < end)
+					{
+						points.push_back(mPointArray[i]);
+					}
+				}
+
+				auto lastPos = GetPointOffset(end);
+				points.push_back(lastPos.first);
+			}
+
+			return points;
+		}
 
 		// Return the interpolated point at specified distance from start of line geometry.
 		std::pair<Point, float> GetPointOffset(float offset)
@@ -233,15 +259,14 @@ export namespace mvt::symbol
 			return angleRadians*Factor;
 		}
 
-		struct Word
-		{
-			std::string_view text;
-			float lengthPx { 0.0f };
-		};
+		//struct Word
+		//{
+		//	std::string_view text;
+		//	float lengthPx { 0.0f };
+		//};
 
 		struct Line
 		{
-//			std::vector<std::string_view> text;
 			std::string_view text;
 			float widthPx { 0.0f };
 		};
@@ -268,7 +293,7 @@ export namespace mvt::symbol
 			return lengthPx;
 		}
 
-		// Add charcters to a line until it exceeds max-text-length, when search backwards for somewhere to split onto a new line.
+		// Add charcters to a line until it exceeds max-text-length, then search backwards for somewhere to split onto a new line.
 		FormattedText FormatText(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, std::string_view textField)
 		{
 			FormattedText ft;
@@ -350,6 +375,7 @@ export namespace mvt::symbol
 			return ft;
 		}
 
+		/*
 		// Split a string into an array of Words using a delimiter of ' '.
 		std::vector<Word> SplitToWords(const mvt::style::GlyphAtlas* glyphAtlas, std::string_view textField)
 		{
@@ -372,6 +398,26 @@ export namespace mvt::symbol
 
 			return words;
 		}
+		*/
+
+		void DrawLine(RenderTarget* renderTarget, const PointArray& pointArray, Color c = Color("#0000ff"))
+		{
+			LineString lineString;
+			lineString.lines.push_back(pointArray);
+			renderTarget->SetLineColor(c);
+			renderTarget->SetDashArray({});
+			renderTarget->DrawLine(&lineString);
+		}
+
+		void DrawRect(RenderTarget* renderTarget, const Rect& r, Color c = Color("#0000ff"))
+		{
+			LineString lineString;
+			PointArray line = { {r.x, r.y}, {r.x + r.width, r.y}, {r.x + r.width, r.y + r.height}, {r.x, r.y + r.height}, {r.x, r.y}};
+			lineString.lines.push_back(line);
+			renderTarget->SetLineColor(c);
+			renderTarget->SetDashArray({});
+			renderTarget->DrawLine(&lineString);
+		}
 
 		void DrawRect(RenderTarget* renderTarget, Point p, float width, float height, Color c = Color("#0000ff"))
 		{
@@ -385,9 +431,6 @@ export namespace mvt::symbol
 
 		void DrawDot(RenderTarget* renderTarget, Point p, Color c = Color("#0000ff"))
 		{
-			//LineString lineString;
-			//PointArray line = { {p.x, p.y}, {p.x + width, p.y}, {p.x + width, p.y + height}, {p.x, p.y + height}, {p.x, p.y}};
-			//lineString.lines.push_back(line);
 			renderTarget->SetFillColor(c);
 			renderTarget->SetDashArray({});
 			renderTarget->SetCircleRadius(3.0f);
@@ -546,8 +589,14 @@ export namespace mvt::symbol
 
 						FormattedText formattedText = FormatText(glyphAtlas.get(), attribs, attribs.textField);
 
-						//float firstLinePx = formattedText.lines.empty() ? 0.0f : formattedText.lines[0].widthPx;
+						// Calculate bounding box of text and check if it overlaps.
+						Point ppp { AdjustForTextAnchor(formattedText, attribs, point) };
+						Rect bb (ppp, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 
+						if (!placedSymbols.TryPlace(bb))
+						{
+							break;
+						}
 
 						Point cursor{ point.x, point.y };
 
@@ -579,9 +628,7 @@ export namespace mvt::symbol
 									float x = cursor.x;
 									float y = cursor.y;
 
-	//								float ypos = y - textScale*(26 + glyphSpec.top + 4);
-									float ypos = y /* + textScale*style::GlyphSize*/ - textScale*(/*descender +*/ glyphSpec.top /*+ 4*/);
-//									ypos += textScale*12;
+									float ypos = y /* + textScale*style::GlyphSize*/ - textScale*glyphSpec.top;
 									Point topLeft{ x, ypos };
 
 									Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
@@ -602,9 +649,8 @@ export namespace mvt::symbol
 						}
 						if constexpr (debug::visual::DrawPointLabelOutline)
 						{
-							Point pp { AdjustForTextAnchor(formattedText, attribs, point) };
-							//pp.y -= textScale*(style::GlyphSize*0.75f);
-							DrawRect(renderTarget, pp, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
+//							DrawRect(renderTarget, bb);
+							DrawRect(renderTarget, bb, Color("hotpink"));
 						}
 
 						break;
@@ -661,8 +707,6 @@ export namespace mvt::symbol
 
 			if (!attribs.textField.empty())
 			{
-				//float haloWidth = lround(attribs.textHaloWidth*10.0f);
-
 				for (const auto& font : attribs.textFont)
 				{
 					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
@@ -675,10 +719,12 @@ export namespace mvt::symbol
 
 						float textScale = attribs.textScale;
 
-						//textScale *= 2.0f;	// XXX debugging purposes.
-
 						float offset{};
 						LineWalker lineWalker(pointArray);
+
+						float worldLength = GetWordLength(glyphAtlas.get(), attribs.textField);
+
+						float glyphWidth = worldLength/attribs.textField.size();
 
 						for (int i = 0; i<attribs.textField.length(); i++)
 						{
@@ -695,16 +741,21 @@ export namespace mvt::symbol
 								float x = point.x;
 								float y = point.y;
 
-								float ypos = y - textScale*(26 + glyphSpec.top + 4);
-								ypos += textScale*12;
-								Point p{ x, ypos };
+								float ypos = y - textScale*glyphSpec.top;
+								ypos -= textScale*style::DefaultAscender + textScale*style::DefaultDecender*0.5f;
+
+								float xpos = x;
+								xpos -= textScale*glyphWidth*0.5f;
+
+								Point p{ xpos, ypos };
 
 								Rect destRect = Rect(p, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
 								float angleDeg = RadiansToDegrees(angleRad);
 
 								Point rotCentre = destRect.Centre();
-//								rotCentre.y = y - textScale*(glyphSpec.top/4.0f);
+								rotCentre.x = x;
+								rotCentre.y = y;
 
 								if constexpr (!debug::visual::NoGlyphRotation)
 								{
@@ -717,8 +768,6 @@ export namespace mvt::symbol
 								{
 									DrawRect(renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
 								}
-
-//								renderTarget->DrawBitmap(srcRect, destRect);
 
 								renderTarget->SetActiveBitmap(haloHandle);
 								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
@@ -735,6 +784,13 @@ export namespace mvt::symbol
 								offset += glyphSpec.advance*textScale;
 							}
 						}
+
+						if constexpr (mvt::debug::visual::DrawLineLabelPath)
+						{
+							auto line = lineWalker.GetPointList(0.0f, offset);
+							DrawLine(renderTarget, line);
+						}
+
 						break;
 					}
 				}

@@ -3,7 +3,9 @@ module;
 export module formats.mvt.symbol:placedsymbols;
 
 import std;
+
 import core.geometry;
+import formats.mvt.debug;
 
 namespace mvt::symbol
 {
@@ -23,6 +25,18 @@ namespace mvt::symbol
 
 		bool HasIntersection(const Entry& entry)
 		{
+			if constexpr (mvt::debug::visual::NoCheckSymbolOverlap)
+			{
+				return false;
+			}
+
+			for (const auto& placed : mPlaced)
+			{
+				if (entry.boundingBox.Intersects(placed.boundingBox))
+				{
+					return true;
+				}
+			}
 			return false;
 		}
 
@@ -41,7 +55,7 @@ namespace mvt::symbol
 
 			if (!HasIntersection(entry))
 			{
-				mPlaced.push_back(Entry{});
+				mPlaced.push_back(entry);
 
 				return true;
 			}

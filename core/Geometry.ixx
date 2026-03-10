@@ -61,10 +61,20 @@ export namespace core::geometry
 		}
 
 		Point Centre(void) const { return { x + width/2, y + height/2 }; }
+		float Right(void) const { return x + width; }
+		float Bottom(void) const { return y + height; }
 
 		bool IsInside(const Point& p) const
 		{
 			return p.x >= x && p.x < x+width && p.y >= y && p.y < y+height;
+		}
+
+		bool Intersects(const Rect& rect) const
+		{
+			if (rect.Right() < x || rect.x > Right() || rect.y > Bottom() || rect.Bottom() < y)
+				return false;
+
+			return true;
 		}
 
 	};
