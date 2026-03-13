@@ -64,6 +64,11 @@ export namespace core::geometry
 		float Right(void) const { return x + width; }
 		float Bottom(void) const { return y + height; }
 
+		Point TopLeft(void) const { return Point(x, y); }
+		Point TopRight(void) const { return Point(Right(), y); }
+		Point BottomRight(void) const { return Point(Right(), Bottom()); }
+		Point BottomLeft(void) const { return Point(x, Bottom()); }
+
 		bool IsInside(const Point& p) const
 		{
 			return p.x >= x && p.x < x+width && p.y >= y && p.y < y+height;

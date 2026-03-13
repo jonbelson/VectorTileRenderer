@@ -3,9 +3,245 @@
 #include "json.hpp"
 
 import core.color;
+import core.geometry;
 
 import formats.mvt.expressions;
 import formats.mvt.feature;
+import formats.mvt.symbol;
+
+
+TEST(Core, Geometry)
+{
+	using core::geometry::Rect;
+
+	Rect rect(50, 100, 200, 300);
+
+	struct Test
+	{
+		Rect r;
+		bool result;
+	};
+
+	Test tests[] = {
+		// Outside of each top corner and edge.
+		{ Rect(10, 11, 20, 30), false  },
+		{ Rect(60, 11, 20, 30), false  },
+		{ Rect(300, 11, 20, 30), false  },
+
+		{ Rect(300, 150, 20, 30), false  },	// To right
+
+		// Outside of each bottom corner and edge.
+		{ Rect(300, 400, 20, 30), false  },
+		{ Rect(10, 400, 20, 30), false  },
+		{ Rect(10, 150, 20, 30), false  },
+
+		{ Rect(10, 150, 20, 30), false  },	// To left
+
+		// Corner overlaps.
+		{ Rect(40, 90, 50, 50), true },
+		{ Rect(240, 20, 100, 100), true },
+		{ Rect(240, 390, 100, 100), true },
+		{ Rect(40, 390, 100, 100), true },
+
+		// Inside.
+		{ Rect(100, 200, 20, 30), true }
+
+	};
+
+	for (const auto& test : tests)
+	{
+		bool b = rect.Intersects(test.r);
+
+		EXPECT_TRUE(b == test.result);
+	}
+}
+
+TEST(PlacedSymbols, RectToRect)
+{
+	using core::geometry::Rect;
+	using mvt::symbol::PlacedSymbols;
+
+	struct TestRectToRect
+	{
+		Rect r;
+		bool result {};
+	};
+
+	TestRectToRect tests[] = {
+		// Outside of each top corner and edge.
+		{ Rect(10, 11, 20, 30), true  },
+		{ Rect(60, 11, 20, 30), true  },
+		{ Rect(300, 11, 20, 30), true  },
+
+		{ Rect(300, 150, 20, 30), true  },	// To right
+
+		// Outside of each bottom corner and edge.
+		{ Rect(300, 400, 20, 30), true  },
+		{ Rect(10, 400, 20, 30), true  },
+		{ Rect(10, 150, 20, 30), true  },
+
+		{ Rect(10, 150, 20, 30), true  },	// To left
+
+		// Corner overlaps.
+		{ Rect(40, 90, 50, 50), false },
+		{ Rect(240, 20, 100, 100), false },
+		{ Rect(240, 390, 100, 100), false },
+		{ Rect(40, 390, 100, 100), false },
+
+		// Inside.
+		{ Rect(100, 200, 20, 30), false }
+
+	};
+
+
+	for (const auto& test : tests)
+	{
+		PlacedSymbols placedSymbols;
+
+		Rect rect(50, 100, 200, 300);
+		placedSymbols.TryPlace(rect);
+
+		bool b = placedSymbols.TryPlace(test.r);
+
+		if (b != test.result)
+		{
+			int i{};
+		}
+
+		EXPECT_TRUE(b == test.result);
+
+	}
+}
+
+TEST(PlacedSymbols, RectToLine)
+{
+	using core::geometry::PointArray;
+	using core::geometry::Rect;
+	using mvt::symbol::PlacedSymbols;
+
+	struct TestRectToLine
+	{
+		Rect r;
+		bool result {};
+	};
+
+	TestRectToLine tests[] = {
+		// Outside of each top corner and edge.
+		{ Rect(10, 11, 20, 30), true  },
+		{ Rect(60, 11, 20, 30), true  },
+		{ Rect(300, 11, 20, 30), true  },
+
+		{ Rect(300, 150, 20, 30), true  },	// To right
+
+		// Outside of each bottom corner and edge.
+		{ Rect(300, 400, 20, 30), true  },
+		{ Rect(10, 400, 20, 30), true  },
+		{ Rect(10, 150, 20, 30), true  },
+
+		{ Rect(10, 150, 20, 30), true  },	// To left
+
+		// Corner overlaps.
+		{ Rect(40, 90, 50, 50), false },
+		{ Rect(240, 20, 100, 100), false },
+		{ Rect(240, 390, 100, 100), false },
+		{ Rect(40, 390, 100, 100), false },
+
+		// Inside.
+		{ Rect(100, 200, 20, 30), true }
+
+	};
+
+
+	for (const auto& test : tests)
+	{
+		PlacedSymbols placedSymbols;
+
+		//Rect rect(50, 100, 200, 300);
+		PointArray line { { 50, 100 }, { 250, 100 }, { 50, 400 }, { 250, 400 } };
+		placedSymbols.TryPlace(line);
+
+		bool b = placedSymbols.TryPlace(test.r);
+
+		if (b != test.result)
+		{
+			int i{};
+		}
+
+		EXPECT_TRUE(b == test.result);
+
+	}
+}
+
+
+TEST(PlacedSymbols, LineToLine)
+{
+	using core::geometry::PointArray;
+	using core::geometry::Rect;
+	using mvt::symbol::PlacedSymbols;
+
+	struct TestLineToLine
+	{
+		PointArray line;
+		bool result {};
+	};
+
+	TestLineToLine tests[] = {
+
+		{ PointArray{ { 10, 20 }, { 300, 70 } }, true },
+		{ PointArray{ { 10, 20 }, { 40, 60 } }, true },
+
+		{ PointArray{ { 100, 50 }, { 110, 120 } }, false },
+		{ PointArray{ { 70, 300 }, { 240, 310 } }, false },
+
+		/*
+		// Outside of each top corner and edge.
+		{ Rect(10, 11, 20, 30), true  },
+		{ Rect(60, 11, 20, 30), true  },
+		{ Rect(300, 11, 20, 30), true  },
+
+		{ Rect(300, 150, 20, 30), true  },	// To right
+
+		// Outside of each bottom corner and edge.
+		{ Rect(300, 400, 20, 30), true  },
+		{ Rect(10, 400, 20, 30), true  },
+		{ Rect(10, 150, 20, 30), true  },
+
+		{ Rect(10, 150, 20, 30), true  },	// To left
+
+		// Corner overlaps.
+		{ Rect(40, 90, 50, 50), false },
+		{ Rect(240, 20, 100, 100), false },
+		{ Rect(240, 390, 100, 100), false },
+		{ Rect(40, 390, 100, 100), false },
+
+		// Inside.
+		{ Rect(100, 200, 20, 30), true }
+		*/
+	};
+
+
+	for (const auto& test : tests)
+	{
+		PlacedSymbols placedSymbols;
+
+		PointArray line { { 50, 100 }, { 250, 100 }, { 50, 400 }, { 250, 400 } };
+		placedSymbols.TryPlace(line);
+
+		bool b = placedSymbols.TryPlace(test.line);
+
+		if (b != test.result)
+		{
+			int i{};
+		}
+
+		EXPECT_TRUE(b == test.result);
+
+	}
+
+
+}
+
+
 
 TEST(Operators, Decision)
 {

@@ -121,7 +121,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 	auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
 
-	renderTarget->SetFillColor(Color("#ff0000"));
+	//renderTarget->SetFillColor(Color("#ff0000"));
 	//renderTarget->FillBackground();
 
 #if 0
@@ -149,6 +149,8 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 #if 0
 	// Render a Tile from an MBTiles database.
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
 
 
 	std::unique_ptr<MbTilesFetcher> mbTilesFetcher = std::make_unique<MbTilesFetcher>(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
@@ -159,16 +161,18 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 //	auto tileData2 = mbTilesFetcher->FetchTile(4, 7, 5);
 ///	auto tileData2 = mbTilesFetcher->FetchTile(TileSpec{ .zoom=7, .x=63, .y=42 } );
 
-	TileSpec tileSpec { .zoom = 13, .x = 4075, .y = 2726 };
+	//51.448839, -0.932772
+	int zoom = 14;
+	auto [ x, y ] = mvt::tile::LatLongToTile(zoom, 51.448839, -0.932772);
+
+//	TileSpec tileSpec { .zoom = 13, .x = 4075, .y = 2726 };
+	TileSpec tileSpec { .zoom = zoom, .x = x, .y = y };
+
 	auto tileData2 = mbTilesFetcher->FetchTile(tileSpec);
 	auto tile2 = mvt::tile::DecodeTile(tileData2);
 
 	mvt::renderer::Renderer tileRenderer(renderTarget, nullptr, style.get());
 
-	renderTarget->SetFillColor(Color("#ff0000"));
-	//renderTarget->FillBackground();
-
-	/////tileRenderer.RenderTile(tile.get(), 4);
 	tileRenderer.RenderTile(tile2.get(), (float)tileSpec.zoom);
 #endif
 
@@ -196,7 +200,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 #if 0
 	// Render a single OS DataHub Tile.
-	auto style = Style::LoadFromFile(R"(C:\Users\jon\Projects\VectorTileRenderer\OS_VTS_3857_Outdoor.json)");
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\VectorTileRenderer\OS_VTS_3857_Outdoor.json)");
 
 	std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\4-5-7.pbf)");
 

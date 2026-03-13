@@ -38,7 +38,7 @@ namespace mvt::renderer
 		bool RenderCircle(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 		bool RenderFill(RenderContext& context, const layer::Layer* layer , const feature::Feature& feature, float zoom) const;
 		bool RenderLine(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
-		bool RenderSymbol(const layer::Layer* layer, const feature::Feature& feature, float zoom);
+		//bool RenderSymbol(const layer::Layer* layer, const feature::Feature& feature, float zoom);
 
 	public:
 		Renderer(core::rendertarget::RenderTarget* renderTarget, TileCache* tileCache, style::Style* style, int tileSize = 512)

@@ -64,6 +64,7 @@ export namespace mvt::symbol
 		TextJustify textJustify { TextJustify::Center };
 		float textLineHeight { 1.2f };
 		float textMaxWidth { 10.0f };
+		float textOpacity { 1.0f };
 		float textSize { 16.0f };
 
 		float textScale { 1.0f };	// Calculated font size scaler compared with GlyphSize.
@@ -127,6 +128,7 @@ export namespace mvt::symbol
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
 			textJustify = TextJustifyToEnum(layer->mTextJustify.GetValue(feature, zoom));
 			textMaxWidth = layer->mTextMaxWidth.GetValue(feature, zoom);
+			textOpacity = layer->mTextOpacity.GetValue(feature, zoom);
 			textSize = layer->mTextSize.GetValue(feature, zoom);
 
 			// icon-image and text-field can use '{}' substitution for Feature fields.
@@ -280,6 +282,7 @@ export namespace mvt::symbol
 		};
 
 		// Get word length in pixels when drawn using glyphs from specified GlyphAtlas.
+		// Result calculated for glyphs of GlyphSize pixels.
 		float GetWordLength(const mvt::style::GlyphAtlas* glyphAtlas, std::string_view word)
 		{
 			float lengthPx { 0.0f };
@@ -633,10 +636,13 @@ export namespace mvt::symbol
 
 									Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
+									Color textColor = attribs.textColor;
+									textColor.Alpha = attribs.textOpacity;
+
 									renderTarget->SetActiveBitmap(haloHandle);
 									renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
 									renderTarget->SetActiveBitmap(glyphHandle);
-									renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
+									renderTarget->DrawSymbolWithRGB(srcRect, destRect, textColor);
 
 									cursor.x += glyphSpec.advance*textScale;
 								}
@@ -719,76 +725,95 @@ export namespace mvt::symbol
 
 						float textScale = attribs.textScale;
 
-						float offset{};
 						LineWalker lineWalker(pointArray);
 
-						float worldLength = GetWordLength(glyphAtlas.get(), attribs.textField);
+						float wordLength = GetWordLength(glyphAtlas.get(), attribs.textField)*textScale;
 
-						float glyphWidth = worldLength/attribs.textField.size();
+						float glyphWidth = wordLength/attribs.textField.size();
 
-						for (int i = 0; i<attribs.textField.length(); i++)
+						float offset { glyphWidth };
+						while (offset < lineWalker.GetTotalDist() - wordLength)
 						{
-							uint32_t ch = attribs.textField[i];
+							float start = offset;
 
-							if (glyphAtlas->glyphs.contains(ch))
+							auto line = lineWalker.GetPointList(start, start + wordLength);
+
+							if (placedSymbols.TryPlace(line))
 							{
-								const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
 
-								Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
-
-								auto [point, angleRad] = lineWalker.GetPointOffset(offset);
-
-								float x = point.x;
-								float y = point.y;
-
-								float ypos = y - textScale*glyphSpec.top;
-								ypos -= textScale*style::DefaultAscender + textScale*style::DefaultDecender*0.5f;
-
-								float xpos = x;
-								xpos -= textScale*glyphWidth*0.5f;
-
-								Point p{ xpos, ypos };
-
-								Rect destRect = Rect(p, glyphSpec.width*textScale, glyphSpec.height*textScale);
-
-								float angleDeg = RadiansToDegrees(angleRad);
-
-								Point rotCentre = destRect.Centre();
-								rotCentre.x = x;
-								rotCentre.y = y;
-
-								if constexpr (!debug::visual::NoGlyphRotation)
+								for (int i = 0; i<attribs.textField.length(); i++)
 								{
-									renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
-									renderTarget->PushRotation(-angleDeg);
-									renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
+									uint32_t ch = attribs.textField[i];
+
+									if (glyphAtlas->glyphs.contains(ch))
+									{
+										const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
+
+										Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
+
+										auto [point, angleRad] = lineWalker.GetPointOffset(offset);
+
+										float x = point.x;
+										float y = point.y;
+
+										float ypos = y - textScale*glyphSpec.top;
+										ypos -= textScale*style::DefaultAscender + textScale*style::DefaultDecender*0.5f;
+
+										float xpos = x;
+										xpos -= glyphWidth*0.5f;
+
+										Point p{ xpos, ypos };
+
+										Rect destRect = Rect(p, glyphSpec.width*textScale, glyphSpec.height*textScale);
+
+										float angleDeg = RadiansToDegrees(angleRad);
+
+										Point rotCentre = destRect.Centre();
+										rotCentre.x = x;
+										rotCentre.y = y;
+
+										if constexpr (!debug::visual::NoGlyphRotation)
+										{
+											renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
+											renderTarget->PushRotation(-angleDeg);
+											renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
+										}
+
+										if constexpr (debug::visual::DrawGlyphOutline)
+										{
+											DrawRect(renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
+										}
+
+
+										Color textColor = attribs.textColor;
+										textColor.Alpha = attribs.textOpacity;
+
+										renderTarget->SetActiveBitmap(haloHandle);
+										renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
+										renderTarget->SetActiveBitmap(glyphHandle);
+										renderTarget->DrawSymbolWithRGB(srcRect, destRect, textColor);
+
+										if constexpr (!debug::visual::NoGlyphRotation)
+										{
+											renderTarget->PopTransform();
+											renderTarget->PopTransform();
+											renderTarget->PopTransform();
+										}
+
+										offset += glyphSpec.advance*textScale;
+									}
 								}
 
-								if constexpr (debug::visual::DrawGlyphOutline)
+								if constexpr (mvt::debug::visual::DrawLineLabelPath)
 								{
-									DrawRect(renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
+									//auto line = lineWalker.GetPointList(start, start + wordLength);
+									DrawLine(renderTarget, line);
 								}
 
-								renderTarget->SetActiveBitmap(haloHandle);
-								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
-								renderTarget->SetActiveBitmap(glyphHandle);
-								renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textColor);
-
-								if constexpr (!debug::visual::NoGlyphRotation)
-								{
-									renderTarget->PopTransform();
-									renderTarget->PopTransform();
-									renderTarget->PopTransform();
-								}
-
-								offset += glyphSpec.advance*textScale;
 							}
-						}
 
-						if constexpr (mvt::debug::visual::DrawLineLabelPath)
-						{
-							auto line = lineWalker.GetPointList(0.0f, offset);
-							DrawLine(renderTarget, line);
+							offset += attribs.symbolSpacing;
+
 						}
 
 						break;

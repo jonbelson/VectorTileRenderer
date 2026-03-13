@@ -219,6 +219,11 @@ namespace mvt::renderer
 
 			float lineWidth = layer->mLineWidth.GetValue(feature, zoom);
 
+			if (layer->mId == "greenspace")
+			{
+				int {};
+			}
+
 			auto dashArray = layer->mLineDashArray.GetValue(feature, zoom);
 
 			for (float& dash : dashArray)
@@ -280,8 +285,9 @@ namespace mvt::renderer
 			//if (layer->mId.find("road/footway/line") == std::string::npos)
 			//	continue;
 
-			///assert(layer->mId != "road (tunnel)/cycleway/line") == std::string::npos)
+			//assert(layer->mId != "greenspace outlines");
 
+			//if (layer->mId != "greenspace") continue;
 
 			//if (layer->mSourceLayer.find("land use area") == std::string::npos)
 			//	continue;
@@ -289,10 +295,9 @@ namespace mvt::renderer
 			//if (layer->mSourceLayer != "roads")
 			//	continue;
 
-
 			//if (layer->mType != LayerType::Symbol) continue;
 
-			if (zoom < layer->mMinZoom || zoom > layer->mMaxZoom)
+			if (zoom < layer->mMinZoom || zoom >= layer->mMaxZoom)
 				continue;
 
 			// Get the features which belong in this Layer.
@@ -327,11 +332,10 @@ namespace mvt::renderer
 						}
 						break;
 					case LayerType::Symbol:
-						//RenderSymbol(layer.get(), feature, zoom);
-						/////RenderCircle(layer.get(), feature, zoom);
 						symbols.push_back( std::make_pair(&feature, layer.get()) );
 						break;
-
+					case LayerType::FillExtrusion:
+						break;
 					default:
 						ATLTRACE("Unhandled LayerType '%d'\n", layer->mType);
 						break;

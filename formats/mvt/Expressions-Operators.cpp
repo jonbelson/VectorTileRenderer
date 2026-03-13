@@ -292,6 +292,10 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorLiteral>(data);
 				}
+			case ExpressionType::ToString:
+				{
+					return MakeExpression<OperatorToString>(data);
+				}
 
 			// Lookup.
 			case ExpressionType::Get:
@@ -499,6 +503,49 @@ Value OperatorLiteral::Evaluate(const mvt::feature::Feature& feature, float zoom
 
 	return Value{};
 }
+
+// [ "to-string", value ]: string
+bool OperatorToString::ParseFromJson(const json& data)
+{
+	if (data.is_array() && data.size() == 2)
+	{
+		auto value = JsonTypeToValue(data[1]);
+
+		mValues.emplace_back(std::move(value));
+
+		return true;
+	}
+
+	return false;
+}
+
+// https://docs.mapbox.com/style-spec/reference/expressions/#types-to-string
+// XXX Handle arrays.
+struct ToStringCallable
+{
+	Value operator()(bool b) const { return b ? "true" : "false"; }
+	Value operator()(float f) const { return std::to_string(f); }
+	Value operator()(const Color& c) const { return std::format("rgba({},{},{},{})", static_cast<uint8_t>(c.Red*255), static_cast<uint8_t>(c.Green*255), static_cast<uint8_t>(c.Blue*255), c.Alpha ); }
+	Value operator()(const std::string& s) const { return s; }
+
+	Value operator()(const std::monostate& m) const { return ""; }
+
+	Value operator()(auto) const { return {}; }
+};
+
+Value OperatorToString::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		Value result = GetValue(mValues[0], feature, zoom);
+		Value value = std::visit(ToStringCallable(), result);
+
+		if (std::holds_alternative<std::string>(value)) return value;
+	}
+
+	return {};
+}
+
 
 
 
@@ -857,7 +904,7 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 					float stopInput1 = mStops[i].input;
 					float stopInput2 = mStops[i + 1].input;
 
-					if (inputValue > stopInput1 && inputValue < stopInput2)
+					if (inputValue > stopInput1 && inputValue <= stopInput2)
 					{
 						if (mType == Type::Linear || mType == Type::Exponential)
 						{

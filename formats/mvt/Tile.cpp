@@ -345,7 +345,7 @@ namespace mvt::tile
 					//mvtTile->mLayerName = layerName;
 					mvtTile->mFeatures[layerName] = Tile::FeatureList{};
 
-					ATLTRACE("Layer: %s (%d x %d)\n", layerName.c_str(), extent, extent);
+					//ATLTRACE("Layer: %s (%d x %d)\n", layerName.c_str(), extent, extent);
 
 					const auto& keys = layers[l].keys();
 					const auto& values = layers[l].values();
