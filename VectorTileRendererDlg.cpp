@@ -164,6 +164,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	//51.448839, -0.932772
 	int zoom = 14;
 	auto [ x, y ] = mvt::tile::LatLongToTile(zoom, 51.448839, -0.932772);
+	//x++;
 
 //	TileSpec tileSpec { .zoom = 13, .x = 4075, .y = 2726 };
 	TileSpec tileSpec { .zoom = zoom, .x = x, .y = y };
@@ -236,26 +237,6 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 #endif
 
-
-	//renderTarget->SetFillColor(Color("rgba(255, 0, 0, 0.5)"));
-	//renderTarget->FillBackground();
-
-	/*
-	renderTarget->SetLineColor(Color("rgba(0, 255, 0, 0.5)"));
-	core::geometry::PointArray pointArray {{200, 100}, {300, 200}, {100, 400 }};
-	core::geometry::LineString lineString = { {pointArray} };
-	renderTarget->SetLineWidth(10.0f);
-	renderTarget->DrawLine(&lineString);
-	*/
-
-/*
-	core::geometry::MultiPolygon multiPolygon;
-	core::geometry::Polygon polygon;
-	polygon.exteriorRing = pointArray;
-	multiPolygon.polygons = { polygon };
-	renderTarget->DrawPolygon(&multiPolygon);
-	renderTarget->FillPolygon(&multiPolygon);
-*/
 
 	renderTarget->Save("C:\\Users\\jon\\MapImage.png");
 

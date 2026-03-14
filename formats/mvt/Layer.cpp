@@ -37,7 +37,6 @@ namespace mvt::layer
 		return LayerType::Unknown;
 	}
 
-
 	IconAnchor IconAnchorToEnum(std::string_view iconAnchor)
 	{
 		if (iconAnchor == "center") return IconAnchor::Centre;
@@ -50,6 +49,15 @@ namespace mvt::layer
 		if (iconAnchor == "bottom-right") return IconAnchor::BottomRight;
 
 		return IconAnchor::Centre;
+	}
+
+	IconRotationAlignment IconRotationAlignmentToEnum(std::string_view iconRotationAlignment)
+	{
+		if (iconRotationAlignment == "map") return IconRotationAlignment::Map;
+		if (iconRotationAlignment == "viewport") return IconRotationAlignment::Viewport;
+		if (iconRotationAlignment == "auto") return IconRotationAlignment::Auto;
+
+		return IconRotationAlignment::Auto;
 	}
 
 	SymbolPlacement SymbolPlacementToEnum(std::string_view symbolPlacement)
@@ -84,6 +92,15 @@ namespace mvt::layer
 		if (textJustify == "right") return TextJustify::Right;
 
 		return TextJustify::Center;
+	}
+
+	TextRotationAlignment TextRotationAlignmentToEnum(std::string_view textRotationAlignment)
+	{
+		if (textRotationAlignment == "map") return TextRotationAlignment::Map;
+		if (textRotationAlignment == "viewport") return TextRotationAlignment::Viewport;
+		if (textRotationAlignment == "auto") return TextRotationAlignment::Auto;
+
+		return TextRotationAlignment::Auto;
 	}
 
 	Visibility VisibilityToEnum(const std::string_view visibility)
@@ -237,6 +254,7 @@ namespace mvt::layer
 			ReadProperty(mIconPadding, layout, "icon-padding");
 			ReadProperty(mIconPitchAlignment, layout, "icon-pitch-alignment");
 			ReadProperty(mIconRotate, layout, "icon-rotate");
+			ReadProperty(mIconRotationAlignment, layout, "icon-rotation-alignment");
 			ReadProperty(mIconSize, layout, "icon-size");
 			ReadProperty(mIconTextFit, layout, "icon-text-fit");
 			ReadProperty(mIconTextFitPadding, layout, "icon-text-fit-padding");
@@ -263,6 +281,7 @@ namespace mvt::layer
 			ReadProperty(mTextPadding, layout, "text-padding");
 			ReadProperty(mTextRadialOffset, layout, "text-radial-offset");
 			ReadProperty(mTextRotate, layout, "text-rotate");
+			ReadProperty(mTextRotationAlignment, layout, "text-rotation-alignment");
 			ReadProperty(mTextSize, layout, "text-size");
 			ReadProperty(mTextTransform, layout, "text-transform");
 			ReadProperty(mTextVariableAnchor, layout, "text-variable-anchor");

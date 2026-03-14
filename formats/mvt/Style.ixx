@@ -52,7 +52,7 @@ namespace mvt::style
 
 
 	// https://docs.mapbox.com/style-spec/reference/sprite/
-	struct SpriteSpec
+	export struct SpriteSpec
 	{
 		std::string identifer;
 		int height{};

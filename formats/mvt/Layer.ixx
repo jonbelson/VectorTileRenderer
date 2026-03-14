@@ -45,6 +45,11 @@ export namespace mvt::layer
 		Centre, Left, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight
 	};
 
+	export enum struct IconRotationAlignment
+	{
+		Map, Viewport, Auto
+	};
+
 	export enum struct IconTextFit
 	{
 		None, Width, Height, Both
@@ -75,6 +80,11 @@ export namespace mvt::layer
 		Auto, Left, Center, Right
 	};
 
+	export enum struct TextRotationAlignment
+	{
+		Map, Viewport, Auto
+	};
+
 	export enum struct TextTransform
 	{
 		None, Uppercase, Lowercase
@@ -96,9 +106,11 @@ export namespace mvt::layer
 	};
 
 	export IconAnchor IconAnchorToEnum(std::string_view iconAnchor);
+	export IconRotationAlignment IconRotationAlignmentToEnum(std::string_view iconRotationAlignment);
 	export SymbolPlacement SymbolPlacementToEnum(std::string_view symbolPlacement);
 	export TextAnchor TextAnchorToEnum(std::string_view textAnchor);
 	export TextJustify TextJustifyToEnum(std::string_view textJustify);
+	export TextRotationAlignment TextRotationAlignmentToEnum(std::string_view textRotationAlignment);
 	export Visibility VisibilityToEnum(const std::string_view visibility);
 
 
@@ -211,6 +223,7 @@ export namespace mvt::layer
 		FloatExpression mIconPadding{ 2 };
 		StringExpression mIconPitchAlignment{ "auto" };
 		FloatExpression mIconRotate{ 0.0f };
+		StringExpression mIconRotationAlignment{ "auto" };
 		FloatExpression mIconSize{ 1.0f };
 		StringExpression mIconTextFit{ "none" };
 		FloatArrayExpression mIconTextFitPadding{ FloatArray({0, 0, 0, 0}) };
@@ -242,6 +255,7 @@ export namespace mvt::layer
 		FloatExpression mTextPadding{ 2.0f };
 		FloatExpression mTextRadialOffset{ 0.0f };
 		FloatExpression mTextRotate{ 0.0f };
+		StringExpression mTextRotationAlignment{ "auto" };
 		FloatExpression mTextSize{ 16.0f };
 		StringExpression mTextTransform{ "none" };
 		StringArrayExpression mTextTranslate{ FloatArray({0, 0}) };

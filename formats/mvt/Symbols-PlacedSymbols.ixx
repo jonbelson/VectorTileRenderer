@@ -234,7 +234,17 @@ namespace mvt::symbol
 
 		bool HasOverlap(const core::geometry::Rect& r)
 		{
-			return false;
+			Entry entry{ .boundingBox = r };
+
+			return HasIntersection(entry);
+		}
+
+		bool HasOverlap(const core::geometry::PointArray& line)
+		{
+			Rect bb = GetBBox(line);
+			Entry entry{ .line = line, .boundingBox = bb };
+
+			return HasIntersection(entry);
 		}
 	};
 
