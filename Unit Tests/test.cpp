@@ -243,6 +243,54 @@ TEST(PlacedSymbols, LineToLine)
 
 
 
+TEST(PlacedSymbols, LineCloseToLine)
+{
+	using core::geometry::PointArray;
+	using core::geometry::Rect;
+	using mvt::symbol::PlacedSymbols;
+
+	struct TestLineCloseToLine
+	{
+		PointArray line;
+		float threshold {};
+
+		bool result {};
+	};
+
+	TestLineCloseToLine tests[] = {
+
+		{ PointArray{ { 10, 40 }, { 310, 40 } }, 1.0f, true },
+		{ PointArray{ { 10, 25 }, { 310, 25 } }, 1.0f, false },
+
+		//{ PointArray{ { 10, 20 }, { 40, 60 } }, true },
+		//{ PointArray{ { 100, 50 }, { 110, 120 } }, false },
+		//{ PointArray{ { 70, 300 }, { 240, 310 } }, false },
+
+	};
+
+
+	for (const auto& test : tests)
+	{
+		PlacedSymbols placedSymbols;
+
+		//PointArray line { { 50, 100 }, { 250, 100 }, { 50, 400 }, { 250, 400 } };
+		PointArray line { { 10, 20 }, { 300, 20 } };
+		placedSymbols.TryPlace(line, 10.0f);
+
+		bool b = placedSymbols.TryPlace(test.line, test.threshold);
+
+		if (b != test.result)
+		{
+			int i{};
+		}
+
+		EXPECT_TRUE(b == test.result);
+
+	}
+
+}
+
+
 TEST(Operators, Decision)
 {
 	mvt::feature::Feature feature;

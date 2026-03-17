@@ -185,6 +185,9 @@
     <ClCompile Include="formats\mvt\Debug.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\Symbols-PlacedSymbols.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

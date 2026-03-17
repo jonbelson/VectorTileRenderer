@@ -146,7 +146,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	}
 #endif
 
-#if 0
+#if 1
 	// Render a Tile from an MBTiles database.
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
 //	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
@@ -214,7 +214,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 #endif
 
-#if 1
+#if 0
 	// Render a single ESRI OSM Tile.
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-style.json)");
 	if (style)
@@ -242,7 +242,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 	//google::protobuf::ShutdownProtobufLibrary();
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 void CVectorTileRendererDlg::OnSysCommand(UINT nID, LPARAM lParam)

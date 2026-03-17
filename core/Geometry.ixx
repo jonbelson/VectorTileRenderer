@@ -60,6 +60,14 @@ export namespace core::geometry
 			y -= dy;
 		}
 
+		void Inflate(float dx, float dy)
+		{
+			x -= dx;
+			y -= dx;
+			width += 2*dx;
+			height += 2*dy;
+		}
+
 		Point Centre(void) const { return { x + width/2, y + height/2 }; }
 		float Right(void) const { return x + width; }
 		float Bottom(void) const { return y + height; }

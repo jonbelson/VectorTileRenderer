@@ -847,10 +847,10 @@ export namespace mvt::symbol
 
 		void RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols)
 		{
-			if (attribs.textField == "Earley")
-			{
-				int i = 0;
-			}
+			//if (attribs.textField == "Eastcourt Avenue")
+			//{
+			//	int i = 0;
+			//}
 
 			bool iconFollowsLine = attribs.iconRotationAlignment == IconRotationAlignment::Map;
 			bool textFollowsLine = attribs.textRotationAlignment == TextRotationAlignment::Map;
@@ -936,7 +936,9 @@ export namespace mvt::symbol
 
 			float start = style::GlyphSize;
 
-			for (float offset = start; offset < lineWalker.GetTotalDist(); offset += minSpacing)
+			bool placedFirst = false;
+
+			for (float offset = start; offset < lineWalker.GetTotalDist(); offset += placedFirst ? minSpacing : style::GlyphSize)
 			{
 				auto [ point, angle ] = lineWalker.GetPointOffset(offset);
 
@@ -972,7 +974,7 @@ export namespace mvt::symbol
 						{
 							textLine = lineWalker.GetPointList(start, start + textLength);
 
-							textOverlaps = placedSymbols.HasOverlap(textLine);
+							textOverlaps = placedSymbols.HasOverlap(textLine, style::GlyphSize*attribs.textScale);
 						}
 						else
 						{
@@ -987,6 +989,7 @@ export namespace mvt::symbol
 						// Calculate bounding box of text and check if it overlaps.
 						Rect bbox (cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 
+						textBbox = bbox;
 						textOverlaps = placedSymbols.HasOverlap(bbox);
 					}
 				}
@@ -999,6 +1002,8 @@ export namespace mvt::symbol
 						const auto& spec = spriteSpec.value();
 						renderTarget->SetActiveBitmap(context.spritesHandle);
 						renderTarget->DrawBitmap(spec->rect, iconBbox);
+
+						placedSymbols.TryPlace(iconBbox);
 					}
 
 					if (hasText)
@@ -1006,13 +1011,23 @@ export namespace mvt::symbol
 						if (textFollowsLine)
 						{
 							RenderTextAlongLine(renderTarget, context, textFont, attribs, textLine);
+	
+							placedSymbols.TryPlace(textLine, style::GlyphSize*attribs.textScale);
 						}
 						else
 						{
 							RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
+
+							//float textScale = attribs.textScale;
+
+							//Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+							//Rect bbox (cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
+							placedSymbols.TryPlace(textBbox);
 						}
+
 					}
 
+					placedFirst = true;
 				}
 
 			}

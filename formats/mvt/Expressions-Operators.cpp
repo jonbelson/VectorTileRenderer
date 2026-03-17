@@ -524,7 +524,7 @@ bool OperatorToString::ParseFromJson(const json& data)
 struct ToStringCallable
 {
 	Value operator()(bool b) const { return b ? "true" : "false"; }
-	Value operator()(float f) const { return std::to_string(f); }
+	Value operator()(float f) const { return std::format("{}", f); }
 	Value operator()(const Color& c) const { return std::format("rgba({},{},{},{})", static_cast<uint8_t>(c.Red*255), static_cast<uint8_t>(c.Green*255), static_cast<uint8_t>(c.Blue*255), c.Alpha ); }
 	Value operator()(const std::string& s) const { return s; }
 
