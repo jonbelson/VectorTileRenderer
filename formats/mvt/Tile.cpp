@@ -307,24 +307,14 @@ namespace mvt::tile
 	}
 
 
-
-	void MyFunc()
-	{
-		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\4-5-7.pbf)");
-
-		auto data = fetcher->FetchTile(0, 0, 0);
-
-		auto tile = DecodeTile(data);
-	}
-
-	std::unique_ptr<Tile> DecodeTile(std::vector<std::byte>& data)
+	std::unique_ptr<tile::Tile> DecodeTile(const tile::TileSpec& tileSpec, std::vector<std::byte>& data)
 	{
 		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\4-5-7.pbf)");
 
 		//auto data = fetcher->FetchTile(0, 0, 0);
 		if (!data.empty())
 		{
-			std::unique_ptr<Tile> mvtTile = std::make_unique<Tile>(4, 5, 7);	// XXX
+			std::unique_ptr<Tile> mvtTile = std::make_unique<Tile>(tileSpec.zoom, tileSpec.x, tileSpec.y);
 
 			vector_tile::Tile pbfTile;
 
@@ -503,7 +493,8 @@ namespace mvt::tile
 		return longitudeDeg;
 	}
 
-	std::pair<double, double> TileToLatLong(int zoom, int x, int y)
+//	std::pair<double, double> TileToLatLong(int zoom, int x, int y)
+	geo::latlong::LatLong TileToLatLong(int zoom, int x, int y)
 	{
 		int n = 1 << zoom;
 
@@ -511,7 +502,12 @@ namespace mvt::tile
 		double latitudeDeg = latitudeRad * 180.0 / std::numbers::pi;
 		double longitudeDeg = x * 360.0 / n - 180.0f;
 
-		return std::pair(latitudeDeg, longitudeDeg);
+		return { latitudeDeg, longitudeDeg };
+	}
+
+	std::pair<int, int> LatLongToTile(int zoom, const geo::latlong::LatLong& latLong)
+	{
+		return LatLongToTile(zoom, latLong.latitude, latLong.longitude);
 	}
 
 	std::pair<int, int> LatLongToTile(int zoom, double latitudeDeg, double longitudeDeg)
@@ -524,6 +520,26 @@ namespace mvt::tile
 		int y = (int)(floor((1.0 - asinh(tan(latitudeRad))/std::numbers::pi)/2.0*n));
 
 		return std::pair(x, y);
+	}
+
+	TileSpecArray GetTileArray(int zoom, geo::latlong::LatLong& bl, geo::latlong::LatLong& tr)
+	{
+		if (bl.longitude >= tr.longitude || bl.latitude >= tr.latitude) return {};
+
+		auto [ blX, blY ] = LatLongToTile(zoom, bl);
+		auto [ trX, trY ] = LatLongToTile(zoom, tr);
+
+		TileSpecArray tileSpec;
+
+		for (int y=blY; y <= trY; y++)
+		{
+			for (int x=blX; x <= trX; x++)
+			{
+				tileSpec.emplace_back(TileSpec{ .zoom = zoom, .x = x, .y = y });
+			}
+		}
+
+		return tileSpec;
 	}
 
 	int LongToTileX(double longitudeDeg, int zoom)

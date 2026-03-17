@@ -4,6 +4,7 @@ module;
 export module formats.mvt.mbtilesfetcher;
 
 import std;
+import formats.mvt.tile;
 import formats.mvt.tilefetcher;
 
 extern "C" { struct sqlite3; }
@@ -24,7 +25,7 @@ public:
 	virtual ~MbTilesFetcher();
 
 	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
-	virtual std::vector<std::byte> FetchTile(const TileSpec& tileSpec) override
+	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
 	{
 		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 	}

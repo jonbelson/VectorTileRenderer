@@ -188,6 +188,9 @@
     <ClCompile Include="formats\mvt\Symbols-PlacedSymbols.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
+    <ClCompile Include="geo\LatLong.ixx">
+      <Filter>Source Files\Geo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

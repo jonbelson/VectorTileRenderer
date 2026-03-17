@@ -11,10 +11,17 @@ module;
 export module formats.mvt.tile;
 
 import formats.mvt.feature;
-
+import geo.latlong;
 
 namespace mvt::tile
 {
+	export struct TileSpec
+	{
+		int zoom {};
+		int x{};
+		int y{};
+	};
+
 
 	// https://github.com/mapbox/vector-tile-spec
 	export class Tile
@@ -42,15 +49,19 @@ namespace mvt::tile
 		std::map<std::string, FeatureList> mFeatures;
 	};
 
-	export void MyFunc();
-
-	export std::unique_ptr<Tile> DecodeTile(std::vector<std::byte>& data);
+	export std::unique_ptr<Tile> DecodeTile(const tile::TileSpec& tileSpec, std::vector<std::byte>& data);
 
 	export double GetLatitude(int zoom, int x, int y);
 	export double GetLongitude(int zoom, int x, int y);
-	export std::pair<double, double> TileToLatLong(int zoom, int x, int y);
+//	export std::pair<double, double> TileToLatLong(int zoom, int x, int y);
+	export geo::latlong::LatLong TileToLatLong(int zoom, int x, int y);
 
 	export std::pair<int, int> LatLongToTile(int zoom, double latitude, double longitude);
+	export std::pair<int, int> LatLongToTile(int zoom, const geo::latlong::LatLong& latLong);
+
+	export using TileSpecArray = std::vector<mvt::tile::TileSpec>;
+
+	TileSpecArray GetTileArray(int zoom, geo::latlong::LatLong& bl, geo::latlong::LatLong& tr);
 
 	export int LongToTileX(double longitudeDeg, int zoom);
 	export int LatToTileY(double latitudeDeg, int zoom);

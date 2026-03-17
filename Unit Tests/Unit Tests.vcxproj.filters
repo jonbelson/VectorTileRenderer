@@ -114,6 +114,9 @@
     <ClCompile Include="..\formats\mvt\Symbols-PlacedSymbols.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\geo\LatLong.ixx">
+      <Filter>Project Modules\geo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -139,6 +142,9 @@
     </Filter>
     <Filter Include="Project Modules\formats\mvt">
       <UniqueIdentifier>{372d18b0-167e-49f2-8e64-ac3356b54b4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\geo">
+      <UniqueIdentifier>{00855bf6-f790-4390-9c2f-865e0934d5c7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

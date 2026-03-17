@@ -6,13 +6,8 @@ export module formats.mvt.tilefetcher;
 
 import std;
 
+import formats.mvt.tile;
 
-export struct TileSpec
-{
-	int zoom {};
-	int x{};
-	int y{};
-};
 
 // Base class for Tile fetchers.
 export class ITileFetcher
@@ -23,7 +18,7 @@ export class ITileFetcher
 
 		// Fetch the Tile PBF, decompressing if necessary.
 		virtual std::vector<std::byte> FetchTile(int x, int y, int zoom) = 0;
-		virtual std::vector<std::byte> FetchTile(const TileSpec& tileSpec) = 0;
+		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
 };
 
 // Test Tile Fetcher that always returns the same test file.
@@ -54,7 +49,7 @@ public:
 		return std::vector<std::byte>{ };
 	}
 
-	virtual std::vector<std::byte> FetchTile(const TileSpec& tileSpec) override
+	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
 	{
 		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 	}
@@ -76,7 +71,7 @@ export class HttpTileFetcher : public ITileFetcher
 			return std::vector<std::byte>{};
 		}
 
-		virtual std::vector<std::byte> FetchTile(const TileSpec& tileSpec) override
+		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
 		{
 			return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 		}

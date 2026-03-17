@@ -8,16 +8,16 @@ import formats.mvt.feature;
 import formats.mvt.layer;
 import formats.mvt.rendercontext;
 import formats.mvt.style;
-//import formats.mvt.symbol;
 import formats.mvt.tile;
 import formats.mvt.tilecache;
 import formats.mvt.tilefetcher;
-
-using namespace core;
-using namespace mvt;
+import geo.latlong;
 
 namespace mvt::renderer
 {
+	using namespace core;
+	using namespace geo;
+	using namespace mvt;
 
 	// Renderer class to handle the rendering of Tiles to a RenderContext.
 	export class Renderer
@@ -25,7 +25,7 @@ namespace mvt::renderer
 		int mTileSize { 512 };
 
 		rendertarget::RenderTarget* mRenderTarget = nullptr;
-		TileCache* mTileCache = nullptr;
+		tilecache::TileCache* mTileCache = nullptr;
 		style::Style* mStyle = nullptr;
 
 		geometry::MultiPolygon TileToWorld(const geometry::MultiPolygon& multiPolygon) const;
@@ -38,22 +38,21 @@ namespace mvt::renderer
 		bool RenderCircle(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 		bool RenderFill(RenderContext& context, const layer::Layer* layer , const feature::Feature& feature, float zoom) const;
 		bool RenderLine(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
-		//bool RenderSymbol(const layer::Layer* layer, const feature::Feature& feature, float zoom);
+
+		using FeatureSymbols = std::vector< std::pair<const feature::Feature*, layer::Layer*> >;
+
+		bool RenderSymbols(const FeatureSymbols& symbols, RenderContext& context, float zoom);
+		bool RenderTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, float zoom);
 
 	public:
-		Renderer(core::rendertarget::RenderTarget* renderTarget, TileCache* tileCache, style::Style* style, int tileSize = 512)
+		Renderer(core::rendertarget::RenderTarget* renderTarget, tilecache::TileCache* tileCache, style::Style* style, int tileSize = 512)
 			: mRenderTarget(renderTarget), mTileCache(tileCache), mStyle(style), mTileSize(tileSize) {}
 
+		bool RenderTile(const tile::TileSpec& tileSpec);
 		bool RenderTile(int x, int y, float zoom);
-		bool RenderTile(mvt::tile::Tile* tile, float zoom);
+		bool RenderTile(const tile::Tile* tile, float zoom);
 
-		bool RenderArea()
-		{
-
-
-
-			return true;
-		}
+		bool RenderTiles(const tile::TileSpecArray& tileArray, float zoom);
 	};
 
 };
