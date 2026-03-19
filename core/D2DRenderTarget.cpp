@@ -129,6 +129,7 @@ namespace core::rendertarget
 		D2D1_COLOR_F mLineColor{ 0 };
 		D2D1_COLOR_F mFillColor{ 0 };
 		D2D1_COLOR_F mFillOutlineColor{ 0 };
+		float mFillOpacity{ 1.0f };
 		float mStrokeWidth{ 1.0f };
 		float mCircleRadius{ 10.f };
 
@@ -585,6 +586,7 @@ namespace core::rendertarget
 		void SetLineColor(const Color& color) { mLineColor = ToColorF(color); }
 		void SetFillColor(const Color& color) { mFillColor = ToColorF(color); mFillMode = Solid; }
 		void SetFillOutlineColor(const Color& color) { mFillOutlineColor = ToColorF(color); }
+		void SetFillOpacity(float opacity) { mFillOpacity = opacity; }
 		void SetLineWidth(float lineWidth) { mStrokeWidth = lineWidth; }
 		void SetCircleRadius(float circleRadius) { mCircleRadius = circleRadius; }
 
@@ -690,6 +692,7 @@ namespace core::rendertarget
 
 					if (SUCCEEDED(hr))
 					{
+						mBitmapBrush->SetOpacity(mFillOpacity);
 						mFillMode = Pattern;
 					}
 
@@ -771,6 +774,7 @@ namespace core::rendertarget
 				}
 				else if (mFillMode == Pattern)
 				{
+					mBitmapBrush->SetOpacity(mFillOpacity);
 					mRenderTarget->FillGeometry(pathGeometry.Get(), mBitmapBrush.Get());
 				}
 			}
@@ -956,6 +960,7 @@ namespace core::rendertarget
 	void D2DRenderTarget::SetLineColor(const Color& color) { mImpl->SetLineColor(color); }
 	void D2DRenderTarget::SetFillColor(const Color& color) { mImpl->SetFillColor(color); }
 	void D2DRenderTarget::SetFillOutlineColor(const Color& color) { mImpl->SetFillOutlineColor(color); }
+	void D2DRenderTarget::SetFillOpacity(float opacity) { mImpl->SetFillOpacity(opacity); }
 	void D2DRenderTarget::SetFillPattern(const geometry::Rect& src) { mImpl->SetFillPattern(src); }
 
 	void D2DRenderTarget::SetLineWidth(float lineWidth) { mImpl->SetLineWidth(lineWidth); }

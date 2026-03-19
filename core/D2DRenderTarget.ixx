@@ -20,6 +20,7 @@ namespace core::rendertarget
 		virtual void SetLineColor(const Color& color) override;
 		virtual void SetFillColor(const Color& color) override;
 		virtual void SetFillOutlineColor(const Color& color) override;
+		virtual void SetFillOpacity(float opacity) override;
 		virtual void SetLineWidth(float lineWidth) override;
 		virtual void SetCircleRadius(float circleRadius) override;
 

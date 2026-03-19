@@ -270,6 +270,11 @@ namespace mvt::symbol
 			Rect bb = GetBBox(line, fontHeight/2.0f);
 			Entry entry{ .line = line, .width = fontHeight/2.0f, .boundingBox = bb };
 
+			if (entry.line.empty() || (entry.line.size() != line.size()))
+			{
+				int i=0;
+			}
+
 			return HasIntersection(entry);
 		}
 	};

@@ -1320,24 +1320,32 @@ Value FilterOperatorMembership::Evaluate(const mvt::feature::Feature& feature, f
 	}
 	else
 	{
-		if (!feature.mValues.contains(mKey)) return {};
-
-		valueField = ValueFieldToValue(feature.mValues.at(mKey));
+		// If key is present, read its value (else leave as null).
+		if (feature.mValues.contains(mKey))
+		{
+			valueField = ValueFieldToValue(feature.mValues.at(mKey));
+		}
 	}
 
 	switch (mType)
 	{
 		case FilterMembership::In:
-			for (const auto& value : mValues)
+			if (!IsNullValue(valueField))	// If 'key' is not present, then it's effectively "not in".
 			{
-				if (std::visit(EqualCompare(), value, valueField)) return true;
+				for (const auto& value : mValues)
+				{
+					if (std::visit(EqualCompare(), value, valueField)) return true;
+				}
 			}
 			return false;
 
 		case FilterMembership::NotIn:
-			for (const auto& value : mValues)
+			if (!IsNullValue(valueField))	// If 'key' is not present, then it's effectively "not in".
 			{
-				if (std::visit(EqualCompare(), value, valueField)) return false;
+				for (const auto& value : mValues)
+				{
+					if (std::visit(EqualCompare(), value, valueField)) return false;
+				}
 			}
 			return true;
 	}

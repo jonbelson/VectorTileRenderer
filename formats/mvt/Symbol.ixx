@@ -444,10 +444,18 @@ export namespace mvt::symbol
 
 		void DrawLine(RenderTarget* renderTarget, const PointArray& pointArray, Color c = Color("#0000ff"))
 		{
+			//std::vector<Color> colours = { Color("red"), Color("green"), Color("blue"), Color("yellow"), Color("pink") };
+			//static int i = 0;
+			//c = colours[i++];
+			//if (i > std::size(colours)) i = 0;
+
 			LineString lineString;
 			lineString.lines.push_back(pointArray);
+			//c.Alpha = 0.8f;
 			renderTarget->SetLineColor(c);
 			renderTarget->SetDashArray({});
+			renderTarget->SetLineWidth(2.0f);
+			renderTarget->SetLineCap(LineCap::Butt);
 			renderTarget->DrawLine(&lineString);
 		}
 
@@ -458,6 +466,7 @@ export namespace mvt::symbol
 			lineString.lines.push_back(line);
 			renderTarget->SetLineColor(c);
 			renderTarget->SetDashArray({});
+			renderTarget->SetLineColor(c);
 			renderTarget->DrawLine(&lineString);
 		}
 
@@ -847,11 +856,6 @@ export namespace mvt::symbol
 
 		void RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols)
 		{
-			//if (attribs.textField == "Eastcourt Avenue")
-			//{
-			//	int i = 0;
-			//}
-
 			bool iconFollowsLine = attribs.iconRotationAlignment == IconRotationAlignment::Map;
 			bool textFollowsLine = attribs.textRotationAlignment == TextRotationAlignment::Map;
 

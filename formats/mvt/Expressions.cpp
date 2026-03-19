@@ -81,7 +81,7 @@ static bool IsOldFilterFormat(const json& data)
 	if (data.is_array() && data.size() > 0 && data[0].is_string())
 	{
 		// Easy case - if the first string is not a known Operation, it's likely to be in the old format.
-		if (!IsExpression(data)) return false;
+		if (!IsExpression(data)) return true;
 
 		std::string type = data[0].get<std::string>();
 

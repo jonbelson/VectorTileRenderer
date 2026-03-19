@@ -234,12 +234,35 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 #endif
 
 #if 1
-	// Render a single ESRI OSM Tile.
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-style.json)");
+	// ESRI WorldBasemap tiles
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\nova.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\community.json)");
 	if (style)
 	{
-		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
-		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
+		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4074-2726.pbf)");
+		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4075-2726.pbf)");
+
+		mvt::tilecache::TileCache tileCache(fetcher.get());
+		mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
+
+		mvt::tile::TileSpec tileSpec{ .zoom = 13, .x = 4075, .y = 2726 };
+		tileRenderer.RenderTile(tileSpec);
+	}
+
+
+#endif
+
+#if 0
+	// Render a single ESRI OpenBasemap Tile.
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\osm-style.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\streets.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\blueprint.json)");
+	if (style)
+	{
+		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
+		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
+//		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4074-2726.pbf)");
+//		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4075-2726.pbf)");
 
 		mvt::tile::TileSpec tileSpec{ .zoom = 13, .x = 4075, .y = 2726 };
 		auto tileData = fetcher->FetchTile(0, 0, 0);
@@ -256,6 +279,43 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	}
 
 #endif
+
+#if 0
+	// Render multiple Tiles from an MBTiles database.
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
+	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
+	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
+
+	if (style)
+	{
+		std::unique_ptr<MbTilesFetcher> mbTilesFetcher = std::make_unique<MbTilesFetcher>(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
+
+		int zoom = 14;
+		geo::latlong::LatLong latLong(51.448839, -0.932772);
+		auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
+		//x++;
+
+		mvt::tile::TileSpec tileSpec1 { .zoom = zoom, .x = x, .y = y };
+		mvt::tile::TileSpec tileSpec2 { .zoom = zoom, .x = x + 1, .y = y };
+		mvt::tile::TileSpec tileSpec3 { .zoom = zoom, .x = x, .y = y + 1 };
+		mvt::tile::TileSpec tileSpec4 { .zoom = zoom, .x = x + 1, .y = y + 1 };
+
+		mvt::tile::TileSpecArray tileSpecArray { tileSpec1, tileSpec2, tileSpec3, tileSpec4 };
+
+		mvt::tilecache::TileCache tileCache(mbTilesFetcher.get());
+
+		auto renderTarget2 = new core::rendertarget::D2DRenderTarget(2048, 2048);
+
+		mvt::renderer::Renderer tileRenderer(renderTarget2, &tileCache, style.get());
+		tileRenderer.RenderTiles(tileSpecArray, zoom);
+
+		renderTarget2->Save("C:\\Users\\jon\\MapImageX2.png");
+
+	}
+#endif
+
+
+
 
 
 	renderTarget->Save("C:\\Users\\jon\\MapImage.png");

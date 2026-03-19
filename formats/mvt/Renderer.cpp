@@ -3,6 +3,9 @@ module;
 #include <atltrace.h>
 #include <cassert>
 
+#undef min
+#undef max
+
 module formats.mvt.renderer;
 
 import core.color;
@@ -178,6 +181,8 @@ namespace mvt::renderer
 
 					mRenderTarget->SetActiveBitmap(context.spritesHandle);
 					mRenderTarget->SetFillPattern(spec->rect);
+					float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
+					mRenderTarget->SetFillOpacity(fillOpacity);
 
 					auto transformed = TileToWorld(feature.mMultiPolygon);
 					mRenderTarget->FillPolygon(&transformed);
@@ -189,6 +194,7 @@ namespace mvt::renderer
 				Color fillColor = layer->mFillColor.GetValue(feature, zoom);
 				float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
 				fillColor.Alpha = fillOpacity;
+				mRenderTarget->SetFillOpacity(fillOpacity);
 
 				Color outlineColor = layer->mFillOutlineColor.GetValue(feature, zoom);
 				if (!outlineColor.IsValid()) outlineColor = fillColor;
@@ -227,11 +233,6 @@ namespace mvt::renderer
 			lineColor.Alpha = lineOpacity;
 
 			float lineWidth = layer->mLineWidth.GetValue(feature, zoom);
-
-			if (layer->mId == "greenspace")
-			{
-				int {};
-			}
 
 			auto dashArray = layer->mLineDashArray.GetValue(feature, zoom);
 
@@ -445,19 +446,46 @@ namespace mvt::renderer
 			RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
 		}
 
-		FeatureSymbols symbols;
+		//FeatureSymbols symbols;
 
+		std::unordered_map<size_t, FeatureSymbols> tileFeatureSymbols;
+
+		int startx { std::numeric_limits<int>::max() };
+		int starty { std::numeric_limits<int>::max() };
 		for (const auto& tileSpec : tileSpecArray)
 		{
+			startx = std::min(startx, tileSpec.x);
+			starty = std::min(starty, tileSpec.y);
+		}
+
+		//for (const auto& tileSpec : tileSpecArray)
+		for (size_t i=0; i<tileSpecArray.size(); i++)
+		{
+			const auto& tileSpec = tileSpecArray[i];
+
+			mRenderTarget->PushTranslation(mTileSize*(tileSpec.x - startx), mTileSize*(tileSpec.y - starty));
+
 			const auto tile = mTileCache->GetTile(tileSpec.x, tileSpec.y, tileSpec.zoom);
 			if (tile)
 			{
-				RenderTile(tile, symbols, renderContext, zoom);
+				RenderTile(tile, tileFeatureSymbols[i], renderContext, zoom);
 			}
+
+			mRenderTarget->PopTransform();
 		}
 
 		///////std::reverse(symbols.begin(), symbols.end());
-		RenderSymbols(symbols, renderContext, zoom);
+
+		for (size_t i=0; i<tileSpecArray.size(); i++)
+		{
+			const auto& tileSpec = tileSpecArray[i];
+
+			mRenderTarget->PushTranslation(mTileSize*(tileSpec.x - startx), mTileSize*(tileSpec.y - starty));
+
+			RenderSymbols(tileFeatureSymbols[i], renderContext, zoom);
+
+			mRenderTarget->PopTransform();
+		}
 
 		//mRenderTarget->SetBitmap(mStyle->mSprites.GetBitmap());
 		//mRenderTarget->DrawBitmap(core::geometry::Rect{0, 0, 100, 100});
