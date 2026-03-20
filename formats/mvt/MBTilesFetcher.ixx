@@ -19,15 +19,19 @@ export class MbTilesFetcher : public ITileFetcher
 
 	bool mValid { false };
 
-public:
-	MbTilesFetcher(const std::string& filePath);
+	MbTilesFetcher(std::string_view filePath);
 
+public:
 	virtual ~MbTilesFetcher();
 
-	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
-	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
+	enum Error
 	{
-		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
-	}
+		FileNotFound, IncorrectFormat
+	};
+
+	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
+	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
+
+	static std::expected<MbTilesFetcher*, Error> Create(std::string_view filePath);
 };
 

@@ -151,6 +151,7 @@ namespace mvt::style
 
 	// Transfer the glyph SDF values to the alpha of a Bitmap atlas.
 	// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
+	// https://blog.mapbox.com/drawing-text-with-signed-distance-fields-in-mapbox-gl-b0933af6f817
 	// https://observablehq.com/@jjhembd/mapbox-glyph-pbfs
 	export std::optional<GlyphAtlas> CreateAtlas(const proto::GlyphFontStack& fontStack, float haloSize)
 	{
@@ -170,7 +171,7 @@ namespace mvt::style
 
 		glyphAtlas.bitmap = std::make_shared<Bitmap>(width, height, Format::RGBA);
 
-		glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 0, 0, 0));
+		glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 255.0f, 0, 0));
 
 		auto& bitmapData = glyphAtlas.bitmap->GetBitmapData();
 		std::uint32_t* pixelData = bitmapData.data();
@@ -225,10 +226,32 @@ namespace mvt::style
 
 					float sdf = val/255.0f;
 
-					float distPx = (sdf - Edge)*PixelsPerUnit;
+					/*
+					//float distPx = (sdf - Edge)*PixelsPerUnit;
 
-					uint8_t alpha = static_cast<uint8_t>(smoothstep(-0.5f, 0.5f, distPx + haloSize)*255.0f);
-					*row++ = MakeRGBA(255, 0, 0, alpha);
+					//uint8_t alpha = static_cast<uint8_t>(smoothstep(-0.5f, 0.5f, distPx + haloSize)*255.0f);
+					*/
+
+					/*
+					float distance = (191 - val + haloSize)/32.0f;
+					//float alpha = smoothstep(0.0f, 0.5f - dist, + haloSize);
+					float alpha = std::min(std::max(0.0f, 0.5f - distance), 1.0f);
+					*/
+
+					float buffer = 192.0f/255.0f;// (192 - haloSize/PixelsPerUnit)/255.0f;//32.0f;
+					buffer -= haloSize/PixelsPerUnit;
+					float gamma = 0.1f;//2.0f/255.0f;//PixelsPerUnit;//0.01f;
+					float alpha = smoothstep(buffer - gamma, buffer + gamma, sdf);
+
+					if (alpha < 0.0f || alpha > 1.0f)
+					{
+						int i{};
+					}
+
+					uint8_t a = static_cast<uint8_t>(alpha*255.0f);
+					*row++ = MakeRGBA(0, 0, 255, a);
+
+
 
 /*
 					//std::uint8_t alpha = val >= thresh ? 255 : 0;

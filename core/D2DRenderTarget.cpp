@@ -147,7 +147,9 @@ namespace core::rendertarget
 
 		ComPtr<ID2D1SolidColorBrush> mSolidBrush;
 
+		ComPtr<ID2D1Effect> mPremultiplyEffect;
 		ComPtr<ID2D1Effect> mColorMatrixEffect;
+		ComPtr<ID2D1Effect> mUnPremultiplyEffect;
 
 		enum FillMode { Solid, Pattern };
 		FillMode mFillMode { Solid };
@@ -205,7 +207,12 @@ namespace core::rendertarget
 									{
 										hr = mRenderTarget->CreateSolidColorBrush(D2D1::ColorF(ColorF::Yellow), mSolidBrush.GetAddressOf());
 
+										hr = mRenderTarget->CreateEffect(CLSID_D2D1Premultiply, mPremultiplyEffect.GetAddressOf());
 										hr = mRenderTarget->CreateEffect(CLSID_D2D1ColorMatrix, mColorMatrixEffect.GetAddressOf());
+										hr = mRenderTarget->CreateEffect(CLSID_D2D1UnPremultiply, mUnPremultiplyEffect.GetAddressOf());
+
+										mColorMatrixEffect->SetInputEffect(0, mPremultiplyEffect.Get());
+										mUnPremultiplyEffect->SetInputEffect(0, mColorMatrixEffect.Get());
 
 										mRenderTarget->BeginDraw();
 
@@ -862,7 +869,8 @@ namespace core::rendertarget
 
 			if (mRenderTarget)
 			{
-				mColorMatrixEffect->SetInput(0, bitmap.Get());
+//				mColorMatrixEffect->SetInput(0, bitmap.Get());
+				mPremultiplyEffect->SetInput(0, bitmap.Get());
 
 				//D2D1_MATRIX_5X4_F colorMatrix = D2D1::Matrix5x4F
 				//{
@@ -898,7 +906,9 @@ namespace core::rendertarget
 						
 				mRenderTarget->SetTransform(transform * current);
 
-				mRenderTarget->DrawImage(mColorMatrixEffect.Get(), ToPointF(src.x, src.y), ToRectF(src), D2D1_INTERPOLATION_MODE_LINEAR);
+				mRenderTarget->DrawImage(mUnPremultiplyEffect.Get(), ToPointF(src.x, src.y), ToRectF(src), D2D1_INTERPOLATION_MODE_LINEAR);
+//				mRenderTarget->DrawImage(mColorMatrixEffect.Get(), ToPointF(src.x, src.y), ToRectF(src), D2D1_INTERPOLATION_MODE_LINEAR);
+//				mRenderTarget->DrawImage(bitmap.Get(), ToPointF(src.x, src.y), ToRectF(src), D2D1_INTERPOLATION_MODE_LINEAR);
 
 				mRenderTarget->SetTransform(current);
 			}

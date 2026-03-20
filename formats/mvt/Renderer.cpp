@@ -265,6 +265,11 @@ namespace mvt::renderer
 
 		for (const auto& symbol : symbols)
 		{
+			if (symbol.second->mId.find("contour labels") != std::string::npos)
+			{
+				int i{};
+			}
+
 			mvt::symbol::SymbolAttribs attribs(symbol.second, *symbol.first, zoom);
 
 			switch (symbol.first->mGeometryType)
@@ -301,8 +306,10 @@ namespace mvt::renderer
 
 			//if (layer->mId != "greenspace") continue;
 
-			//if (layer->mSourceLayer.find("land use area") == std::string::npos)
-			//	continue;
+			//if (layer->mId.find("contour labels") != std::string::npos)
+			//{
+			//	int i{};
+			//}
 
 			//if (layer->mSourceLayer != "roads")
 			//	continue;

@@ -150,53 +150,34 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 #if 0
 	// Render a Tile from an MBTiles database.
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
-//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
-//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
+	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
+	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
 
+	if (style)
+	{
+		auto mbtilesFetcher = MbTilesFetcher::Create(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
 
-	std::unique_ptr<MbTilesFetcher> mbTilesFetcher = std::make_unique<MbTilesFetcher>(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
+		if (mbtilesFetcher)
+		{
+			std::unique_ptr<MbTilesFetcher> mbTilesFetcher { mbtilesFetcher.value() };
 
-	//51.448839, -0.932772
-	int zoom = 14;
-	geo::latlong::LatLong latLong(51.448839, -0.932772);
-	auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
-	//x++;
+			mvt::tilecache::TileCache tileCache(mbTilesFetcher.get());
 
-	mvt::tile::TileSpec tileSpec { .zoom = zoom, .x = x, .y = y };
+			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
 
-	auto tileData2 = mbTilesFetcher->FetchTile(tileSpec);
-	auto tile2 = mvt::tile::DecodeTile(tileSpec, tileData2);
+			int zoom = 11;
+			geo::latlong::LatLong latLong(51.448839, -0.932772);
+			auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
+			//x++;
 
-	mvt::renderer::Renderer tileRenderer(renderTarget, nullptr, style.get());
-
-	tileRenderer.RenderTile(tile2.get(), (float)tileSpec.zoom);
-//	tileRenderer.RenderTile(tileSpec);
+			mvt::tile::TileSpec tileSpec { .zoom = zoom, .x = x, .y = y };
+			tileRenderer.RenderTile(tileSpec);
+		}
+	}
 #endif
 
 
 #if 0
-	// Render a Tile from an MBTiles database.
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
-	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
-	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
-
-
-	std::unique_ptr<MbTilesFetcher> mbTilesFetcher = std::make_unique<MbTilesFetcher>(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
-
-	int zoom = 14;
-	geo::latlong::LatLong latLong(51.448839, -0.932772);
-	auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
-	//x++;
-
-	mvt::tile::TileSpec tileSpec { .zoom = zoom, .x = x, .y = y };
-
-	mvt::tilecache::TileCache tileCache(mbTilesFetcher.get());
-
-	mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
-	tileRenderer.RenderTile(tileSpec);
-#endif
-
-
 	auto result = io::resource::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\sprites\sprites.png)");
 
 	if (result)
@@ -216,7 +197,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 		//const auto json = nlohmann::json::parse(result2.value().data());
 		int i{};
 	}
-
+#endif
 
 #if 0
 	// Render a single OS DataHub Tile.
@@ -235,18 +216,23 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 #if 1
 	// ESRI WorldBasemap tiles
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\nova.json)");
-//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\community.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\nova.json)");
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\community.json)");
+//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\midcentury.json)");
 	if (style)
 	{
-		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4074-2726.pbf)");
-		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4075-2726.pbf)");
+		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4074-2726.pbf)");
+//		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4075-2726.pbf)");
+		if (tileFetcher)
+		{
+			std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
 
-		mvt::tilecache::TileCache tileCache(fetcher.get());
-		mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
+			mvt::tilecache::TileCache tileCache(fetcher.get());
+			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
 
-		mvt::tile::TileSpec tileSpec{ .zoom = 13, .x = 4075, .y = 2726 };
-		tileRenderer.RenderTile(tileSpec);
+			mvt::tile::TileSpec tileSpec{ .zoom = 13, .x = 4075, .y = 2726 };
+			tileRenderer.RenderTile(tileSpec);
+		}
 	}
 
 
@@ -256,25 +242,20 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	// Render a single ESRI OpenBasemap Tile.
 //	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\osm-style.json)");
 //	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\streets.json)");
-//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\blueprint.json)");
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\ESRI\blueprint.json)");
 	if (style)
 	{
-		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
-		//std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
-//		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4074-2726.pbf)");
-//		std::unique_ptr<TestTileFetcher> fetcher = std::make_unique<TestTileFetcher>(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-4075-2726.pbf)");
-
-		mvt::tile::TileSpec tileSpec{ .zoom = 13, .x = 4075, .y = 2726 };
-		auto tileData = fetcher->FetchTile(0, 0, 0);
-		if (!tileData.empty())
+		//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4074-2726.pbf)");
+		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-4075-2726.pbf)");
+		if (tileFetcher)
 		{
-			auto tile = mvt::tile::DecodeTile(tileSpec, tileData);
-			if (tile)
-			{
-				mvt::renderer::Renderer tileRenderer(renderTarget, nullptr, style.get());
+			std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
 
-				tileRenderer.RenderTile(tile.get(), static_cast<float>(tileSpec.zoom));
-			}
+			mvt::tilecache::TileCache tileCache(fetcher.get());
+			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
+
+			mvt::tile::TileSpec tileSpec{ .zoom = 13, .x = 4075, .y = 2726 };
+			tileRenderer.RenderTile(tileSpec);
 		}
 	}
 

@@ -11,9 +11,9 @@ import io.gzip;
 
 using namespace io;
 
-MbTilesFetcher::MbTilesFetcher(const std::string& filePath) : mFilePath(filePath)
+MbTilesFetcher::MbTilesFetcher(std::string_view filePath) : mFilePath(filePath)
 {
-	int result = sqlite3_open_v2(filePath.c_str(), &mDatabase, SQLITE_OPEN_READONLY, nullptr);
+	int result = sqlite3_open_v2(filePath.data(), &mDatabase, SQLITE_OPEN_READONLY, nullptr);
 
 	mValid = result == SQLITE_OK;
 }
@@ -27,6 +27,13 @@ MbTilesFetcher::~MbTilesFetcher()
 		mDatabase = nullptr;
 	}
 }
+
+
+std::vector<std::byte> MbTilesFetcher::FetchTile(const mvt::tile::TileSpec& tileSpec)
+{
+	return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
+}
+
 
 // Read data blob from 'tiles' table.
 // [ zoom_level:INTEGER, tile_column:INTERGER, tile_row:INTEGER, tile_data:BLOB ]
@@ -75,3 +82,17 @@ std::vector<std::byte> MbTilesFetcher::FetchTile(int zoom, int x, int y)
 
 	return tileData;
 }
+
+
+std::expected<MbTilesFetcher*, MbTilesFetcher::Error> MbTilesFetcher::Create(std::string_view filePath)
+{
+	std::error_code ec {};
+	bool exists = std::filesystem::is_regular_file(filePath, ec);
+
+	if (!exists) return std::unexpected(Error::FileNotFound);
+
+	// XXX Test for valid SQLite format.
+
+	return { new MbTilesFetcher(filePath) };
+}
+

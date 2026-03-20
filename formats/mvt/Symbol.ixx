@@ -255,6 +255,11 @@ export namespace mvt::symbol
 		{
 			namespace ranges = std::ranges;
 
+			if (mPointArray.empty())
+			{
+				return std::make_pair(Point{}, 0.0f);
+			}
+
 			if (offset >= mTotalDist)
 			{
 				return std::make_pair(mPointArray.back(), mAngles.back());
@@ -346,9 +351,15 @@ export namespace mvt::symbol
 
 			float maxTextWidthPx = attribs.textMaxWidth*style::GlyphSize;
 
+			//if (textField.find("University of Reading/") != std::string::npos)
+			//{
+			//	int i{};
+			//}
+
 			size_t start{} , end{};
 
-			for (size_t i=0; i<textField.size(); i++)
+			size_t i{};
+			for (/*size_t*/ i=0; i<textField.size(); i++)
 			{
 				char ch = textField.at(i);
 				float advance{};
@@ -363,8 +374,15 @@ export namespace mvt::symbol
 					// Search backwards for the last point we can split at (either a space or hyphen).
 					for (size_t j=end; j>=start; j--)
 					{
-						if (textField[j] == ' ' || textField[j] == '-' || textField[j] == '\n')
+						char jch = textField[j];
+						if (jch == ' ' || jch == '-' || jch == '\n' || jch == '/')
 						{
+							if (jch == '/' && j < textField.size() - 1)
+							{
+								// We want to split /after/ the '/'.
+								j++;
+							}
+
 							std::string_view text = textField.substr(start, j - start);
 							line = { text, GetWordLength(glyphAtlas, text) };
 							ft.lines.push_back(line);
@@ -376,11 +394,16 @@ export namespace mvt::symbol
 							start = i;
 							end = i;
 
-							if ((textField[j] == ' ' || textField[j] == '\n') && j < textField.size() - 1)
+							if ((jch == ' ' || jch == '\n') && j < textField.size() - 1)
 							{
 								start++;
 								end++;
 							}
+							else if (jch == '/' && j < textField.size() - 1)
+							{
+								end++;
+							}
+
 							break;
 						}
 
@@ -818,6 +841,11 @@ export namespace mvt::symbol
 			if (!attribs.textField.empty())
 			{
 				float haloScale = attribs.textSize/24.0f;
+
+				if (attribs.textField.find("University of Reading") != std::string::npos)
+				{
+					int i{};
+				}
 
 				for (const auto& font : attribs.textFont)
 				{

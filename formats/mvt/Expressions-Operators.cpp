@@ -889,7 +889,7 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 
 		if (numStops > 0)
 		{
-			if (inputValue < mStops.front().input)
+			if (inputValue <= mStops.front().input)
 			{
 				result = mStops[0].output;
 			}

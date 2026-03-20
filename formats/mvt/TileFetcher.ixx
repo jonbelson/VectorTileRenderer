@@ -21,15 +21,22 @@ export class ITileFetcher
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
 };
 
+
 // Test Tile Fetcher that always returns the same test file.
 export class TestTileFetcher : public ITileFetcher
 {
 	std::string mFilePath;
 
-public:
 	// filePath		PBF test file to return for all FetchTile calls.
-	TestTileFetcher(const std::string& filePath) : mFilePath(filePath) {}
+	TestTileFetcher(std::string_view filePath) : mFilePath(filePath) {}
+
+public:
 	virtual ~TestTileFetcher() {}
+
+	enum Error
+	{
+		FileNotFound
+	};
 
 	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
 	{
@@ -52,6 +59,16 @@ public:
 	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
 	{
 		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
+	}
+
+	static std::expected<TestTileFetcher*, Error> Create(std::string_view filePath)
+	{
+		std::error_code ec {};
+		bool exists = std::filesystem::is_regular_file(filePath, ec);
+		
+		if (!exists) return std::unexpected(Error::FileNotFound);
+
+		return { new TestTileFetcher(filePath) };
 	}
 };
 
