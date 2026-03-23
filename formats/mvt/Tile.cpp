@@ -535,7 +535,7 @@ namespace mvt::tile
 		{
 			for (int x=blX; x <= trX; x++)
 			{
-				tileSpec.emplace_back(TileSpec{ .zoom = zoom, .x = x, .y = y });
+				tileSpec.emplace_back(TileSpec{ .zoom = zoom, .y = y, .x = x });
 			}
 		}
 

@@ -208,6 +208,7 @@
     <ClCompile Include="core\D2DRenderTarget.cpp" />
     <ClCompile Include="core\D2DRenderTarget.ixx" />
     <ClCompile Include="Core\Geometry.ixx" />
+    <ClCompile Include="core\Logger.ixx" />
     <ClCompile Include="core\RenderTarget.ixx" />
     <ClCompile Include="formats\mvt\Debug.ixx" />
     <ClCompile Include="formats\mvt\Expressions-Operators.cpp" />

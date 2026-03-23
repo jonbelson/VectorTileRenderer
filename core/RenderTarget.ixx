@@ -37,11 +37,14 @@ namespace core::rendertarget
 		virtual ~RenderTarget() = default;
 
 		virtual void SetLineColor(const Color& color) = 0;
+		virtual void SetLineOpacity(float opacity) = 0;
+		virtual void SetLinePattern(const geometry::Rect& src) = 0;
+		virtual void SetLineWidth(float width) = 0;
+
 		virtual void SetFillColor(const Color& color) = 0;
 		virtual void SetFillOutlineColor(const Color& color) = 0;
 		virtual void SetFillOpacity(float opacity) = 0;;
 		virtual void SetFillPattern(const geometry::Rect& src) = 0;
-		virtual void SetLineWidth(float width) = 0;
 		virtual void SetCircleRadius(float circleRadius) = 0;
 
 		virtual void SetDashArray(const std::vector<float>& dashArray) = 0;

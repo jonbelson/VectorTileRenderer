@@ -18,8 +18,8 @@ namespace mvt::tile
 	export struct TileSpec
 	{
 		int zoom {};
-		int x{};
 		int y{};
+		int x{};
 	};
 
 

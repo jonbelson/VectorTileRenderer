@@ -117,6 +117,9 @@
     <ClCompile Include="..\geo\LatLong.ixx">
       <Filter>Project Modules\geo</Filter>
     </ClCompile>
+    <ClCompile Include="..\core\Logger.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

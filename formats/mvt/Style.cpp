@@ -2,13 +2,13 @@ module;
 
 #include "json.hpp"
 
-#include <atltrace.h>
 #include <fstream>
 
 module formats.mvt.style;
 
 import std;
 
+import core.logger;
 import formats.mvt.parser;
 import io.resource;
 
@@ -44,8 +44,21 @@ namespace mvt::style
 
 			for (const auto& suffix : suffixes)
 			{
-				std::string jsonUrl = spriteUrl + suffix.json;	// "/sprites@2x.json";
-				std::string pngUrl = spriteUrl + suffix.png;	// "/sprites@2x.png";
+				std::string jsonUrl { spriteUrl };
+				std::string pngUrl { spriteUrl };
+
+				auto pos = spriteUrl.find_first_of('?');
+
+				if (pos == std::string::npos)
+				{
+					jsonUrl.append(suffix.json);
+					pngUrl.append(suffix.png);
+				}
+				else
+				{
+					jsonUrl.insert(pos, suffix.json);
+					pngUrl.insert(pos, suffix.png);
+				}
 
 				auto jsonResult = io::resource::LoadFromUri(jsonUrl);
 				auto pngResult = io::resource::LoadFromUri(pngUrl);
@@ -158,7 +171,7 @@ namespace mvt::style
 
 		if (!mSprites.Load(mSpriteUrl))
 		{
-			ATLTRACE("Failed to load sprites\n");
+			core::logger::Write(std::format("Failed to load sprites from {}\n", mSpriteUrl));
 		}
 
 		mGlyphs = Glyphs(mGlyphUrl);
@@ -179,6 +192,8 @@ namespace mvt::style
 				return style;
 		}
 
+		core::logger::Write(std::format("Failed to load style from {}\n", fileName));
+
 		return nullptr;
 	}
 
@@ -191,12 +206,16 @@ namespace mvt::style
 		if (style->ParseFromJson(data))
 			return style;
 
+		core::logger::Write(std::format("Failed to load style from {}\n", s));
+
 		return nullptr;
 	}
 
 
 	std::shared_ptr<Style> Style::LoadFromUrl(const std::string& Url)
 	{
+		core::logger::Write(std::format("Loading a style from a URL is currently unsupported: {}\n", Url));
+
 		return nullptr;
 	}
 

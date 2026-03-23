@@ -69,6 +69,7 @@ export namespace mvt::symbol
 		float textLineHeight { 1.2f };
 		float textMaxWidth { 10.0f };
 		float textOpacity { 1.0f };
+		float textRotate { 0.0f };
 		TextRotationAlignment textRotationAlignment;
 		float textSize { 16.0f };
 
@@ -135,6 +136,7 @@ export namespace mvt::symbol
 			textJustify = TextJustifyToEnum(layer->mTextJustify.GetValue(feature, zoom));
 			textMaxWidth = layer->mTextMaxWidth.GetValue(feature, zoom);
 			textOpacity = layer->mTextOpacity.GetValue(feature, zoom);
+			textRotate = layer->mTextRotate.GetValue(feature, zoom);
 			textRotationAlignment = TextRotationAlignmentToEnum(layer->mTextRotationAlignment.GetValue(feature, zoom));
 			textSize = layer->mTextSize.GetValue(feature, zoom);
 
@@ -172,7 +174,7 @@ export namespace mvt::symbol
 			ReplaceTokens(feature, textField);
 
 			textScale = textSize/style::GlyphSize;
-			textScale *= 2.0f;	// XXX debugging purposes.
+			////textScale *= 2.0f;	// XXX debugging purposes.
 
 		}
 	};
@@ -351,15 +353,9 @@ export namespace mvt::symbol
 
 			float maxTextWidthPx = attribs.textMaxWidth*style::GlyphSize;
 
-			//if (textField.find("University of Reading/") != std::string::npos)
-			//{
-			//	int i{};
-			//}
-
 			size_t start{} , end{};
 
-			size_t i{};
-			for (/*size_t*/ i=0; i<textField.size(); i++)
+			for (size_t i=0; i<textField.size(); i++)
 			{
 				char ch = textField.at(i);
 				float advance{};
@@ -842,11 +838,6 @@ export namespace mvt::symbol
 			{
 				float haloScale = attribs.textSize/24.0f;
 
-				if (attribs.textField.find("University of Reading") != std::string::npos)
-				{
-					int i{};
-				}
-
 				for (const auto& font : attribs.textFont)
 				{
 					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
@@ -872,7 +863,19 @@ export namespace mvt::symbol
 
 						if (placedSymbols.TryPlace(bbox))
 						{
+							if (attribs.textRotate != 0.0f)
+							{
+								renderTarget->PushTranslation(point.x, point.y);
+								renderTarget->PushRotation(attribs.textRotate);
+								renderTarget->PushTranslation(-point.x, -point.y);
+							}
 							RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
+							if (attribs.textRotate != 0.0f)
+							{
+								renderTarget->PopTransform();
+								renderTarget->PopTransform();
+								renderTarget->PopTransform();
+							}
 						}
 
 						break;

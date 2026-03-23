@@ -18,10 +18,13 @@ namespace core::rendertarget
 		virtual ~D2DRenderTarget();
 
 		virtual void SetLineColor(const Color& color) override;
+		virtual void SetLineOpacity(float opacity) override;
+		virtual void SetLinePattern(const geometry::Rect& src) override;
+		virtual void SetLineWidth(float lineWidth) override;
+
 		virtual void SetFillColor(const Color& color) override;
 		virtual void SetFillOutlineColor(const Color& color) override;
 		virtual void SetFillOpacity(float opacity) override;
-		virtual void SetLineWidth(float lineWidth) override;
 		virtual void SetCircleRadius(float circleRadius) override;
 
 		virtual void SetDashArray(const std::vector<float>& dashArray) override;

@@ -129,6 +129,7 @@ namespace core::rendertarget
 		D2D1_COLOR_F mLineColor{ 0 };
 		D2D1_COLOR_F mFillColor{ 0 };
 		D2D1_COLOR_F mFillOutlineColor{ 0 };
+		float mLineOpacity{ 1.0f };
 		float mFillOpacity{ 1.0f };
 		float mStrokeWidth{ 1.0f };
 		float mCircleRadius{ 10.f };
@@ -151,8 +152,11 @@ namespace core::rendertarget
 		ComPtr<ID2D1Effect> mColorMatrixEffect;
 		ComPtr<ID2D1Effect> mUnPremultiplyEffect;
 
-		enum FillMode { Solid, Pattern };
-		FillMode mFillMode { Solid };
+		enum struct LineMode { Colour, Pattern };
+		LineMode mLineMode{ LineMode::Colour };
+
+		enum struct FillMode { Solid, Pattern };
+		FillMode mFillMode { FillMode::Solid };
 
 		using Matrix = D2D1_MATRIX_3X2_F;
 		std::stack<Matrix> mTransforms;
@@ -590,11 +594,23 @@ namespace core::rendertarget
 			return true;
 		}
 
-		void SetLineColor(const Color& color) { mLineColor = ToColorF(color); }
-		void SetFillColor(const Color& color) { mFillColor = ToColorF(color); mFillMode = Solid; }
+		void SetLineColor(const Color& color)
+		{
+			mLineColor = ToColorF(color);
+			mLineMode = LineMode::Colour;
+		}
+
+		void SetLineOpacity(float opacity) { mLineOpacity = opacity;; }
+		void SetLineWidth(float lineWidth) { mStrokeWidth = lineWidth; }
+
+		void SetFillColor(const Color& color)
+		{
+			mFillColor = ToColorF(color);
+			mFillMode = FillMode::Solid;
+		}
+
 		void SetFillOutlineColor(const Color& color) { mFillOutlineColor = ToColorF(color); }
 		void SetFillOpacity(float opacity) { mFillOpacity = opacity; }
-		void SetLineWidth(float lineWidth) { mStrokeWidth = lineWidth; }
 		void SetCircleRadius(float circleRadius) { mCircleRadius = circleRadius; }
 
 		void SetDashArray(const std::vector<float>& dashArray) { mDashes = dashArray; }
@@ -700,7 +716,7 @@ namespace core::rendertarget
 					if (SUCCEEDED(hr))
 					{
 						mBitmapBrush->SetOpacity(mFillOpacity);
-						mFillMode = Pattern;
+						mFillMode = FillMode::Pattern;
 					}
 
 					//if (SUCCEEDED(hr))
@@ -708,10 +724,46 @@ namespace core::rendertarget
 					//	mBitmapBrush->SetSourceRectangle();
 					//}
 				}
-
-
 			}
+		}
 
+		void SetLinePattern(const geometry::Rect& src)
+		{
+			if (mBitmapHandle == InvalidHandle) return;
+
+			auto it = mBitmaps.find(mBitmapHandle);
+			if (it == mBitmaps.end()) return;
+
+			auto bitmap = it->second;
+			if (!bitmap) return;
+
+			ComPtr<ID2D1Bitmap> lineBitmap;
+			HRESULT hr = mRenderTarget->CreateBitmap(D2D1::SizeU(src.width, src.height), D2D1::BitmapProperties(
+				D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+								  D2D1_ALPHA_MODE_PREMULTIPLIED)), lineBitmap.GetAddressOf());
+
+			if (SUCCEEDED(hr))
+			{
+				auto bitmapSource = ToRectU(src);
+				auto patternDest = D2D1::Point2U(0, 0);
+				hr = lineBitmap->CopyFromBitmap(&patternDest, bitmap.Get(), &bitmapSource);
+
+				if (SUCCEEDED(hr))
+				{
+					mBitmapBrush = nullptr;
+
+					hr = mRenderTarget->CreateBitmapBrush(lineBitmap.Get(), D2D1::BitmapBrushProperties(
+						D2D1_EXTEND_MODE_WRAP,
+						D2D1_EXTEND_MODE_WRAP,
+						D2D1_BITMAP_INTERPOLATION_MODE_LINEAR), mBitmapBrush.GetAddressOf());
+
+					if (SUCCEEDED(hr))
+					{
+						mBitmapBrush->SetOpacity(mLineOpacity);
+						mLineMode = LineMode::Pattern;
+					}
+				}
+			}
 
 		}
 
@@ -740,7 +792,14 @@ namespace core::rendertarget
 					auto strokeStyle = CreateStrokeStyle();
 					if (strokeStyle)
 					{
-						mRenderTarget->DrawGeometry(geometry.Get(), mSolidBrush.Get(), mStrokeWidth, strokeStyle.Get());
+						if (mLineMode == LineMode::Pattern)
+						{
+							mRenderTarget->DrawGeometry(geometry.Get(), mBitmapBrush.Get(), mStrokeWidth, strokeStyle.Get());
+						}
+						else if (mLineMode == LineMode::Colour)
+						{
+							mRenderTarget->DrawGeometry(geometry.Get(), mSolidBrush.Get(), mStrokeWidth, strokeStyle.Get());
+						}
 					}
 				}
 			}
@@ -774,12 +833,12 @@ namespace core::rendertarget
 
 			if (pathGeometry)
 			{
-				if (mFillMode == Solid)
+				if (mFillMode == FillMode::Solid)
 				{
 					mSolidBrush->SetColor(mFillColor);
 					mRenderTarget->FillGeometry(pathGeometry.Get(), mSolidBrush.Get());
 				}
-				else if (mFillMode == Pattern)
+				else if (mFillMode == FillMode::Pattern)
 				{
 					mBitmapBrush->SetOpacity(mFillOpacity);
 					mRenderTarget->FillGeometry(pathGeometry.Get(), mBitmapBrush.Get());
@@ -968,22 +1027,20 @@ namespace core::rendertarget
 	}
 
 	void D2DRenderTarget::SetLineColor(const Color& color) { mImpl->SetLineColor(color); }
+	void D2DRenderTarget::SetLineOpacity(float opacity) { mImpl->SetLineOpacity(opacity); }
+	void D2DRenderTarget::SetLineWidth(float lineWidth) { mImpl->SetLineWidth(lineWidth); }
+	void D2DRenderTarget::SetLinePattern(const geometry::Rect& src) { mImpl->SetLinePattern(src); }
+
 	void D2DRenderTarget::SetFillColor(const Color& color) { mImpl->SetFillColor(color); }
 	void D2DRenderTarget::SetFillOutlineColor(const Color& color) { mImpl->SetFillOutlineColor(color); }
 	void D2DRenderTarget::SetFillOpacity(float opacity) { mImpl->SetFillOpacity(opacity); }
 	void D2DRenderTarget::SetFillPattern(const geometry::Rect& src) { mImpl->SetFillPattern(src); }
 
-	void D2DRenderTarget::SetLineWidth(float lineWidth) { mImpl->SetLineWidth(lineWidth); }
 	void D2DRenderTarget::SetCircleRadius(float circleRadius) { mImpl->SetCircleRadius(circleRadius); }
 
 	void D2DRenderTarget::SetDashArray(const std::vector<float>& dashArray) { mImpl->SetDashArray(dashArray); }
 	void D2DRenderTarget::SetLineCap(LineCap lineCap) { mImpl->SetLineCap(lineCap); }
 	void D2DRenderTarget::SetLineJoin(LineJoin lineJoin) { mImpl->SetLineJoin(lineJoin); }
-
-	//void D2DRenderTarget::SetBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap)
-	//{
-	//	if (mImpl) mImpl->SetBitmap(bitmap);
-	//}
 
 	BitmapHandle D2DRenderTarget::RegisterBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap)
 	{

@@ -211,17 +211,12 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderLine(const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
+	bool Renderer::RenderLine(RenderContext& context, const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
 
 		Visibility visibility = VisibilityToEnum(layer->mLineVisibility.GetValue(feature, zoom));
 		bool visible = visibility == Visibility::Visible;
-
-		if (feature.mValues.contains("type") && feature.mValues.at("type") == mvt::feature::ValueField { "Primary" } )
-		{
-		////	assert(false);
-		}
 
 		if (visible)
 		{
@@ -244,7 +239,26 @@ namespace mvt::renderer
 			LineCap lineCap = LineCapToEnum(layer->mLineCap.GetValue(feature, zoom));
 			LineJoin lineJoin = LineJoinToEnum(layer->mLineJoin.GetValue(feature, zoom));
 			
-			mRenderTarget->SetLineColor(lineColor);
+			std::string linePattern = layer->mLinePattern.GetValue(feature, zoom);	// XXX Only evaluate at interger zoom?
+
+			if (!linePattern.empty())
+			{
+				auto spriteSpec = context.sprites.Lookup(linePattern);
+
+				if (spriteSpec)
+				{
+					const auto& spec = spriteSpec.value();
+
+					mRenderTarget->SetActiveBitmap(context.spritesHandle);
+					mRenderTarget->SetLinePattern(spec->rect);
+					mRenderTarget->SetLineOpacity(lineOpacity);
+				}
+			}
+			else
+			{
+				mRenderTarget->SetLineColor(lineColor);
+			}
+
 			mRenderTarget->SetLineCap(lineCap);
 			mRenderTarget->SetLineJoin(lineJoin);
 			mRenderTarget->SetDashArray(dashArray);
@@ -347,7 +361,7 @@ namespace mvt::renderer
 					case LayerType::Line:
 						if (feature.mGeometryType == geometry::GeometryType::LineString)
 						{
-							RenderLine(layer.get(), feature, zoom);
+							RenderLine(context, layer.get(), feature, zoom);
 						}
 						break;
 					case LayerType::Symbol:
@@ -384,7 +398,8 @@ namespace mvt::renderer
 			rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
 			renderContext.spritesHandle = spriteHandle;
 
-			mTileSize = 1024;
+			//mTileSize = 1024;
+			mRenderTarget->PushScale(2.0f);
 
 			for (const auto& background : mStyle->mBackground)
 			{
@@ -413,8 +428,8 @@ namespace mvt::renderer
 		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
 		renderContext.spritesHandle = spriteHandle;
 
-		mTileSize = 1024;
-////////		mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
+//		mTileSize = 1024;
+		mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
 
 		for (const auto& background : mStyle->mBackground)
 		{
@@ -470,7 +485,10 @@ namespace mvt::renderer
 		{
 			const auto& tileSpec = tileSpecArray[i];
 
-			mRenderTarget->PushTranslation(mTileSize*(tileSpec.x - startx), mTileSize*(tileSpec.y - starty));
+			float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
+			float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
+
+			mRenderTarget->PushTranslation(offx, offy);
 
 			const auto tile = mTileCache->GetTile(tileSpec.x, tileSpec.y, tileSpec.zoom);
 			if (tile)
@@ -487,7 +505,10 @@ namespace mvt::renderer
 		{
 			const auto& tileSpec = tileSpecArray[i];
 
-			mRenderTarget->PushTranslation(mTileSize*(tileSpec.x - startx), mTileSize*(tileSpec.y - starty));
+			float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
+			float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
+
+			mRenderTarget->PushTranslation(offx, offy);
 
 			RenderSymbols(tileFeatureSymbols[i], renderContext, zoom);
 

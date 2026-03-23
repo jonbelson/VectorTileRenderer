@@ -78,19 +78,45 @@ export class HttpTileFetcher : public ITileFetcher
 {
 	std::string mUrl;
 
-	public:
-		HttpTileFetcher(const std::string& url) : mUrl(url) {}
-		virtual ~HttpTileFetcher() {}
+	HttpTileFetcher(std::string_view url) : mUrl(url) {}
 
-		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+public:
+	virtual ~HttpTileFetcher() {}
+
+	enum Error
+	{
+		InvalidUrl, MissingTemplates
+	};
+
+	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+	{
+		// Placeholder implementation
+		return std::vector<std::byte>{};
+	}
+
+	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
+	{
+		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
+	}
+
+	// url	Url of tile source, with {zoom}, {x}, {y} templates.
+	std::expected<HttpTileFetcher*, Error> Create(std::string_view url)
+	{
+		if (url.find("http://") != 0 && url.find("https://") != 0)
 		{
-			// Placeholder implementation
-			return std::vector<std::byte>{};
+			return std::unexpected(InvalidUrl);
 		}
 
-		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
+		for (const auto& t : { "{zoom}", "{x}", "{y}" })
 		{
-			return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
+			if (url.find(t) == std::string::npos)
+			{
+				return std::unexpected(MissingTemplates);
+			}
 		}
+
+		return new HttpTileFetcher(url);
+
+	}
 };
 
