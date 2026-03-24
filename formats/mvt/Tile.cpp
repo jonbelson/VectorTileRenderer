@@ -1,6 +1,5 @@
 module;
 
-#include <atltrace.h>
 #include <numbers>
 #include <vector>
 
@@ -149,8 +148,6 @@ namespace mvt::tile
 			if (!ok) return false;
 
 			multiPoint.points.emplace_back(geometry::Point(dx*scaler, dy*scaler));
-
-			//ATLTRACE("MoveTo(%d, %d)\n", dx, dy);
 		}
 
 		return true;
@@ -187,8 +184,6 @@ namespace mvt::tile
 
 			points.emplace_back(geometry::Point(cx*scaler, cy*scaler));
 
-			//ATLTRACE("MoveTo(%d, %d)\n", cx, cy);
-
 			ok = decoder.GetCommand(Id, Count);
 			if (!ok) return false;
 			if (Id != Command::LineTo) return false;
@@ -202,8 +197,6 @@ namespace mvt::tile
 				cx += dx;
 				cy += dy;
 				points.emplace_back(geometry::Point(cx*scaler, cy*scaler));
-
-				//ATLTRACE("LineTo(%d, %d)\n", cx, cy);
 			}
 
 			lineString.lines.emplace_back(std::move(points));
@@ -245,8 +238,6 @@ namespace mvt::tile
 
 			points.emplace_back(cx*scaler, cy*scaler);
 
-			//ATLTRACE("MoveTo(%d, %d)\n", cx, cy);
-
 
 			ok = decoder.GetCommand(Id, Count);
 
@@ -262,8 +253,6 @@ namespace mvt::tile
 				cx += dx;
 				cy += dy;
 				points.emplace_back(cx*scaler, cy*scaler);
-
-				//ATLTRACE("LineTo(%d, %d)\n", cx, cy);
 			}
 
 			ok = decoder.GetCommand(Id, Count);
@@ -271,8 +260,6 @@ namespace mvt::tile
 			if (!ok) return false;
 			if (Id != Command::ClosePath) return false;
 			if (Count != 1) return false;
-
-			//ATLTRACE("ClosePath()\n");
 
 			float area = GetArea(points);
 
@@ -335,8 +322,6 @@ namespace mvt::tile
 					//mvtTile->mLayerName = layerName;
 					mvtTile->mFeatures[layerName] = Tile::FeatureList{};
 
-					//ATLTRACE("Layer: %s (%d x %d)\n", layerName.c_str(), extent, extent);
-
 					const auto& keys = layers[l].keys();
 					const auto& values = layers[l].values();
 
@@ -355,8 +340,6 @@ namespace mvt::tile
 					auto features = layers[l].features();
 					for (int f = 0; f < features.size(); f++)
 					{
-						//ATLTRACE("  Feature: %d\n", f);
-
 						feature::Feature mvtFeature;
 
 						uint64_t id = features[f].id();
@@ -410,8 +393,6 @@ namespace mvt::tile
 							std::string s = std::visit(VariantPrint(), valueField);
 
 							mvtFeature.mValues[keys[tagIndex]] = valueField;
-
-							//ATLTRACE("  tag: %s\t value : %s \n", keys[tagIndex].c_str(), s.c_str());
 						}
 
 						const auto& geometry = features[f].geometry();
@@ -422,7 +403,6 @@ namespace mvt::tile
 						{
 							case vector_tile::Tile_GeomType_POINT:
 								{
-									//ATLTRACE("  MultiPoint\n");
 									geometry::MultiPoint pointType;
 									if (DecodePoint(decoder, pointType, scaler))
 									{
@@ -433,7 +413,6 @@ namespace mvt::tile
 								break;
 							case vector_tile::Tile_GeomType_LINESTRING:
 								{
-									//ATLTRACE("  LineString\n");
 									geometry::LineString lineString;
 									if (DecodeLineString(decoder, lineString, scaler))
 									{
@@ -444,7 +423,6 @@ namespace mvt::tile
 								break;
 							case vector_tile::Tile_GeomType_POLYGON:
 								{
-									//ATLTRACE("  MultiPolygon\n");
 									geometry::MultiPolygon multiPolygon;
 									if (DecodePolygon(decoder, multiPolygon, scaler))
 									{

@@ -1,6 +1,5 @@
 module;
 
-#include <atltrace.h>
 #include <cassert>
 
 #undef min
@@ -9,21 +8,22 @@ module;
 module formats.mvt.renderer;
 
 import core.color;
+import core.logger;
 import formats.mvt.layer;
 import formats.mvt.symbol;
 
-using namespace core;
-using namespace core::rendertarget;
-
-using namespace mvt::layer;
-using namespace mvt::renderer;
-using namespace mvt::tile;
-
-using LineCap = core::rendertarget::LineCap;
-using LineJoin = core::rendertarget::LineJoin;
-
 namespace mvt::renderer
 {
+	using namespace core;
+	using namespace core::rendertarget;
+
+	using namespace mvt::layer;
+	using namespace mvt::renderer;
+	using namespace mvt::tile;
+
+	using LineCap = core::rendertarget::LineCap;
+	using LineJoin = core::rendertarget::LineJoin;
+
 	enum core::rendertarget::LineCap LineCapToEnum(std::string_view lineCap)
 	{
 		if (lineCap == "butt") return LineCap::Butt;
@@ -250,18 +250,19 @@ namespace mvt::renderer
 					const auto& spec = spriteSpec.value();
 
 					mRenderTarget->SetActiveBitmap(context.spritesHandle);
+					mRenderTarget->SetDashArray(FloatArray{});
 					mRenderTarget->SetLinePattern(spec->rect);
 					mRenderTarget->SetLineOpacity(lineOpacity);
 				}
 			}
 			else
 			{
+				mRenderTarget->SetDashArray(dashArray);
 				mRenderTarget->SetLineColor(lineColor);
 			}
 
 			mRenderTarget->SetLineCap(lineCap);
 			mRenderTarget->SetLineJoin(lineJoin);
-			mRenderTarget->SetDashArray(dashArray);
 			mRenderTarget->SetLineWidth(lineWidth);
 
 			auto transformed = TileToWorld(feature.mLineString);
@@ -370,7 +371,7 @@ namespace mvt::renderer
 					case LayerType::FillExtrusion:
 						break;
 					default:
-						ATLTRACE("Unhandled LayerType '%d'\n", layer->mType);
+						core::logger::Write(std::format("Unhandled LayerType '{}'\n", static_cast<int>(layer->mType)));
 						break;
 
 				}

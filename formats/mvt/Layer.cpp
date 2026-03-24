@@ -1,7 +1,5 @@
 module;
 
-#include <atltrace.h>
-
 #include "json.hpp"
 
 module formats.mvt.layer;

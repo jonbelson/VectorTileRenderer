@@ -220,6 +220,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	}
 #endif
 
+
 #if 0
 
 	//int zoom = 15;
@@ -255,7 +256,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 #endif
 
-#if 0
+#if 1
 	// ESRI WorldBasemap tiles
 	 
 	for (const auto& styleName : { "colored-pencil", "community", "midcentury", "modern-antique", "newspaper", "nova" })
@@ -264,8 +265,9 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 		auto style = mvt::style::Style::LoadFromFile(styleFile);
 		if (style)
 		{
-			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-2726-4074.pbf)");
+//			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-2726-4074.pbf)");
 //			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-2726-4075.pbf)");
+			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-ZYX-16-21809-32598.pbf)");
 			if (tileFetcher)
 			{
 				std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
@@ -276,8 +278,9 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 				mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
 
-				mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4074 };
+				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4074 };
 				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4075 };
+				mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };
 				tileRenderer.RenderTile(tileSpec);
 
 				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", styleName, tileSpec.zoom, tileSpec.y, tileSpec.x);
@@ -290,7 +293,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 #endif
 
-#if 1
+#if 0
 	// Render a single ESRI OpenBasemap Tile.
 
 	for (const auto& styleName : { "blueprint", "light-gray", "dark-gray", "navigation", "osm-style", "streets", "streets-night" })
@@ -300,8 +303,8 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 		if (style)
 		{
 
-			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-2726-4074.pbf)");
-			//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-2726-4075.pbf)");
+			//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-2726-4074.pbf)");
+			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-2726-4075.pbf)");
 			if (tileFetcher)
 			{
 				std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
@@ -312,8 +315,8 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 				mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
 
-				mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4074 };
-				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4075 };
+				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4074 };
+				mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4075 };
 				tileRenderer.RenderTile(tileSpec);
 
 				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", styleName, tileSpec.zoom, tileSpec.y, tileSpec.x);

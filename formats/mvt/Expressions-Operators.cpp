@@ -1,10 +1,10 @@
 module;
 
 #include <cassert>
-#include <atltrace.h>
 
 module formats.mvt.expressions:operators;
 
+import core.logger;
 import formats.mvt.feature;
 import formats.mvt.parser;
 
@@ -400,7 +400,7 @@ Value JsonTypeToValue(const json& data)
 		if (!exprOp)
 		{
 			///assert(data[0].get<std::string>() != "match");
-			ATLTRACE("Unhandled Operation '%s'\n", data[0].get<std::string>().c_str());
+			core::logger::Write(std::format("Unhandled Operation '{}'\n", data[0].get<std::string>().c_str()));
 		}
 	}
 	else if (IsFunction(data))

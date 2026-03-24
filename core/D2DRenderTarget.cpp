@@ -782,22 +782,50 @@ namespace core::rendertarget
 			assert(mLineColor.r != -1.0f);
 			assert(mStrokeWidth != 0.0f);
 
-			mSolidBrush->SetColor(mLineColor);
-
 			for (const auto& line : lineString->lines)
 			{
-				auto geometry = CreatePathGeometry(line);
-				if (geometry)
+				auto strokeStyle = CreateStrokeStyle();
+				if (strokeStyle)
 				{
-					auto strokeStyle = CreateStrokeStyle();
-					if (strokeStyle)
+					if (mLineMode == LineMode::Pattern)
 					{
-						if (mLineMode == LineMode::Pattern)
+						D2D1::Matrix3x2F current{};
+						mBitmapBrush->GetTransform(&current);
+
+						mBitmapBrush->SetOpacity(mLineOpacity);
+
+						for (size_t i=1; i<line.size(); i++)
 						{
-							mRenderTarget->DrawGeometry(geometry.Get(), mBitmapBrush.Get(), mStrokeWidth, strokeStyle.Get());
+							const geometry::Point& p1 = line[i - 1];
+							const geometry::Point& p2 = line[i];
+
+							float angleDeg = std::atan2(p2.y - p1.y, p2.x - p1.x)*180.0f/std::numbers::pi_v<float>;
+
+							ComPtr<ID2D1Bitmap> bitmap;
+							mBitmapBrush->GetBitmap(bitmap.GetAddressOf());
+							if (bitmap)
+							{
+								auto size = bitmap->GetSize();
+								float heightScale = mStrokeWidth/size.height;
+
+								auto scale = D2D1::Matrix3x2F::Scale(heightScale, heightScale);
+								auto translation = D2D1::Matrix3x2F::Translation(0.0f, -(size.height*heightScale/2.0f));
+								auto rotation = D2D1::Matrix3x2F::Rotation(angleDeg);
+								auto translation2 = D2D1::Matrix3x2F::Translation(p1.x, p1.y);
+								mBitmapBrush->SetTransform(scale*translation*rotation*translation2);
+
+								// XXX For a brush transform, transforms effectively applied in left to right order (world-to-texture).
+								mRenderTarget->DrawLine(ToPointF(p1), ToPointF(p2), mBitmapBrush.Get(), mStrokeWidth, strokeStyle.Get());
+							}
 						}
-						else if (mLineMode == LineMode::Colour)
+						mBitmapBrush->SetTransform(current);
+					}
+					else if (mLineMode == LineMode::Colour)
+					{
+						auto geometry = CreatePathGeometry(line);
+						if (geometry)
 						{
+							mSolidBrush->SetColor(mLineColor);
 							mRenderTarget->DrawGeometry(geometry.Get(), mSolidBrush.Get(), mStrokeWidth, strokeStyle.Get());
 						}
 					}

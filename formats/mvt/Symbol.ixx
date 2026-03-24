@@ -2,7 +2,6 @@ module;
 
 //#include <vector>
 
-#include <atltrace.h>
 #include <cassert>
 #include <cstdint>
 
@@ -15,6 +14,7 @@ import std;
 
 import core.color;
 import core.geometry;
+import core.logger;
 import core.rendertarget;
 import formats.mvt.debug;
 import formats.mvt.layer;
@@ -104,7 +104,7 @@ export namespace mvt::symbol
 						}
 						else
 						{
-							//ATLTRACE("Could not substitute '{%s}' \n", key.c_str());
+							core::logger::Write(std::format("Could not substitute '{{}}' \n", key.c_str()));
 							break;
 						}
 					}
@@ -510,6 +510,29 @@ export namespace mvt::symbol
 			renderTarget->FillCircle(&multiPoint);
 		}
 
+		// Utility class for applying a RenderTarget rotation at a point.
+		// Note that any other transforms applied during the lifetime of this object must be popped first.
+		class RotateAtPoint
+		{
+			RenderTarget* mRenderTarget {};
+
+		public:
+			RotateAtPoint(RenderTarget* renderTarget, const Point& point, float angleDeg)
+				: mRenderTarget(renderTarget)
+			{
+				mRenderTarget->PushTranslation(point.x, point.y);
+				mRenderTarget->PushRotation(angleDeg);
+				mRenderTarget->PushTranslation(-point.x, -point.y);
+			}
+
+			~RotateAtPoint()
+			{
+				mRenderTarget->PopTransform();
+				mRenderTarget->PopTransform();
+				mRenderTarget->PopTransform();
+			}
+		};
+
 		BitmapHandle GetGlyphBitmapHandle(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
 		{
 			BitmapHandle glyphHandle = context.GetBitmapHandle(font, /*start,*/ haloWidth);
@@ -829,6 +852,12 @@ export namespace mvt::symbol
 
 					if (placedSymbols.TryPlace(r))
 					{
+						std::optional<RotateAtPoint> rap;
+						if (attribs.iconRotate != 0.0f)
+						{
+							rap.emplace(renderTarget, point, attribs.iconRotate);
+						}
+
 						renderTarget->DrawBitmap(spec->rect, r);
 					}
 				}
@@ -865,16 +894,12 @@ export namespace mvt::symbol
 						{
 							if (attribs.textRotate != 0.0f)
 							{
-								renderTarget->PushTranslation(point.x, point.y);
-								renderTarget->PushRotation(attribs.textRotate);
-								renderTarget->PushTranslation(-point.x, -point.y);
+								RotateAtPoint rap(renderTarget, point, attribs.textRotate);
+								RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
 							}
-							RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
-							if (attribs.textRotate != 0.0f)
+							else
 							{
-								renderTarget->PopTransform();
-								renderTarget->PopTransform();
-								renderTarget->PopTransform();
+								RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
 							}
 						}
 

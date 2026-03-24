@@ -6,7 +6,6 @@ module;
 #pragma warning(pop)
 
 #include <cstdint>
-#include <atltrace.h>
 
 export module formats.mvt.tile;
 
