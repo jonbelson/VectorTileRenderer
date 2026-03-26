@@ -4,6 +4,9 @@ module;
 
 module formats.mvt.expressions:operators;
 
+import std;
+
+import core.color;
 import core.logger;
 import formats.mvt.feature;
 import formats.mvt.parser;
@@ -160,7 +163,7 @@ std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 
 
 // Check if the given JSON data represents an Expression by checking the first element.
-/*static*/ bool IsExpression(const json& data)
+/*static*/ bool IsJsonExpression(const json& data)
 {
 	if (data.size() > 0 && data.is_array())
 	{
@@ -177,7 +180,7 @@ std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 }
 
 // Check if the given JSON data represents a Function.
-bool IsFunction(const json& data)
+bool IsJsonFunction(const json& data)
 {
 	if (data.is_object())
 	{
@@ -190,14 +193,14 @@ bool IsFunction(const json& data)
 }
 
 // Check if json contains an array.
-static bool IsArray(const json& data)
+static bool IsJsonArray(const json& data)
 {
 	return data.is_array();
 }
 
 
 // Check if json contains a string.
-bool IsString(const json& data)
+bool IsJsonString(const json& data)
 {
 	return data.is_string();
 }
@@ -281,7 +284,7 @@ auto MakeExpression(const json& data) -> std::shared_ptr<IOperator>
 // Create an Operator that performs the task of an Expression.
 std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 {
-	if (IsExpression(data))
+	if (IsJsonExpression(data))
 	{
 		ExpressionType exprType = ExpressionToExpressionType(data);
 
@@ -332,6 +335,18 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorAll>(data);
 				}
+			case ExpressionType::Any:
+				{
+					return MakeExpression<OperatorAny>(data);
+				}
+			case ExpressionType::Case:
+				{
+					return MakeExpression<OperatorCase>(data);
+				}
+			case ExpressionType::Coalesce:
+				{
+					return MakeExpression<OperatorCoalesce>(data);
+				}
 			case ExpressionType::Match:
 				{
 					return MakeExpression<OperatorMatch>(data);
@@ -372,24 +387,38 @@ std::shared_ptr<IOperator> CreateFunctionOperatorFromJson(const json& data)
 
 
 
-bool IsNullValue(const Value& op)
+//bool IsNullValue(const Value& op)
+//{
+//	return std::holds_alternative<std::monostate>(op);
+//}
+
+//bool IsFloatValue(const Value& op)
+//{
+//	return std::holds_alternative<float>(op);
+//}
+
+
+bool JsonArrayToValueArray(const json& data, std::vector<Value>& values, int start=0)
 {
-	return std::holds_alternative<std::monostate>(op);
+	if (!data.is_array()) return false;
+
+	values.clear();
+	values.reserve(data.size() - start);
+
+	for (size_t i = start; i<data.size(); i++)
+	{
+		values.emplace_back(JsonTypeToValue(data[i]));
+	}
+
+	return true;
 }
-
-bool IsFloatValue(const Value& op)
-{
-	return std::holds_alternative<float>(op);
-}
-
-
 
 // Convert the data in the supplied JSON to a Value, either a simple type or an OperatorPtr.
 Value JsonTypeToValue(const json& data)
 {
 	Value result;
 
-	if (IsExpression(data))
+	if (IsJsonExpression(data))
 	{
 		std::shared_ptr<IOperator> exprOp = CreateOperatorFromJson(data);
 		if (exprOp)
@@ -403,7 +432,7 @@ Value JsonTypeToValue(const json& data)
 			core::logger::Write(std::format("Unhandled Operation '{}'\n", data[0].get<std::string>().c_str()));
 		}
 	}
-	else if (IsFunction(data))
+	else if (IsJsonFunction(data))
 	{
 		std::shared_ptr<IOperator> exprOp = CreateFunctionOperatorFromJson(data);
 		if (exprOp)
@@ -565,7 +594,7 @@ bool OperatorGet::ParseFromJson(const json& data)
 				mValues.push_back(data[1].get<std::string>());
 				return true;
 			}
-			else if (IsExpression(data[1]))
+			else if (IsJsonExpression(data[1]))
 			{
 				std::shared_ptr<IOperator> exprOp = CreateOperatorFromJson(data[1]);
 				if (exprOp)
@@ -614,7 +643,7 @@ bool _OperatorDecision::ParseFromJson(const json& data)
 		{
 			Value op = JsonTypeToValue(data[i]);
 
-			assert(!IsNullValue(op));
+			assert(!op.IsNull());
 
 			mValues.push_back(std::move(op));
 		}
@@ -751,6 +780,89 @@ Value OperatorAll::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 	return true;
 }
+
+Value OperatorAny::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() > 0)
+	{
+		for (const auto& arg : mValues)
+		{
+			Value value = GetValue(arg, feature, zoom);
+			if (value.IsBool() && value.GetBool() == true)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
+bool OperatorCase::ParseFromJson(const json& data)
+{
+	if (data.is_array() && data.size() >= 4 && data.size()%2 == 0)
+	{
+		for (size_t i = 2; i<data.size(); i+=2)
+		{
+			Test test;
+			test.condition = std::move(JsonTypeToValue(data[i - 1]));
+			test.output = std::move(JsonTypeToValue(data[i]));
+
+			mConditions.emplace_back(std::move(test));
+		}
+
+		mFallback = JsonTypeToValue(data.back());
+
+		return true;
+	}
+
+	return false;
+}
+
+Value OperatorCase::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	for (const auto& test : mConditions)
+	{
+		Value value = GetValue(test.condition, feature, zoom);
+
+		// XXX Type error means expression returns default value for property?
+		if (!value.IsBool()) return {  };
+
+		if (value.IsBool() && value.GetBool() == true) return test.output;
+	}
+
+	return mFallback;
+}
+
+
+bool OperatorCoalesce::ParseFromJson(const json& data)
+{
+	if (data.is_array())
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+Value OperatorCoalesce::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	for (const auto& value : mValues)
+	{
+		Value result = GetValue(value, feature, zoom);
+
+		// XXX Check for invalid 'image' expresions.
+		if (not result.IsNull()) return result;
+	}
+
+	if (not mValues.empty()) return mValues.front();
+
+	return {};
+}
+
 
 
 
@@ -909,7 +1021,7 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 						if (mType == Type::Linear || mType == Type::Exponential)
 						{
 							Value base = GetValue(mBase, feature, zoom);
-							if (IsFloatValue(base))
+							if (base.IsFloat())
 							{
 								float baseValue = std::get<float>(base);
 								float ratio = GetExponentialRatio(stopInput1, stopInput2, inputValue, baseValue);
@@ -969,7 +1081,8 @@ bool OperatorMatch::ParseFromJson(const json& data)
 		mFallback = JsonTypeToValue(data.back());
 	}
 
-	if (IsNullValue(mInput) || IsNullValue(mFallback)) return false;
+//	if (mInput.IsNull() || mFallback.IsNull()) return false;
+	if (AnyHoldType<NullValue>(mInput, mFallback)) return false;
 
 	return true;
 }
@@ -1014,7 +1127,7 @@ bool _OperatorMath::ParseFromJson(const json& data)
 		{
 			Value op = JsonTypeToValue(data[i]);
 
-			assert(!IsNullValue(op));
+			assert(!op.IsNull());
 
 			mValues.push_back(std::move(op));
 		}
@@ -1093,7 +1206,7 @@ bool OperatorFunction::ParseFromJson(const json& data)
 
 	if (data.contains("stops"))
 	{
-		if (const json& stops = data.at("stops"); IsArray(stops))
+		if (const json& stops = data.at("stops"); IsJsonArray(stops))
 		{
 			for (int i = 0; i < stops.size(); i++)
 			{
@@ -1116,7 +1229,7 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 	Value result{};
 
 	Value functionInput = (float)zoom;
-	if (IsNullValue(mProperty))
+	if (!mProperty.empty())
 	{
 		functionInput = mProperty;
 	}
@@ -1196,7 +1309,7 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 					// Input must be numeric.
 					for (size_t i = numStops - 1; i >= 0; i--)
 					{
-						if (!IsFloatValue(mStops[i].input)) continue;
+						if (!mStops[i].input.IsFloat()) continue;
 
 						if (std::visit(LessThanCompare(), mStops[i].input, functionInput))
 						{
@@ -1204,7 +1317,7 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 							break;
 						}
 					}
-					if (IsNullValue(result))
+					if (result.IsNull())
 					{
 						result = mStops[0].output;
 					}
@@ -1228,7 +1341,7 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 
 	}
 
-	if (IsNullValue(result)) result = mDefault;
+	if (result.IsNull()) result = mDefault;
 
 	return result;
 }
@@ -1330,7 +1443,7 @@ Value FilterOperatorMembership::Evaluate(const mvt::feature::Feature& feature, f
 	switch (mType)
 	{
 		case FilterMembership::In:
-			if (!IsNullValue(valueField))	// If 'key' is not present, then it's effectively "not in".
+			if (!valueField.IsNull())	// If 'key' is not present, then it's effectively "not in".
 			{
 				for (const auto& value : mValues)
 				{
@@ -1340,7 +1453,7 @@ Value FilterOperatorMembership::Evaluate(const mvt::feature::Feature& feature, f
 			return false;
 
 		case FilterMembership::NotIn:
-			if (!IsNullValue(valueField))	// If 'key' is not present, then it's effectively "not in".
+			if (!valueField.IsNull())	// If 'key' is not present, then it's effectively "not in".
 			{
 				for (const auto& value : mValues)
 				{

@@ -8,8 +8,8 @@ module;
 export module formats.mvt.parser;
 
 import std;
-import formats.mvt.layer;
-import formats.mvt.style;
+//import formats.mvt.layer;
+//import formats.mvt.style;
 
 using json = nlohmann::json;
 
@@ -91,19 +91,3 @@ export bool TryReadBool(const json& data, bool& value)
 
 	return false;
 }
-
-
-#if 0
-export bool LoadStyleFromFile(const std::string& fileName)
-{
-	std::ifstream f(fileName.c_str());
-	if (f.is_open())
-	{
-		const json data = json::parse(f /*"{ \"array\": [ 1, 2, 3] }"*/);
-
-		int i{};
-	}
-
-	return false;
-};
-#endif

@@ -14,12 +14,49 @@ export class IOperator;
 export using OperatorPtr = std::shared_ptr<IOperator>;
 export using FloatArray = std::vector<float>;
 export using StringArray = std::vector<std::string>;
+export using BoolArray = std::vector<bool>;
+
+export class Value;
+
+export using ValueArray = std::vector<Value>;
+export using ValueMap = std::unordered_map<std::string, Value>;
+export using NullValue = std::monostate;
 
 // Variant for supported Expression types.
 // XXX Should use std::vector<Value> instead of std::vector<std::string> and std::vector<float>.
 // XXX Should support std::map<std::string, Value> for objects.
-export using Value = std::variant<std::monostate, float, std::string, bool, Color, FloatArray, StringArray, OperatorPtr>;
+using ValueVariant = std::variant<std::monostate, float, std::string, bool, Color, FloatArray, StringArray, BoolArray, OperatorPtr>;
 
+export class Value : public ValueVariant
+{
+	using ValueVariant::variant;
+public:
+	bool IsNull(void) const { return std::holds_alternative<std::monostate>(*this); }
+	bool IsFloat(void) const { return std::holds_alternative<float>(*this); }
+	bool IsString(void) const { return std::holds_alternative<std::string>(*this); }
+	bool IsBool(void) const { return std::holds_alternative<bool>(*this); }
+	bool IsColor(void) const { return std::holds_alternative<Color>(*this); }
+	bool IsFloatArray(void) const { return std::holds_alternative<FloatArray>(*this); }
+	bool IsStringArray(void) const { return std::holds_alternative<StringArray>(*this); }
+	bool IsBoolArray(void) const { return std::holds_alternative<BoolArray>(*this); }
+	bool IsExpression(void) const { return std::holds_alternative<OperatorPtr>(*this); }
+
+	float GetFloat(void) const { return std::get<float>(*this); }
+	std::string GetString(void) const { return std::get<std::string>(*this); }
+	bool GetBool(void) const { return std::get<bool>(*this); }
+	Color GetColor(void) const { return std::get<Color>(*this); }
+	FloatArray GetFloatArray(void) const { return std::get<FloatArray>(*this); }
+	StringArray GetStringArray(void) const { return std::get<StringArray>(*this); }
+	BoolArray GetBoolArray(void) const { return std::get<BoolArray>(*this); }
+
+	OperatorPtr GetExpression(void) const { return std::get<OperatorPtr>(*this); }
+
+	template<typename... Types>
+	constexpr bool IsAnyOfTypes(void) noexcept
+	{
+		return (... || std::holds_alternative<Types>(this));
+	}
+};
 
 using json = nlohmann::json;
 
@@ -150,13 +187,13 @@ export enum struct ExpressionType
 
 
 // Check if the given JSON data represents an Expression by checking the first element.
-export bool IsExpression(const json& data);
+export bool IsJsonExpression(const json& data);
 
 // Check if the given JSON data represents a Function.
-export bool IsFunction(const json& data);
+export bool IsJsonFunction(const json& data);
 
 // Check if the given JSON data contains a string.
-export bool IsString(const json& data);
+export bool IsJsonString(const json& data);
 
 
 // Reduce a Value to a simple type by evaluating any Operators.
@@ -183,6 +220,13 @@ constexpr bool HoldsAnyOfTypes(const /*Variant*/ Value& variant) noexcept
 	return (... || std::holds_alternative<Types>(variant));
 }
 
+// Check if any of multiple std::variant hold the specified type.
+template <typename Type, typename... Variant>
+constexpr bool AnyHoldType(Variant... variants) noexcept
+{
+	return (std::holds_alternative<Type>(variants) || ...);
+}
+
 // Check if multiple std::variant hold the specified type.
 template <typename Type, typename... Variant>
 constexpr bool AllHoldType(Variant... variants) noexcept
@@ -207,9 +251,9 @@ constexpr bool AllHoldSameType(Variant... variants) noexcept
 // Convert data fields mapped into Features into a Value.
 export Value ValueFieldToValue(mvt::feature::ValueField valueField);
 
-export bool IsNullValue(const Value& op);
+//export bool IsNullValue(const Value& op);
 
-export bool IsFloatValue(const Value& op);
+//export bool IsFloatValue(const Value& op);
 
 
 
@@ -311,6 +355,34 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+export class OperatorAny : public _OperatorDecision
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorCase : public IOperator
+{
+	struct Test
+	{
+		Value condition;
+		Value output;
+	};
+	std::vector<Test> mConditions;
+	Value mFallback;
+
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorCoalesce : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+
+};
 
 
 export class OperatorMatch : public IOperator

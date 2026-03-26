@@ -22,7 +22,7 @@ bool Expression::ParseFromJson(const nlohmann::json& data)
 {
 	mValue = JsonTypeToValue(data);
 
-	return !IsNullValue(mValue);
+	return !mValue.IsNull();
 }
 
 Value Expression::Evaluate(const mvt::feature::Feature& feature, float zoom) const
@@ -81,7 +81,7 @@ static bool IsOldFilterFormat(const json& data)
 	if (data.is_array() && data.size() > 0 && data[0].is_string())
 	{
 		// Easy case - if the first string is not a known Operation, it's likely to be in the old format.
-		if (!IsExpression(data)) return true;
+		if (!IsJsonExpression(data)) return true;
 
 		std::string type = data[0].get<std::string>();
 
@@ -305,7 +305,7 @@ bool FilterExpression::ParseFromJson(const nlohmann::json& data)
 bool FilterExpression::GetValue(const mvt::feature::Feature& feature, float zoom) const
 {
 	// If no Filter was defined, Layer should be displayed.
-	if (IsNullValue(mValue)) return true;
+	if (mValue.IsNull()) return true;
 
 	Value value = Evaluate(feature, zoom);
 
@@ -337,7 +337,7 @@ bool ColorExpression::ParseFromJson(const nlohmann::json& data)
 		}
 	}
 
-	return !IsNullValue(mValue);
+	return !mValue.IsNull();
 }
 
 Color ColorExpression::GetValue(const mvt::feature::Feature& feature, float zoom) const

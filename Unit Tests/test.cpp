@@ -307,6 +307,11 @@ TEST(Operators, Decision)
 	};
 
 	Test tests[] = {
+		{ R"([ "all", true, false ])", { false } },
+		{ R"([ "all", true, true ])", { true } },
+		{ R"([ "all", true, [ "get", "boolean1" ] ])", { false } },
+		{ R"([ "all", true, [ "get", "boolean2" ] ])", { true } },
+
 		{ R"([ "!=", 12.34, 12.34 ])", { false } },
 		{ R"([ "!=", 12.34, 56.78 ])", { true } },
 		{ R"([ "!=", "abc", "abc" ])", { false } },
@@ -361,23 +366,18 @@ TEST(Operators, Decision)
 		{ R"([ ">=", "zzz", [ "get", "string1"] ])", { true }},
 		{ R"([ ">=", "hello", [ "get", "string1"] ])", { true }},
 
-		{ R"([ "all", true, false ])", { false } },
-		{ R"([ "all", true, true ])", { true } },
-		{ R"([ "all", true, [ "get", "boolean1" ] ] ])", { false } },
-		{ R"([ "all", true, [ "get", "boolean2" ] ] ])", { true } },
-
 		{ R"([ "any", true, false ])", { true } },
 		{ R"([ "any", true, true ])", { true } },
 		{ R"([ "any", false, false ])", { false } },
-		{ R"([ "any", true, [ "get", "boolean1" ] ] ])", { true } },
-		{ R"([ "any", false, [ "get", "boolean2" ] ] ])", { true } },
+		{ R"([ "any", true, [ "get", "boolean1" ] ])", { true } },
+		{ R"([ "any", false, [ "get", "boolean2" ] ])", { true } },
 
 		{ R"([ "case", false, "aaa", true, "bbb", "fallback" ])", { "bbb" } },
-		{ R"([ "case", false, 10.0f, true, 20.0, 999.0 ])", { 20.0f } },
-		{ R"([ "case", false, 10.0f, false, 20.0, 999.0 ])", { 999.0f }},
-		{ R"([ "case", false, 10.0f, [ "get", "boolean2" ], 20.0f, 999.0f ])", { 20.0f }},
+		{ R"([ "case", false, 10.0, true, 20.0, 999.0 ])", { 20.0f } },
+		{ R"([ "case", false, 10.0, false, 20.0, 999.0 ])", { 999.0f }},
+		{ R"([ "case", false, 10.0, [ "get", "boolean2" ], 20.0, 999.0 ])", { 20.0f }},
 
-		{ R"([ "coalesce", "arg1", arg2" ])", { "arg1"}},
+		{ R"([ "coalesce", "arg1", "arg2" ])", { "arg1"}},
 		{ R"([ "coalesce", [ "image", "sprite_name" ], "arg2" ])", { "arg2"}},
 
 		{ R"([ "match", "bbb", "aaa", 10, "bbb", 30.0, "fallback" ])", { 30.0f }},
@@ -400,17 +400,17 @@ TEST(Operators, Decision)
 		SCOPED_TRACE("json: " + test.json);
 
 		nlohmann::json data;
-		EXPECT_NO_THROW( data = nlohmann::json::parse(test.json) );
+		EXPECT_NO_THROW( data = nlohmann::json::parse(test.json) ) << "Invalid JSON was '" << test.json << "'";
 
 		auto op = CreateOperatorFromJson(data);
 
-		EXPECT_TRUE(op != nullptr);
+		EXPECT_TRUE(op != nullptr) << "Failed Operator was '" << test.json << "'";
 
 		if (op)
 		{
 			auto value = op->Evaluate(feature, 10);
 
-			EXPECT_TRUE(value == test.result);
+			EXPECT_TRUE(value == test.result)  << "Wrong result was from'" << test.json << "'";
 		}
 	}
 }
