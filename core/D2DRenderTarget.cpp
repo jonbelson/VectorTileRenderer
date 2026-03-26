@@ -1020,6 +1020,8 @@ namespace core::rendertarget
 
 		void ClearTransforms(void)
 		{
+			if (!mRenderTarget) return;
+
 			std::stack<Matrix>().swap(mTransforms);
 
 			mRenderTarget->SetTransform(Matrix3x2F::Identity());
@@ -1027,6 +1029,8 @@ namespace core::rendertarget
 
 		bool PopTransform()
 		{
+			if (!mRenderTarget) return false;
+
 			if (!mTransforms.empty())
 			{
 				mRenderTarget->SetTransform(mTransforms.top());
@@ -1054,21 +1058,65 @@ namespace core::rendertarget
 	{
 	}
 
-	void D2DRenderTarget::SetLineColor(const Color& color) { mImpl->SetLineColor(color); }
-	void D2DRenderTarget::SetLineOpacity(float opacity) { mImpl->SetLineOpacity(opacity); }
-	void D2DRenderTarget::SetLineWidth(float lineWidth) { mImpl->SetLineWidth(lineWidth); }
-	void D2DRenderTarget::SetLinePattern(const geometry::Rect& src) { mImpl->SetLinePattern(src); }
+	void D2DRenderTarget::SetLineColor(const Color& color)
+	{
+		if (mImpl) mImpl->SetLineColor(color);
+	}
 
-	void D2DRenderTarget::SetFillColor(const Color& color) { mImpl->SetFillColor(color); }
-	void D2DRenderTarget::SetFillOutlineColor(const Color& color) { mImpl->SetFillOutlineColor(color); }
-	void D2DRenderTarget::SetFillOpacity(float opacity) { mImpl->SetFillOpacity(opacity); }
-	void D2DRenderTarget::SetFillPattern(const geometry::Rect& src) { mImpl->SetFillPattern(src); }
+	void D2DRenderTarget::SetLineOpacity(float opacity)
+	{
+		if (mImpl) mImpl->SetLineOpacity(opacity);
+	}
 
-	void D2DRenderTarget::SetCircleRadius(float circleRadius) { mImpl->SetCircleRadius(circleRadius); }
+	void D2DRenderTarget::SetLineWidth(float lineWidth)
+	{
+		if (mImpl) mImpl->SetLineWidth(lineWidth);
+	}
 
-	void D2DRenderTarget::SetDashArray(const std::vector<float>& dashArray) { mImpl->SetDashArray(dashArray); }
-	void D2DRenderTarget::SetLineCap(LineCap lineCap) { mImpl->SetLineCap(lineCap); }
-	void D2DRenderTarget::SetLineJoin(LineJoin lineJoin) { mImpl->SetLineJoin(lineJoin); }
+	void D2DRenderTarget::SetLinePattern(const geometry::Rect& src)
+	{
+		if (mImpl) mImpl->SetLinePattern(src);
+	}
+
+	void D2DRenderTarget::SetFillColor(const Color& color)
+	{
+		if (mImpl) mImpl->SetFillColor(color);
+	}
+
+	void D2DRenderTarget::SetFillOutlineColor(const Color& color)
+	{
+		if (mImpl) mImpl->SetFillOutlineColor(color);
+	}
+
+	void D2DRenderTarget::SetFillOpacity(float opacity)
+	{
+		if (mImpl) mImpl->SetFillOpacity(opacity);
+	}
+
+	void D2DRenderTarget::SetFillPattern(const geometry::Rect& src)
+	{
+		if (mImpl) mImpl->SetFillPattern(src);
+	}
+
+	void D2DRenderTarget::SetCircleRadius(float circleRadius)
+	{
+		if (mImpl) mImpl->SetCircleRadius(circleRadius);
+	}
+
+	void D2DRenderTarget::SetDashArray(const std::vector<float>& dashArray)
+	{
+		if (mImpl) mImpl->SetDashArray(dashArray);
+	}
+
+	void D2DRenderTarget::SetLineCap(LineCap lineCap)
+	{
+		if (mImpl) mImpl->SetLineCap(lineCap);
+	}
+
+	void D2DRenderTarget::SetLineJoin(LineJoin lineJoin)
+	{
+		if (mImpl) mImpl->SetLineJoin(lineJoin);
+	}
 
 	BitmapHandle D2DRenderTarget::RegisterBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap)
 	{
@@ -1076,12 +1124,14 @@ namespace core::rendertarget
 
 		return InvalidHandle;
 	}
+
 	bool D2DRenderTarget::UnregisterBitmap(BitmapHandle handle)
 	{
 		if (mImpl) return mImpl->UnregisterBitmap(handle);
 		
 		return false;
 	}
+
 	void D2DRenderTarget::SetActiveBitmap(BitmapHandle handle)
 	{
 		if (mImpl) mImpl->SetActiveBitmap(handle);

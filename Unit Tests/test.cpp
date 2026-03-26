@@ -461,24 +461,24 @@ TEST(Operators, Lookup)
 		{ R"([ "index-of", "bb", [ "aa", "bb", "cc" ] ])", { 1.0f }},
 		{ R"([ "index-of", "bb", [ "aa", "bb", "cc" ], 2 ])", { -1.0f }},
 		{ R"([ "index-of", "bb", [ "aa", "bb", "cc" ], 1 ])", { 1.0f }},
-		{ R"([ "index-of", "zz", [ "aa", "bb", "cc" ] ])", { -1.0f }},
+		{ R"([ "index-of", "zz", [ "aa", "bb", "cc" ], 0 ])", { -1.0f }},
 		{ R"([ "index-of", "there", "hello there" ])", { 6.0f }},
 		{ R"([ "index-of", "zz", "hello there" ])", { -1.0f }},
-		{ R"([ "index-of", true, [ false, true, false ])", { 1.0f }},
+		{ R"([ "index-of", true, [ false, true, false ] ])", { 1.0f }},
 
 		{ R"([ "length", [ "aa", "bb", "cc" ] ])", { 3.0f }},
 		{ R"([ "length", [ 1, 2, 3, 4, 5 ] ])", { 5.0f }},
 		{ R"([ "length", [] ])", { 0.0f }},
 		{ R"([ "length", "abcdef" ])", { 6.0f }},
 
-		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0f ])", { FloatArray{ 30.0f, 40.0f, 50.0f } }},
-		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0f, 3.0f ])", { FloatArray{ 30.0f, 40.0f } }},
-		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0f, 3.0f ])", { StringArray{ "bb", "cc", "dd" } }},
-		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 2.0f ])", { StringArray{ "cc", "dd", "ee" } }},
-		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0f, 3.0f ])", { StringArray{ "bb", "cc", "dd" } }},
+		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0 ])", { FloatArray{ 30.0f, 40.0f, 50.0f } }},
+		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0, 3.0 ])", { FloatArray{ 30.0f, 40.0f } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0, 3.0 ])", { StringArray{ "bb", "cc", "dd" } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 2.0 ])", { StringArray{ "cc", "dd", "ee" } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0, 3.0 ])", { StringArray{ "bb", "cc", "dd" } }},
 
-		{ R"([ "slice", "abcdefghi", 5.0f ])", { "fghi"} },
-		{ R"([ "slice", "abcdefghi", 3.0f, 6.0f ])", { "defg"} },
+		{ R"([ "slice", "abcdefghi", 5.0 ])", { "fghi"} },
+		{ R"([ "slice", "abcdefghi", 3.0, 6.0 ])", { "defg"} },
 
 		{ R"([ "split", "aaa,bbb, ccc, ddd", "," ])", { StringArray{ "aaa", "bbb", " ccc", " ddd" } }},
 	};
@@ -487,17 +487,18 @@ TEST(Operators, Lookup)
 	{
 		SCOPED_TRACE("json: " + test.json);
 
-		auto data = nlohmann::json::parse(test.json);
+		nlohmann::json data;
+		EXPECT_NO_THROW( data = nlohmann::json::parse(test.json) ) << "Invalid JSON was '" << test.json << "'";
 
 		auto op = CreateOperatorFromJson(data);
 
-		EXPECT_NE(op, nullptr);
+		EXPECT_TRUE(op != nullptr) << "Failed Operator was '" << test.json << "'";
 
 		if (op)
 		{
 			auto value = op->Evaluate(feature, 10);
 
-			EXPECT_TRUE(value == test.result);
+			EXPECT_TRUE(value == test.result)  << "Wrong result was from'" << test.json << "'";
 		}
 
 	}
