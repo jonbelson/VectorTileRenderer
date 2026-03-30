@@ -57,7 +57,7 @@ namespace core::rendertarget
 
 		virtual void FillBackground(void) = 0;
 
-		virtual void DrawLine(float x1, float y1, float x2, float y2) = 0;
+		//virtual void DrawLine(float x1, float y1, float x2, float y2) = 0;
 		virtual void DrawLine(const geometry::LineString* line) = 0;
 		virtual void DrawPolygon(const geometry::MultiPolygon* multiPolygon) = 0;
 		virtual void FillPolygon(const geometry::MultiPolygon* multiPolygon) = 0;
@@ -109,5 +109,4 @@ namespace core::rendertarget
 
 		virtual void SetBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap) { mBitmap = bitmap; }
 	};
-
 };

@@ -7,7 +7,7 @@ import core.logger;
 
 namespace core::rendertarget
 {
-	constexpr const std::string_view SvgHeader = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes")";
+	constexpr const std::string_view SvgHeader = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
 
 	void SvgRenderTarget::WritePointsAttrib(const geometry::PointArray& line, std::string& s)
 	{
@@ -18,6 +18,7 @@ namespace core::rendertarget
 			{
 				std::format_to(std::back_inserter(mSvgDocument), "{},{} ", point.x, point.y); 
 			}
+			s += "\"";
 		}
 	}
 
@@ -99,21 +100,57 @@ namespace core::rendertarget
 		}
 	}
 
+
+	// Empty-element tag, e.g. <path />
+	class WriteEmptyElement
+	{
+		std::string& mOutput;
+	public:
+		WriteEmptyElement(const std::string& name, std::string& s) : mOutput(s)
+		{
+			std::format_to(std::back_inserter(s), "<{} ", name);
+		}
+		~WriteEmptyElement()
+		{
+			mOutput += " />\n";
+		}
+	};
+
+	// Element with a closing tag, e.g. <polygon>...</polygon>
+	class WriteElement
+	{
+		std::string& mOutput;
+		std::string mName;
+	public:
+		WriteElement(const std::string& name, std::string& s) : mOutput(s), mName(name)
+		{
+			std::format_to(std::back_inserter(mOutput), "<{} ", mName);
+		}
+		~WriteElement()
+		{
+			std::format_to(std::back_inserter(mOutput), "><{}>\n", mName);
+		}
+	};
+
+
 	void SvgRenderTarget::WriteStrokeAttribs(std::string& s)
 	{
 		s += " stroke=\"";
 		WriteRGB(mLineColour, s);
 		s += "\"";
 
-		std::format_to(std::back_inserter(s), " stroke_width=\"{}\"", mLineWidth);
+		std::format_to(std::back_inserter(s), " stroke-width=\"{}\"", mLineWidth);
 
-		std::format_to(std::back_inserter(s), " stroke_opacity={}", mLineOpacity);
-		std::format_to(std::back_inserter(s), " stroke_linecap=\"{}\"", LineCapToString(mLineCap));
-		std::format_to(std::back_inserter(s), " stroke_linejoin=\"{}\"", LineJoinToString(mLineJoin));
+		std::format_to(std::back_inserter(s), " stroke-opacity=\"{}\"", mLineOpacity);
+		std::format_to(std::back_inserter(s), " stroke-linecap=\"{}\"", LineCapToString(mLineCap));
+		std::format_to(std::back_inserter(s), " stroke-linejoin=\"{}\"", LineJoinToString(mLineJoin));
 
-		s += " stroke_dasharray=\"";
-		WriteDashArray(mDashArray, s);
-		s += "\"";
+		if (!mDashArray.empty())
+		{
+			s += " stroke-dasharray=\"";
+			WriteDashArray(mDashArray, s);
+			s += "\"";
+		}
 	}
 
 	void SvgRenderTarget::WriteFillAttribs(std::string& s)
@@ -132,7 +169,8 @@ namespace core::rendertarget
 	{
 		//std::format_to(std::back_inserter(s), "<polygon ");
 
-		s += "<polygon ";
+		//s += "<polygon ";
+		WriteEmptyElement element("polygon", s);
 
 		if (fill)
 		{
@@ -148,41 +186,10 @@ namespace core::rendertarget
 		WritePointsAttrib(polygon.exteriorRing, s);
 	}
 
-	// Empty-element tag, e.g. <path />
-	class WriteEmptyElement
-	{
-		std::string mOutput;
-	public:
-		WriteEmptyElement(const std::string& name, std::string& s) : mOutput(s)
-		{
-			std::format_to(std::back_inserter(s), "<{} ", name);
-		}
-		~WriteEmptyElement()
-		{
-			mOutput += " />";
-		}
-	};
-
-	// Element with a closing tag, e.g. <polygon>...</polygon>
-	class WriteElement
-	{
-		std::string mOutput;
-		std::string mName;
-	public:
-		WriteElement(const std::string& name, std::string& s) : mOutput(s), mName(name)
-		{
-			std::format_to(std::back_inserter(mOutput), "<{} ", mName);
-		}
-		~WriteElement()
-		{
-			std::format_to(std::back_inserter(mOutput), "><{}>", mName);
-		}
-	};
-
 	// Polygon wtih interior rings.
 	void SvgRenderTarget::WritePath(const geometry::Polygon& polygon, bool fill, std::string& s)
 	{
-		WriteEmptyElement("path", s);
+		WriteEmptyElement elem("path", s);
 
 		WritePathAttrib(polygon, s);
 
@@ -202,7 +209,7 @@ namespace core::rendertarget
 
 	void SvgRenderTarget::FillBackground(void)
 	{
-
+		mBackground = mFillColour;
 	}
 
 	// XXX Use group <g>...</g> to apply stroke attributes to all polylines.
@@ -210,9 +217,12 @@ namespace core::rendertarget
 	{
 		for (const auto& line : lineString->lines)
 		{
-			WriteEmptyElement("polyline", mSvgDocument);
+			WriteEmptyElement element("polyline", mSvgDocument);
 
 			WriteStrokeAttribs(mSvgDocument);
+
+			mSvgDocument += " fill=\"none\" ";
+
 			WritePointsAttrib(line, mSvgDocument);
 		}
 	}
@@ -281,8 +291,13 @@ namespace core::rendertarget
 		{
 			out.write(SvgHeader.data(), SvgHeader.size());
 
-			std::string header = std::format(R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{}" height="{}">\n)", mWidth, mHeight);
+			std::string header = std::format(R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{}" height="{}" overflow="hidden">{})", mWidth, mHeight, "\n");
 			out.write(header.data(), header.size());
+
+			std::string colour;
+			WriteRGB(mBackground, colour);
+			std::string background = std::format(R"(<rect fill="{}" x="0" y = "0" width="{}" height="{}" />{} )", colour, mWidth, mHeight, "\n");
+			out.write(background.data(), background.size());
 
 			out.write(mSvgDocument.data(), mSvgDocument.size());
 

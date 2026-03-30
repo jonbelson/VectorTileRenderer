@@ -13,7 +13,7 @@ namespace core::rendertarget
 		int mWidth{};
 		int mHeight{};
 
-		//Color mBackground;
+		Color mBackground;
 
 		std::string mSvgDocument;
 
@@ -32,12 +32,29 @@ namespace core::rendertarget
 		SvgRenderTarget(int width, int height) : mWidth(width), mHeight(height) {}
 		virtual ~SvgRenderTarget() {}
 
+		virtual void SetLinePattern(const geometry::Rect& src) override {}
+		virtual void SetFillPattern(const geometry::Rect& src) override {}
+
 		virtual void FillBackground(void) override;
 		virtual void DrawLine(const geometry::LineString* line) override;
 		virtual void DrawPolygon(const geometry::MultiPolygon* multiPolygon) override;
 		virtual void FillPolygon(const geometry::MultiPolygon* multiPolygon) override;
 		virtual void DrawCircle(const geometry::MultiPoint* multiPoint) override;
 		virtual void FillCircle(const geometry::MultiPoint* multiPoint) override;
+
+		virtual BitmapHandle RegisterBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap) override { return InvalidHandle; }
+		virtual bool UnregisterBitmap(BitmapHandle handle) override { return true; }
+		virtual void SetActiveBitmap(BitmapHandle handle) override {}
+
+		virtual void DrawBitmap(const geometry::Rect& dest) override {}
+		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override {}
+		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) override {}
+
+		virtual void PushScale(float scale) override {}
+		virtual void PushTranslation(float x, float y) override {}
+		virtual void PushRotation(float angleRad) override {}
+		virtual void PopTransform(void) override {}
+		virtual void ClearTransforms(void) override {}
 
 		virtual void Save(const std::string& outputName) override;
 

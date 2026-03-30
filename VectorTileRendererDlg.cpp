@@ -19,6 +19,7 @@
 import core.bitmap;
 import core.color;
 import core.d2drendertarget;
+import core.svgrendertarget;
 import core.geometry;
 import core.logger;
 import formats.mvt.tilecache;
@@ -221,7 +222,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 #endif
 
 
-#if 0
+#if 1
 
 	//int zoom = 15;
 	//geo::latlong::LatLong latLong(51.448839, -0.932772);
@@ -231,8 +232,8 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS_VTS_3857.json)");
 	if (style)
 	{
-//		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-15-10904-16299.pbf)");
-		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-16-21809-32598.pbf)");
+		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-15-10904-16299.pbf)");
+		//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-16-21809-32598.pbf)");
 		if (tileFetcher)
 		{
 			std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
@@ -240,23 +241,32 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 			mvt::tilecache::TileCache tileCache(fetcher.get());
 
 			auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+//			auto renderTarget = new core::rendertarget::SvgRenderTarget(1024, 1024);
 
 			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
 
-			//mvt::tile::TileSpec tileSpec{ .zoom = 15, .y = 10904, .x = 16299 };
-			mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };
+			mvt::tile::TileSpec tileSpec{ .zoom = 15, .y = 10904, .x = 16299 };
+			//mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };
 
 			tileRenderer.RenderTile(tileSpec);
 
-			std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", "ZoomStack", tileSpec.zoom, tileSpec.y, tileSpec.x);
-			renderTarget->Save(fileName);
+			if (dynamic_cast<core::rendertarget::SvgRenderTarget*>(renderTarget))
+			{
+				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.svg", "ZoomStack", tileSpec.zoom, tileSpec.y, tileSpec.x);
+				renderTarget->Save(fileName);
+			}
+			else
+			{
+				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", "ZoomStack", tileSpec.zoom, tileSpec.y, tileSpec.x);
+				renderTarget->Save(fileName);
+			}
 
 		}
 	}
 
 #endif
 
-#if 1
+#if 0
 	// ESRI WorldBasemap tiles
 	 
 	for (const auto& styleName : { "colored-pencil", "community", "midcentury", "modern-antique", "newspaper", "nova" })

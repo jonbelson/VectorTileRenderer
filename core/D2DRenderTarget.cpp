@@ -1142,10 +1142,10 @@ namespace core::rendertarget
 		if (mImpl) mImpl->FillBackground();
 	}
 
-	void D2DRenderTarget::DrawLine(float x1, float y1, float x2, float y2)
-	{
-		//mImpl->DrawLine();
-	}
+	//void D2DRenderTarget::DrawLine(float x1, float y1, float x2, float y2)
+	//{
+	//	//mImpl->DrawLine();
+	//}
 
 	void D2DRenderTarget::DrawLine(const geometry::LineString* lineString)
 	{

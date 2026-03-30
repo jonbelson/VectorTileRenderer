@@ -40,7 +40,7 @@ namespace core::rendertarget
 
 		virtual void FillBackground(void) override;
 
-		virtual void DrawLine(float x1, float y1, float x2, float y2) override;
+		//virtual void DrawLine(float x1, float y1, float x2, float y2) override;
 		virtual void DrawLine(const geometry::LineString* line) override;
 		virtual void DrawPolygon(const geometry::MultiPolygon* multiPolygon) override;
 		virtual void FillPolygon(const geometry::MultiPolygon* multiPolygon) override;

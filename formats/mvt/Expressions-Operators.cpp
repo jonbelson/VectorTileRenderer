@@ -305,6 +305,10 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorGet>(data);
 				}
+			case ExpressionType::Length:
+				{
+					return MakeExpression<OperatorLength>(data);
+				}
 
 			// Decision.
 			case ExpressionType::NotEqual:
@@ -461,7 +465,12 @@ Value JsonTypeToValue(const json& data)
 	}
 	else if (data.is_array())
 	{
-		if (data.size() > 0)
+		if (data.size() == 0)
+		{
+			// If the array is empry, I guess it doesn't matter what it's an array of.
+			result = std::move(StringArray{});
+		}
+		else
 		{
 			if (data[0].is_string())
 			{
@@ -631,6 +640,52 @@ Value OperatorGet::Evaluate(const Feature& feature, float zoom)
 }
 
 
+// ["length", string]: number
+// ["length", array]: number
+bool OperatorLength::ParseFromJson(const json& data)
+{
+	if (data.is_array() && data.size() == 2)
+	{
+		Value value = JsonTypeToValue(data[1]);
+		mValues.emplace_back(std::move(value));
+		return value.IsAnyOfTypes<std::string, StringArray, FloatArray, BoolArray>();
+	}
+
+	return false;
+}
+
+Value OperatorLength::Evaluate(const Feature& feature, float zoom)
+{
+	assert(mValues.size() == 1);
+
+	if (mValues.size() == 1)
+	{
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		if (value.IsString())
+		{
+			std::string s = value.GetString();
+			return static_cast<float>(s.length());
+		}
+		else if (value.IsFloatArray())
+		{
+			const auto& floatArray = value.GetFloatArray();
+			return static_cast<float>(floatArray.size());
+		}
+		else if (value.IsStringArray())
+		{
+			const auto& stringArray = value.GetStringArray();
+			return static_cast<float>(stringArray.size());
+		}
+		else if (value.IsBoolArray())
+		{
+			const auto& boolArray = value.GetBoolArray();
+			return static_cast<float>(boolArray.size());
+		}
+	}
+
+	return {};
+}
 
 
 // ["==", value, value]: boolean

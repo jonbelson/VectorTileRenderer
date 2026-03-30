@@ -54,7 +54,7 @@ public:
 	template<typename... Types>
 	constexpr bool IsAnyOfTypes(void) noexcept
 	{
-		return (... || std::holds_alternative<Types>(this));
+		return (... || std::holds_alternative<Types>(*this));
 	}
 };
 
@@ -304,6 +304,17 @@ public:
 
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
+
+export class OperatorLength : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+
+
 
 // Helper base class for Decision Operators (==, !=, <, <=, >, >=)
 class _OperatorDecision : public IOperator
