@@ -83,6 +83,8 @@ namespace core::rendertarget
 		Color mLineColour;
 		Color mFillColour;
 		Color mFillOutlineColor;
+		float mLineOpacity{ 1.0f };
+		float mFillOpacity{ 1.0f };
 		float mLineWidth{ 1.0f };
 		float mCircleRadius { 10.0f };
 
@@ -94,8 +96,10 @@ namespace core::rendertarget
 
 	public:
 		virtual void SetLineColor(const Color& color) override { mLineColour = color; }
+		virtual void SetLineOpacity(float opacity) { mLineOpacity = opacity; }
 		virtual void SetFillColor(const Color& color) override { mFillColour = color; }
 		virtual void SetFillOutlineColor(const Color& color) override { mFillOutlineColor = color; }
+		virtual void SetFillOpacity(float opacity) { mFillOpacity = opacity; }
 		virtual void SetLineWidth(float lineWidth) override { mLineWidth = lineWidth; }
 		virtual void SetCircleRadius(float circleRadius) override { mCircleRadius = circleRadius; }
 
@@ -104,18 +108,6 @@ namespace core::rendertarget
 		virtual void SetLineJoin(LineJoin lineJoin) override { mLineJoin = lineJoin; }
 
 		virtual void SetBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap) { mBitmap = bitmap; }
-	};
-
-
-
-	// RenderTarget that produces an SVG.
-	export class SvgRenderTarget : public RenderTarget
-	{
-	public:
-		SvgRenderTarget() {};
-		virtual ~SvgRenderTarget() {}
-
-
 	};
 
 };

@@ -279,15 +279,14 @@ namespace core::rendertarget
 
 		if (out.is_open())
 		{
-			std::string header = std::format(R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{}" height="{}">\n)", mWidth, mHeight);
-			std::string footer = "</svg>\n";
-
-			out.write(header.data(), header.size());
-
 			out.write(SvgHeader.data(), SvgHeader.size());
+
+			std::string header = std::format(R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{}" height="{}">\n)", mWidth, mHeight);
+			out.write(header.data(), header.size());
 
 			out.write(mSvgDocument.data(), mSvgDocument.size());
 
+			std::string footer = "</svg>\n";
 			out.write(footer.data(), footer.size());
 		}
 		else

@@ -1,3 +1,7 @@
+module;
+
+#include <chrono>
+
 export module core.logger;
 
 import std;
@@ -38,7 +42,18 @@ namespace core::logger
 
 		void Write(std::string_view sv)
 		{
-			if (mImpl) mImpl->Write(sv);
+			if (mImpl)
+			{
+				using namespace std::chrono;
+
+				const auto now = system_clock::now();
+				auto local = zoned_time{ current_zone(), now };
+
+				std::string timeStamp = std::format("{0:%Y-%m-%d %H:%M:%S}", local);
+
+				std::string log = std::format("{} : {}", timeStamp, sv);
+				mImpl->Write(log);
+			}
 		}
 
 	};

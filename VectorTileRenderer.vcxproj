@@ -210,6 +210,8 @@
     <ClCompile Include="Core\Geometry.ixx" />
     <ClCompile Include="core\Logger.ixx" />
     <ClCompile Include="core\RenderTarget.ixx" />
+    <ClCompile Include="core\SVGRenderTarget.cpp" />
+    <ClCompile Include="core\SVGRenderTarget.ixx" />
     <ClCompile Include="formats\mvt\Debug.ixx" />
     <ClCompile Include="formats\mvt\Expressions-Operators.cpp" />
     <ClCompile Include="formats\mvt\Expressions-Operators.ixx" />

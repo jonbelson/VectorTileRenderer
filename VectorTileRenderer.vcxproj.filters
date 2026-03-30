@@ -194,6 +194,12 @@
     <ClCompile Include="core\Logger.ixx">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="core\SVGRenderTarget.ixx">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="core\SVGRenderTarget.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">
