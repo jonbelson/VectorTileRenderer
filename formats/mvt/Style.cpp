@@ -211,10 +211,21 @@ namespace mvt::style
 		return nullptr;
 	}
 
-
-	std::shared_ptr<Style> Style::LoadFromUrl(const std::string& Url)
+		std::shared_ptr<Style> Style::LoadFromUrl(const std::string& url)
 	{
-		core::logger::Write(std::format("Loading a style from a URL is currently unsupported: {}\n", Url));
+		auto result = io::resource::LoadFromUri(url);
+		if (result)
+		{
+			const auto& data = result.value();
+			json parsedJson = json::parse(data.begin(), data.end());
+
+			std::shared_ptr<Style> style = std::make_shared<Style>();
+
+			if (style->ParseFromJson(parsedJson))
+				return style;
+		}
+
+		core::logger::Write(std::format("Failed to load style from {}\n", url));
 
 		return nullptr;
 	}

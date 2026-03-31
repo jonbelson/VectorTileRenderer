@@ -454,7 +454,7 @@ TEST(Operators, Lookup)
 		{ R"([ "in", "llo", "hello there"])", { true }},
 		{ R"([ "in", "xyz", "hello there"])", { false }},
 		{ R"([ "in", "bb", [ "aa", "bb", "cc" ] ])", { true }},
-		{ R"([ "in", "zz", [ "aa", "bb", "cc" ] ])", { true }},
+		{ R"([ "in", "zz", [ "aa", "bb", "cc" ] ])", { false }},
 		{ R"([ "in", true, [ false, false, true ] ])", { true }},
 		{ R"([ "in", true, [ false, false, false ] ])", { false }},
 

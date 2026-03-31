@@ -48,8 +48,16 @@ public:
 	FloatArray GetFloatArray(void) const { return std::get<FloatArray>(*this); }
 	StringArray GetStringArray(void) const { return std::get<StringArray>(*this); }
 	BoolArray GetBoolArray(void) const { return std::get<BoolArray>(*this); }
-
 	OperatorPtr GetExpression(void) const { return std::get<OperatorPtr>(*this); }
+
+	std::optional<float> TryGetFloat(void) const { if (auto* p = std::get_if<float>(this)) return *p; return {}; }
+	std::optional<std::string> TryGetString(void) const { if (auto* p = std::get_if<std::string>(this)) return *p; return {}; }
+	std::optional<bool> TryGetBool(void) const { if (auto* p = std::get_if<bool>(this)) return *p; return {}; }
+	std::optional<Color> TryGetColor(void) const { if (auto* p = std::get_if<Color>(this)) return *p; return {}; }
+	std::optional<FloatArray> TryGetFloatArray(void) const { if (auto* p = std::get_if<FloatArray>(this)) return *p; return {}; }
+	std::optional<StringArray> TryGetStringArray(void) const { if (auto* p = std::get_if<StringArray>(this)) return *p; return {}; }
+	std::optional<BoolArray> TryGetBoolArray(void) const { if (auto* p = std::get_if<BoolArray>(this)) return *p; return {}; }
+
 
 	template<typename... Types>
 	constexpr bool IsAnyOfTypes(void) noexcept
@@ -297,6 +305,14 @@ public:
 };
 
 
+export class OperatorAt : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 export class OperatorGet : public IOperator
 {
 public:
@@ -304,6 +320,31 @@ public:
 
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
+
+export class OperatorHas : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorIn : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorIndexOf : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 
 export class OperatorLength : public IOperator
 {
