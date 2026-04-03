@@ -6,8 +6,10 @@ export module formats.mvt.tilefetcher;
 
 import std;
 
+import core.logger;
 import formats.mvt.tile;
-
+import io.gzip;
+import io.resource;
 
 // Base class for Tile fetchers.
 export class ITileFetcher
@@ -90,8 +92,29 @@ public:
 
 	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
 	{
-		// Placeholder implementation
-		return std::vector<std::byte>{};
+		std::string url { mUrl };
+		
+		url.replace(url.find("{z}"), 3, std::to_string(zoom));
+		url.replace(url.find("{y}"), 3, std::to_string(y));
+		url.replace(url.find("{x}"), 3, std::to_string(x));
+
+		auto data = io::resource::LoadFromHttp(url);
+
+		if (data)
+		{
+			auto& tileData = data.value();
+
+			if (io::gzip::IsGzipped(std::span<std::byte>(tileData)))
+			{
+				tileData = io::gzip::Decompress(tileData);
+			}
+
+			return tileData;
+		}
+
+		core::logger::Write(std::format("Failed to load tile from '{}'\n", url));
+
+		return {};
 	}
 
 	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
@@ -99,21 +122,26 @@ public:
 		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 	}
 
-	// url	Url of tile source, with {zoom}, {x}, {y} templates.
-	std::expected<HttpTileFetcher*, Error> Create(std::string_view url)
+	// url	Url of tile source, with {z}, {y}, {x} templates.
+	static std::expected<HttpTileFetcher*, Error> Create(std::string_view url)
 	{
 		if (url.find("http://") != 0 && url.find("https://") != 0)
 		{
 			return std::unexpected(InvalidUrl);
 		}
 
-		for (const auto& t : { "{zoom}", "{x}", "{y}" })
+		for (const auto& t : { "{z}", "{y}", "{x}" })
 		{
 			if (url.find(t) == std::string::npos)
 			{
 				return std::unexpected(MissingTemplates);
 			}
 		}
+
+		//if (url.find("{zoom}") == std::string::npos && url.find("{z}") == std::string::npos)
+		//{
+		//	return std::unexpected(MissingTemplates);
+		//}
 
 		return new HttpTileFetcher(url);
 

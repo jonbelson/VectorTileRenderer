@@ -42,7 +42,7 @@ namespace mvt::tilecache
 
 				if (!tileData.empty())
 				{
-					if (auto newTile = mvt::tile::DecodeTile(tile::TileSpec{ zoom, x, y }, tileData))
+					if (auto newTile = mvt::tile::DecodeTile(tile::TileSpec{ zoom, y, x }, tileData))
 					{
 						const auto tile = newTile.get();
 

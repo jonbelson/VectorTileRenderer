@@ -192,6 +192,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CFromMBTilesDlg.h" />
+    <ClInclude Include="CFromServerDlg.h" />
     <ClInclude Include="formats\mvt\glyphs.pb.h" />
     <ClInclude Include="formats\mvt\vector_tile.pb.h" />
     <ClInclude Include="framework.h" />
@@ -202,6 +204,8 @@
     <ClInclude Include="VectorTileRendererDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CFromMBTilesDlg.cpp" />
+    <ClCompile Include="CFromServerDlg.cpp" />
     <ClCompile Include="core\Bitmap.cpp" />
     <ClCompile Include="core\Bitmap.ixx" />
     <ClCompile Include="Core\Color.ixx" />

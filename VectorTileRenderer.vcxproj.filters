@@ -57,6 +57,12 @@
     <ClInclude Include="formats\mvt\glyphs.pb.h">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClInclude>
+    <ClInclude Include="CFromServerDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CFromMBTilesDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorTileRenderer.cpp">
@@ -199,6 +205,12 @@
     </ClCompile>
     <ClCompile Include="core\SVGRenderTarget.cpp">
       <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="CFromServerDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CFromMBTilesDlg.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -306,7 +306,7 @@ namespace core::rendertarget
 		}
 		else
 		{
-			core::logger::Write(std::format("Failed to open output file '{}'", outputName));
+			core::logger::Write(std::format("Failed to open output file '{}'\n", outputName));
 		}
 
 		int i{};

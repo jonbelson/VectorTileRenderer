@@ -95,7 +95,19 @@ namespace mvt::style
 	};
 
 
+	export struct Source
+	{
+		std::string mType;
 
+		std::string mUrl;
+		std::string mAttribution;
+		std::string mCopyright;
+
+		std::vector<std::string> mTiles;
+
+		int mMinZoom{};
+		int mMaxZoom {};
+	};
 
 
 	// OS Data Hub
@@ -120,6 +132,8 @@ namespace mvt::style
 		int mVersion;
 		std::string mSpriteUrl;
 		std::string mGlyphUrl;
+
+		std::unordered_map<std::string, Source> mSources;
 
 		SourceType mSourceType;		// XXX Only 'vector' supported.
 		std::string mSourceTileUrl;

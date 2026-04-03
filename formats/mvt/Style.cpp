@@ -118,6 +118,21 @@ namespace mvt::style
 	}
 
 
+	static std::vector<std::string> ParseTileUrlsFromSource(const json& data)
+	{
+		std::vector<std::string> tileUrls;
+		if (data.contains("tiles") && data.at("tiles").is_array())
+		{
+			for (const auto& tileUrl : data.at("tiles"))
+			{
+				if (tileUrl.is_string())
+				{
+					tileUrls.push_back(tileUrl.get<std::string>());
+				}
+			}
+		}
+		return tileUrls;
+	}
 
 	bool Style::ParseFromJson(const nlohmann::json& data)
 	{
@@ -130,16 +145,49 @@ namespace mvt::style
 		{
 			if (const auto& n = data["sources"]; n.is_object())
 			{
-				if (n.contains("esri"))
+				for (const auto& [key, value] : n.items())
 				{
-					if (const auto& n2 = n["esri"]; n2.is_object())
+					Source source;
+					TryReadString(value, "type", source.mType);
+					TryReadString(value, "url", source.mUrl);
+					TryReadString(value, "attribution", source.mAttribution);
+					TryReadString(value, "copyright", source.mCopyright);
+					TryReadInt(value, "minzoom", source.mMinZoom);
+					TryReadInt(value, "maxzoom", source.mMaxZoom);
+
+					auto tileUrls = ParseTileUrlsFromSource(value);
+
+					if (tileUrls.empty())
 					{
-						std::string sourceType;
-						if (TryReadString(n2, "type", sourceType))
+						// If no '"tiles": []' is present, we need to fetch from 'url' and parse from the result.
+						auto result = io::resource::LoadFromUri(source.mUrl);
+						if (result)
 						{
-							mSourceType = SourceTypeToEnum(sourceType);
+							const auto& data = result.value();
+							json parsedJson = json::parse(data.begin(), data.end(), nullptr, false);
+
+							tileUrls = ParseTileUrlsFromSource(parsedJson);
 						}
-						TryReadString(n2, "url", mSourceTileUrl);
+					}
+
+					if (!tileUrls.empty())
+					{
+						source.mTiles = std::move(tileUrls);
+					}
+					else
+					{
+						core::logger::Write(std::format("Failed to parse 'tiles' from Style\n"));
+					}
+
+					mSources[key] = source;
+				}
+
+				// For simplicity's sake, just copy the first tile URL. XXX Handle 'source' and use multiple tile URLs.
+				if (!mSources.empty())
+				{
+					if (!mSources.begin()->second.mTiles.empty())
+					{
+						mSourceTileUrl = mSources.begin()->second.mTiles.front();
 					}
 				}
 			}
@@ -184,7 +232,7 @@ namespace mvt::style
 		std::ifstream f(fileName.c_str());
 		if (f.is_open())
 		{
-			const json data = json::parse(f /*"{ \"array\": [ 1, 2, 3] }"*/);
+			const json data = json::parse(f, nullptr, false);
 
 			std::shared_ptr<Style> style = std::make_shared<Style>();
 
@@ -199,7 +247,7 @@ namespace mvt::style
 
 	std::shared_ptr<Style> Style::LoadFromString(const std::string& s)
 	{
-		const json data = json::parse(s);
+		const json data = json::parse(s, nullptr, false);
 
 		std::shared_ptr<Style> style = std::make_shared<Style>();
 
@@ -211,13 +259,20 @@ namespace mvt::style
 		return nullptr;
 	}
 
-		std::shared_ptr<Style> Style::LoadFromUrl(const std::string& url)
+	std::shared_ptr<Style> Style::LoadFromUrl(const std::string& url)
 	{
 		auto result = io::resource::LoadFromUri(url);
 		if (result)
 		{
 			const auto& data = result.value();
-			json parsedJson = json::parse(data.begin(), data.end());
+			json parsedJson = json::parse(data.begin(), data.end(), nullptr, false);
+
+			if (parsedJson.size() == 1 && parsedJson.contains("error"))
+			{
+				core::logger::Write(parsedJson.dump() + "\n");
+
+				return nullptr;
+			}
 
 			std::shared_ptr<Style> style = std::make_shared<Style>();
 
