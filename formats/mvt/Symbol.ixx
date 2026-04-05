@@ -67,7 +67,9 @@ export namespace mvt::symbol
 		float textHaloWidth { 0.0f };
 		TextJustify textJustify { TextJustify::Center };
 		float textLineHeight { 1.2f };
+		float textMaxAngle { 45.0f };
 		float textMaxWidth { 10.0f };
+		std::vector<float> textOffset { 0.0f, 0.0f };
 		float textOpacity { 1.0f };
 		float textRotate { 0.0f };
 		TextRotationAlignment textRotationAlignment;
@@ -134,7 +136,9 @@ export namespace mvt::symbol
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
 			textJustify = TextJustifyToEnum(layer->mTextJustify.GetValue(feature, zoom));
+			textMaxAngle = layer->mTextMaxAngle.GetValue(feature, zoom);
 			textMaxWidth = layer->mTextMaxWidth.GetValue(feature, zoom);
+			textOffset = layer->mTextOffset.GetValue(feature, zoom);
 			textOpacity = layer->mTextOpacity.GetValue(feature, zoom);
 			textRotate = layer->mTextRotate.GetValue(feature, zoom);
 			textRotationAlignment = TextRotationAlignmentToEnum(layer->mTextRotationAlignment.GetValue(feature, zoom));
@@ -253,7 +257,7 @@ export namespace mvt::symbol
 		}
 
 		// Return the interpolated point at specified distance from start of line geometry.
-		std::pair<Point, float> GetPointOffset(float offset)
+		std::pair<Point, float> GetPointOffset(float offset) const
 		{
 			namespace ranges = std::ranges;
 
@@ -340,6 +344,93 @@ export namespace mvt::symbol
 				}
 			}
 			return lengthPx;
+		}
+
+		void OffsetPointList(core::geometry::PointArray& pointList, float offX, float offY)
+		{
+			for (auto& point : pointList)
+			{
+				point.x += offX;
+				point.y += offY;
+			}
+		}
+
+		// Decide if text rendered along a line coudl be considered 'upside-down'.
+		bool IsUpsideDown(const mvt::style::GlyphAtlas* glyphAtlas, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const PointArray& pointArray)
+		{
+			if (pointArray.empty()) return false;
+
+			std::string_view word = attribs.textField;
+			float textScale = attribs.textScale;
+
+			size_t numChars = word.size();
+			size_t numUpsideDown { 0 };
+
+			LineWalker lineWalker(pointArray);
+
+			float offset { 0.0f };
+
+			for (int i = 0; i<word.length(); i++)
+			{
+				uint32_t ch = attribs.textField[i];
+
+				if (glyphAtlas->glyphs.contains(ch))
+				{
+					const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
+
+					auto [point, angleRad] = lineWalker.GetPointOffset(offset);
+					float angleDeg = RadiansToDegrees(angleRad);
+
+					// if line angle is >90 and <180, characater is 'upside down'.
+					if (angleDeg > 90.0f && angleDeg < 180.0f) numUpsideDown++;
+
+					offset += glyphSpec.advance*textScale;
+				}
+			}
+
+			return static_cast<float>(numUpsideDown)/numChars >= 0.5f;
+		}
+
+		// Check if the angle between the line segments at any point along the line geometry between offsets 'start' and 'end' exceeds 'maxAngle'.
+		bool ExceedsMaxAngle(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, const LineWalker& lineWalker, float start)
+		{
+			if (!glyphAtlas) return false;
+			if (start >= lineWalker.GetTotalDist()) return false;
+
+			float textScale = attribs.textScale;
+			float maxAngle = attribs.textMaxAngle;
+			std::string_view word = attribs.textField;
+
+			float offset = start;
+
+			float lastAngleDeg {};
+
+			for (int i = 0; i<word.length(); i++)
+			{
+				uint32_t ch = attribs.textField[i];
+
+				if (glyphAtlas->glyphs.contains(ch))
+				{
+					const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
+
+					auto [point, angleRad] = lineWalker.GetPointOffset(offset);
+					float angleDeg = RadiansToDegrees(angleRad);
+
+					if (i > 0)
+					{
+						if (std::abs(angleDeg - lastAngleDeg) > maxAngle)
+						{
+							return true;
+						}
+					}
+
+					lastAngleDeg = angleDeg;
+
+					offset += glyphSpec.advance*textScale;
+				}
+			}
+
+			return false;
 		}
 
 		// Add charcters to a line until it exceeds max-text-length, then search backwards for somewhere to split onto a new line.
@@ -636,15 +727,22 @@ export namespace mvt::symbol
 			BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
 			BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);
 
-
 			if (haloHandle != InvalidHandle && glyphHandle != InvalidHandle)
 			{
 				//auto glyphAtlas = context.glyphs.Lookup(font, 0, haloWidth);
 				auto glyphAtlas = context.glyphs.Lookup(font, 0);
 
+				bool isUpsideDown = IsUpsideDown(glyphAtlas.get(), context, font, attribs, pointArray);
+
+				if (isUpsideDown)
+				{
+					core::logger::Write(std::format("Label '{}' is upside down\n", attribs.textField));
+				}
+
 				float textScale = attribs.textScale;
 
-				LineWalker lineWalker(pointArray);
+				PointArray points = isUpsideDown ? PointArray(pointArray.rbegin(), pointArray.rend()) : pointArray;
+				LineWalker lineWalker(points /*pointArray*/);
 
 				float wordLength = GetWordLength(glyphAtlas.get(), attribs.textField)*textScale;
 
@@ -1003,8 +1101,10 @@ export namespace mvt::symbol
 				auto [ point, angle ] = lineWalker.GetPointOffset(offset);
 
 				bool iconOverlaps { false };
-				bool textOverlaps { false };
+				//bool textOverlaps { false };
+				bool willDrawText { false };
 
+				// Check if icon can be drawn here.
 				if (hasIcon)
 				{
 					// XXX rotate when iconFollowsLine set.
@@ -1016,6 +1116,7 @@ export namespace mvt::symbol
 				}
 
 
+				// Check if text can be drawn here.
 				if (hasText)
 				{
 					float textScale = attribs.textScale;
@@ -1032,13 +1133,28 @@ export namespace mvt::symbol
 						bool willFit = start + textLength < lineWalker.GetTotalDist();
 						if (willFit)
 						{
-							textLine = lineWalker.GetPointList(start, start + textLength);
+							bool tooBendy = ExceedsMaxAngle(glyphAtlas.get(), attribs, lineWalker, start);
 
-							textOverlaps = placedSymbols.HasOverlap(textLine, style::GlyphSize*attribs.textScale);
+							if (!tooBendy)
+							{
+								textLine = lineWalker.GetPointList(start, start + textLength);
+
+								// 'text-offset'
+								float offX = attribs.textOffset[0]*attribs.textSize;
+								float offY = attribs.textOffset[1]*attribs.textSize;
+								OffsetPointList(textLine, offX, offY);
+
+								bool textOverlaps = placedSymbols.HasOverlap(textLine, style::GlyphSize*attribs.textScale);
+
+								if (!textOverlaps)
+								{
+									willDrawText = true;
+								}
+							}
 						}
 						else
 						{
-							textOverlaps = true;
+							//textOverlaps = true;
 						}
 					}
 					else
@@ -1050,12 +1166,12 @@ export namespace mvt::symbol
 						Rect bbox (cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 
 						textBbox = bbox;
-						textOverlaps = placedSymbols.HasOverlap(bbox);
+						willDrawText = !placedSymbols.HasOverlap(bbox);
 					}
 				}
 
 
-				if (!iconOverlaps && !textOverlaps)
+				if (!iconOverlaps && willDrawText)
 				{
 					if (hasIcon)
 					{

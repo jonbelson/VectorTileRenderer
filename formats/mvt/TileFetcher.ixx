@@ -138,11 +138,6 @@ public:
 			}
 		}
 
-		//if (url.find("{zoom}") == std::string::npos && url.find("{z}") == std::string::npos)
-		//{
-		//	return std::unexpected(MissingTemplates);
-		//}
-
 		return new HttpTileFetcher(url);
 
 	}

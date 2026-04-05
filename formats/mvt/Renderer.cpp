@@ -265,8 +265,16 @@ namespace mvt::renderer
 			mRenderTarget->SetLineJoin(lineJoin);
 			mRenderTarget->SetLineWidth(lineWidth);
 
-			auto transformed = TileToWorld(feature.mLineString);
-			mRenderTarget->DrawLine(&transformed);
+			if (feature.mGeometryType == core::geometry::GeometryType::LineString)
+			{
+				auto transformed = TileToWorld(feature.mLineString);
+				mRenderTarget->DrawLine(&transformed);
+			}
+			else if (feature.mGeometryType == core::geometry::GeometryType::MultiPolygon)
+			{
+				auto transformed = TileToWorld(feature.mMultiPolygon);
+				mRenderTarget->DrawPolygon(&transformed);
+			}
 		}
 		
 		return true;
@@ -280,12 +288,17 @@ namespace mvt::renderer
 
 		for (const auto& symbol : symbols)
 		{
-			if (symbol.second->mId.find("contour labels") != std::string::npos)
+			//if (symbol.second->mId.find("contour labels") != std::string::npos)
+			//{
+			//	int i{};
+			//}
+
+			mvt::symbol::SymbolAttribs attribs(symbol.second, *symbol.first, zoom);
+
+			if (attribs.textField.find("North Downs Line") != std::string::npos)
 			{
 				int i{};
 			}
-
-			mvt::symbol::SymbolAttribs attribs(symbol.second, *symbol.first, zoom);
 
 			switch (symbol.first->mGeometryType)
 			{
@@ -326,8 +339,11 @@ namespace mvt::renderer
 			//	int i{};
 			//}
 
-			//if (layer->mSourceLayer != "roads")
-			//	continue;
+			if (layer->mSourceLayer == "building")
+			{
+				//continue;
+				int jj{};
+			}
 
 			//if (layer->mType != LayerType::Symbol) continue;
 
@@ -360,7 +376,7 @@ namespace mvt::renderer
 						}
 						break;
 					case LayerType::Line:
-						if (feature.mGeometryType == geometry::GeometryType::LineString)
+						if (feature.mGeometryType == geometry::GeometryType::LineString || feature.mGeometryType == geometry::GeometryType::MultiPolygon)
 						{
 							RenderLine(context, layer.get(), feature, zoom);
 						}
