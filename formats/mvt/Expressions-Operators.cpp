@@ -247,7 +247,7 @@ Value GetValue(const Value& value, const Feature& feature, float zoom)
 		op = operatorPtr->Evaluate(feature, zoom);
 	}
 
-	assert(!HoldsAnyOfTypes<OperatorPtr>(op));
+	assert(!op.IsExpression());
 
 	return op;
 }
@@ -271,10 +271,10 @@ auto MakeExpression(const json& data) -> std::shared_ptr<IOperator>
 	requires std::derived_from<T, IOperator>
 	//std::shared_ptr<IOperator> MakeExpression(const json& data)
 {
-	std::shared_ptr<T> op = std::make_shared<T>();
+	std::unique_ptr<T> op = std::make_unique<T>();
 	if (op->ParseFromJson(data))
 	{
-		return std::shared_ptr<IOperator>(op);
+		return std::shared_ptr<IOperator>(std::move(op));
 	}
 	return nullptr;
 }
@@ -305,6 +305,10 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorAt>(data);
 				}
+			case ExpressionType::AtInterpolated:
+				{
+					return MakeExpression<OperatorAtInterpolated>(data);
+				}
 			case ExpressionType::Get:
 				{
 					return MakeExpression<OperatorGet>(data);
@@ -325,8 +329,20 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorLength>(data);
 				}
+			case ExpressionType::Slice:
+				{
+					return MakeExpression<OperatorSlice>(data);
+				}
+			case ExpressionType::Split:
+				{
+					return MakeExpression<OperatorSplit>(data);
+				}
 
 			// Decision.
+			case ExpressionType::Negate:
+				{
+					return MakeExpression<OperatorNegate>(data);
+				}
 			case ExpressionType::NotEqual:
 				{
 					return MakeExpression<OperatorNotEqual>(data);
@@ -373,10 +389,36 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				}
 
 			// Math.
+			case ExpressionType::Subtraction:
+				{
+					return MakeExpression<OperatorSubtraction>(data);
+				}
+			case ExpressionType::Product:
+				{
+					return MakeExpression<OperatorProduct>(data);
+				}
+			case ExpressionType::Division:
+				{
+					return MakeExpression<OperatorDivision>(data);
+				}
+			case ExpressionType::Remainder:
+				{
+					return MakeExpression<OperatorRemainder>(data);
+				}
+			case ExpressionType::Pow:
+				{
+					return MakeExpression<OperatorPow>(data);
+				}
 			case ExpressionType::Sum:
 				{
 					return MakeExpression<OperatorSum>(data);
 				}
+			case ExpressionType::Abs:
+				{
+					return MakeExpression<OperatorAbs>(data);
+				}
+
+
 
 			// Ramps, scales, curves.
 			case ExpressionType::Interpolate:
@@ -386,7 +428,9 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 
 			// Camera.
 			case ExpressionType::Zoom:
-				return MakeExpression<OperatorZoom>(data);
+				{
+					return MakeExpression<OperatorZoom>(data);
+				}
 		}
 	}
 
@@ -394,64 +438,16 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 }
 
 
-// Create an Operator that performs the task of a Function. This is required to support the old Function syntax.
+// Create an Operator that performs the task of a Function. This is required to support the old Function syntax via an Expression.
 std::shared_ptr<IOperator> CreateFunctionOperatorFromJson(const json& data)
 {
-	std::shared_ptr<OperatorFunction> op = std::make_shared<OperatorFunction>();
+	std::unique_ptr<OperatorFunction> op = std::make_unique<OperatorFunction>();
 	if (op->ParseFromJson(data))
 	{
-		return std::shared_ptr<IOperator>(op);
+		return std::shared_ptr<IOperator>(std::move(op));
 	}
 	return nullptr;
 }
-
-
-
-//bool IsNullValue(const Value& op)
-//{
-//	return std::holds_alternative<std::monostate>(op);
-//}
-
-//bool IsFloatValue(const Value& op)
-//{
-//	return std::holds_alternative<float>(op);
-//}
-
-
-bool JsonArrayToValueArray(const json& data, std::vector<Value>& values, int start=0)
-{
-	if (!data.is_array()) return false;
-
-	values.clear();
-	values.reserve(data.size() - start);
-
-	for (size_t i = start; i<data.size(); i++)
-	{
-		values.emplace_back(JsonTypeToValue(data[i]));
-	}
-
-	return true;
-}
-
-//bool IsJsonArrayOfType(const json& data, nlohmann::detail::value_t type)
-//{
-//	if (data.is_array())
-//	{
-//		return std::all_of(std::begin(data), std::end(data), [type](const json& item) { return item.type() == type; });
-//	}
-//	return false;
-//}
-//
-//template<typename Predicate>
-//bool IsJsonArrayOfType(const json& data, Predicate predicate)
-//{
-//	if (data.is_array())
-//	{
-//		return std::all_of(std::begin(data), std::end(data), [type](const json& item) { return predicate(); });
-//	}
-//	return false;
-//}
-
 
 // Convert the data in the supplied JSON to a Value, either a simple type or an OperatorPtr.
 Value JsonTypeToValue(const json& data)
@@ -463,12 +459,11 @@ Value JsonTypeToValue(const json& data)
 		std::shared_ptr<IOperator> exprOp = CreateOperatorFromJson(data);
 		if (exprOp)
 		{
-			result = exprOp;
+			result = { exprOp };
 		}
 
 		if (!exprOp)
 		{
-			///assert(data[0].get<std::string>() != "match");
 			core::logger::Write(std::format("Unhandled Operation '{}'\n", data[0].get<std::string>().c_str()));
 		}
 	}
@@ -532,7 +527,43 @@ Value JsonTypeToValue(const json& data)
 	return result;
 }
 
+// Convert the data in the supplied JSON array to an array of Vlues, either simple types or OperatorPtrs.
+// start	Specify first item to check (defaults to zero).
+static bool JsonArrayToValueArray(const json& data, std::vector<Value>& values, int start=0)
+{
+	if (!data.is_array()) return false;
 
+	values.clear();
+	values.reserve(data.size() - start);
+
+	for (size_t i = start; i<data.size(); i++)
+	{
+		values.emplace_back(JsonTypeToValue(data[i]));
+	}
+
+	return true;
+}
+
+static bool IsOperatorOfType(const json& data, std::string_view name)
+{
+	return data.is_array() && data.size() > 0 && data[0].is_string() && data[0].get<std::string>() == name;
+}
+
+template<typename T, typename... Sizes>
+bool ArrayHasSize(const T& array, Sizes... size)
+{
+	return ((array.size() == size) || ...);
+}
+
+//static bool IsArrayOfSize(const ValueArray& array, std::initializer_list<size_t> sizes)
+//{
+//	for (size_t size : sizes)
+//	{
+//		if (array.size() == size) return true;
+//	}
+//
+//	return false;
+//}
 
 // [ "literal", [ .... ]]: value
 // [ "literal", { .... }]: value
@@ -630,52 +661,50 @@ Value OperatorToString::Evaluate(const mvt::feature::Feature& feature, float zoo
 // ["at", number, array]: value
 bool OperatorAt::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() == 3)
+	if (IsOperatorOfType(data, "at"))
 	{
-		if (IsStringOfValue(data[0], "at"))
+		if (JsonArrayToValueArray(data, mValues, 1))
 		{
-			Value value = JsonTypeToValue(data[1]);
-			if (!value.IsNull())
-			{
-				mValues.emplace_back(std::move(value));
-
-				Value array = JsonTypeToValue(data[2]);
-				mValues.emplace_back(std::move(array));
-
-				return true;
-			}
+			return ArrayHasSize(mValues, 2);
 		}
 	}
 
 	return false;
 }
 
+template<typename T>
+static T GetValueAt(const std::vector<T>& array, int index)
+{
+	if (index < 0 || index >= array.size())
+	{
+		return {};
+	}
+
+	return array.at(index);
+}
+
 Value OperatorAt::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
 	if (mValues.size() == 2)
 	{
-		Value index = GetValue(mValues[0], feature, zoom);
+		Value indexValue = GetValue(mValues[0], feature, zoom);
+		Value arrayValue = GetValue(mValues[1], feature, zoom);
 
-		if (auto key = index.TryGetFloat(); key.has_value())
+		if (!indexValue.IsFloat()) return {};
+
+		int index = static_cast<int>(std::round(indexValue.GetFloat()));
+
+		if (auto opt = arrayValue.TryGetStringArray(); opt.has_value())
 		{
-			Value array = GetValue(mValues[1], feature, zoom);
-			if (auto stringArray = array.TryGetStringArray(); stringArray.has_value())
-			{
-				size_t idx = static_cast<size_t>(key.value());
-				if (idx < stringArray.value().size())
-				{
-					return { stringArray.value().at(idx) };
-				}
-			}
-			else if (auto floatArray = array.TryGetFloatArray(); floatArray.has_value())
-			{
-				size_t idx = static_cast<size_t>(key.value());
-				if (idx < floatArray.value().size())
-				{
-					return { floatArray.value().at(idx) };
-				}
-			}
-
+			return GetValueAt(opt.value(), index);
+		}
+		else if (auto opt = arrayValue.TryGetFloatArray(); opt.has_value())
+		{
+			return GetValueAt(opt.value(), index);
+		}
+		else if (auto opt = arrayValue.TryGetBoolArray(); opt.has_value())
+		{
+			return GetValueAt(opt.value(), index);
 		}
 	}
 
@@ -683,10 +712,75 @@ Value OperatorAt::Evaluate(const mvt::feature::Feature& feature, float zoom)
 }
 
 
+// ["at-interpolated", number, array]: value
+bool OperatorAtInterpolated::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "at-interpolated"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 2);
+		}
+	}
+
+	return false;
+}
+
+Value OperatorAtInterpolated::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 2)
+	{
+		Value indexValue = GetValue(mValues[0], feature, zoom);
+		Value arrayValue = GetValue(mValues[1], feature, zoom);
+
+		if (!indexValue.IsFloat()) return {};
+
+		int index = static_cast<int>(std::round(indexValue.GetFloat()));
+
+		if (auto opt = arrayValue.TryGetStringArray(); opt.has_value())
+		{
+			return GetValueAt(opt.value(), index);
+		}
+		else if (auto opt = arrayValue.TryGetFloatArray(); opt.has_value())
+		{
+			FloatArray floatArray = opt.value();
+
+			// Interpolate for non-integer index.
+
+			int idx1 = static_cast<int>(indexValue.GetFloat());
+			int idx2 = idx1 + 1;
+			float ratio = indexValue.GetFloat() - idx1;
+
+			if (idx1 < 0 || idx1 >= floatArray.size()) return {};
+			if (idx2 >= floatArray.size()) return {};
+
+			return std::lerp(floatArray.at(idx1), floatArray.at(idx2), ratio);
+		}
+		else if (auto opt = arrayValue.TryGetBoolArray(); opt.has_value())
+		{
+			return GetValueAt(opt.value(), index);
+		}
+	}
+
+	return {};
+}
+
+
+
 // ["get", string]: value
 // ["get", string, object]: value
 bool OperatorGet::ParseFromJson(const json& data)
 {
+	if (IsOperatorOfType(data, "get"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			//return IsArrayOfSize(mValues, { 1, 2 });
+			return ArrayHasSize(mValues, 1, 2);
+		}
+	}
+
+	/*
 	if (data.is_array() && data.size() >= 2)
 	{
 		//if (data[0].is_string() && data[0].get<std::string>() == "get")
@@ -708,7 +802,7 @@ bool OperatorGet::ParseFromJson(const json& data)
 			}
 		}
 	}
-
+	*/
 	return false;
 }
 
@@ -738,6 +832,15 @@ Value OperatorGet::Evaluate(const Feature& feature, float zoom)
 // ["has", string, object]: boolean
 bool OperatorHas::ParseFromJson(const json& data)
 {
+	if (IsOperatorOfType(data, "has"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 1, 2);
+		}
+	}
+
+/*
 	if (data.is_array() && data.size() >= 2)
 	{
 		if (IsStringOfValue(data[0], "has"))
@@ -761,6 +864,8 @@ bool OperatorHas::ParseFromJson(const json& data)
 			}
 		}
 	}
+*/
+
 	return false;
 }
 
@@ -794,6 +899,15 @@ Value OperatorHas::Evaluate(const Feature& feature, float zoom)
 // ["in", keyword (boolean, std::string, float), input (array or std::string)]: booolean
 bool OperatorIn::ParseFromJson(const json& data)
 {
+	if (IsOperatorOfType(data, "in"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 2);
+		}
+	}
+
+	/*
 	if (data.is_array() && data.size() == 3)
 	{
 		if (IsStringOfValue(data[0], "in"))
@@ -813,6 +927,7 @@ bool OperatorIn::ParseFromJson(const json& data)
 			}
 		}
 	}
+	*/
 
 	return false;
 }
@@ -875,6 +990,15 @@ Value OperatorIn::Evaluate(const Feature& feature, float zoom)
 // ["index-of", keyword, input, index]: number
 bool OperatorIndexOf::ParseFromJson(const json& data)
 {
+	if (IsOperatorOfType(data, "index-of"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 2, 3);
+		}
+	}
+
+	/*
 	if (data.is_array() && data.size() >= 3)
 	{
 		if (IsStringOfValue(data[0], "index-of"))
@@ -907,6 +1031,7 @@ bool OperatorIndexOf::ParseFromJson(const json& data)
 			}
 		}
 	}
+	*/
 
 	return false;
 }
@@ -997,12 +1122,22 @@ Value OperatorIndexOf::Evaluate(const Feature& feature, float zoom)
 // ["length", array]: number
 bool OperatorLength::ParseFromJson(const json& data)
 {
+	if (IsOperatorOfType(data, "length"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 1);
+		}
+	}
+
+	/*
 	if (data.is_array() && data.size() == 2)
 	{
 		Value value = JsonTypeToValue(data[1]);
 		mValues.emplace_back(std::move(value));
 		return value.IsAnyOfTypes<std::string, StringArray, FloatArray, BoolArray>();
 	}
+	*/
 
 	return false;
 }
@@ -1040,22 +1175,178 @@ Value OperatorLength::Evaluate(const Feature& feature, float zoom)
 	return {};
 }
 
+// ["slice", input, index]: OutputType
+// ["slice", input, index, index]: OutputType
+bool OperatorSlice::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "slice"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			if (mValues.size() == 2)
+			{
+				mValues.emplace_back(-1.0f);	// Add a default end index of -1.0f if none is supplied.
+			}
+
+			return ArrayHasSize(mValues, 3);
+		}
+	}
+
+	return false;
+}
+
+template<typename T>
+static std::vector<T> SliceArray(const std::vector<T>& array, int startIndex, int endIndex)
+{
+	if (endIndex == -1) endIndex = static_cast<int>(array.size());
+
+	if (startIndex >= array.size() || endIndex > array.size() || endIndex <= 0 || startIndex > endIndex)
+	{
+		return {};
+	}
+
+	return std::vector<T>(array.begin() + startIndex, array.begin() + endIndex);
+}
+
+Value OperatorSlice::Evaluate(const Feature& feature, float zoom)
+{
+	if (ArrayHasSize(mValues, 3))
+	{
+		Value input = GetValue(mValues[0], feature, zoom);
+
+		if (!input.IsAnyOfTypes<std::string, StringArray, FloatArray, BoolArray>())
+		{
+			return {};
+		}
+
+		Value start = GetValue(mValues[1], feature, zoom);
+		Value end = GetValue(mValues[2], feature, zoom);
+
+		if (!start.IsFloat() || !end.IsFloat())
+		{
+			return {};
+		}
+
+		int startIndex = static_cast<int>(std::round(start.GetFloat()));
+		int endIndex = static_cast<int>(std::round(end.GetFloat()));
+
+		if (input.IsString())
+		{
+			const std::string& s = input.GetString();
+
+			if (endIndex == -1) endIndex = static_cast<int>(s.length());
+
+			if (startIndex >= s.length() || endIndex <= 0 || startIndex > endIndex)
+			{
+				return { };
+			}
+
+			return s.substr(startIndex, endIndex - startIndex);
+		}
+		else if (auto opt = input.TryGetBoolArray(); opt.has_value())
+		{
+			return SliceArray(opt.value(), startIndex, endIndex);
+		}
+		else if (auto opt = input.TryGetFloatArray(); opt.has_value())
+		{
+			return SliceArray(opt.value(), startIndex, endIndex);
+		}
+		else if (auto opt = input.TryGetStringArray(); opt.has_value())
+		{
+			return SliceArray(opt.value(), startIndex, endIndex);
+		}
+	}
+
+	return {};
+}
+
+
+// ["split", input, delimiter]: StringArray
+bool OperatorSplit::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "split"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 2);
+		}
+	}
+	return false;
+}
+
+Value OperatorSplit::Evaluate(const Feature& feature, float zoom)
+{
+	if (ArrayHasSize(mValues, 2))
+	{
+		Value inputValue = GetValue(mValues[0], feature, zoom);
+		Value delimiterValue = GetValue(mValues[1], feature, zoom);
+
+		if (!inputValue.IsString() || !delimiterValue.IsString()) { return {}; }
+
+		const std::string& input = inputValue.GetString();
+		const std::string& delimiter = delimiterValue.GetString();
+
+		if (delimiter.empty()) { return input; }	// XXX I guess?
+
+		size_t start{}, end{};
+
+		StringArray tokens;
+
+		while ((end = input.find(delimiter, end)) != std::string::npos)
+		{
+			tokens.emplace_back(input.begin() + start, input.begin() + end);
+
+			end += delimiter.length();
+			start = end;
+		}
+
+		tokens.emplace_back(input.begin() + start, input.end());
+
+		return tokens;
+
+	}
+
+	return {};
+}
+
+
+// [ "!", boolean]: condition
+bool OperatorNegate::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "!"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 1);
+		}
+	}
+
+	return false;
+}
+
+Value OperatorNegate::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		Value value = GetValue(mValues[0], feature, zoom);
+		if (value.IsBool())
+		{
+			return { !value.GetBool() };
+		}
+	}
+
+	return {};
+}
+
+
 
 // ["==", value, value]: boolean
 // ["==", value, value, collator]: boolean
 bool _OperatorDecision::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() >= 2)
+	if (JsonArrayToValueArray(data, mValues, 1))
 	{
-		for (size_t i = 1; i < data.size(); ++i)
-		{
-			Value op = JsonTypeToValue(data[i]);
-
-			assert(!op.IsNull());
-
-			mValues.push_back(std::move(op));
-		}
-		return mValues.size() >= 2;
+		return ArrayHasSize(mValues, 2, 3);
 	}
 
 	return false;
@@ -1246,7 +1537,7 @@ Value OperatorCase::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 bool OperatorCoalesce::ParseFromJson(const json& data)
 {
-	if (data.is_array())
+	if (IsOperatorOfType(data, "coalesce"))
 	{
 		if (JsonArrayToValueArray(data, mValues, 1))
 		{
@@ -1529,53 +1820,170 @@ Value OperatorMatch::Evaluate(const mvt::feature::Feature& feature, float zoom)
 // E.g. ["+", number, number, ...]: number
 bool _OperatorMath::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() >= 2)
+	if (data.is_array())
 	{
-		for (size_t i = 1; i < data.size(); ++i)
+		if (JsonArrayToValueArray(data, mValues, 1))
 		{
-			Value op = JsonTypeToValue(data[i]);
-
-			assert(!op.IsNull());
-
-			mValues.push_back(std::move(op));
+			return mValues.size() >= 2;
 		}
-		return mValues.size() >= 2;
 	}
 
 	return false;
 }
 
+Value OperatorSubtraction::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 2)
+	{
+		Value number1 = GetValue(mValues[0], feature, zoom);
+		Value number2 = GetValue(mValues[1], feature, zoom);
+
+		if (number1.IsFloat() && number2.IsFloat())
+		{
+			return { number1.GetFloat() - number2.GetFloat() };
+		}
+	}
+
+	return {};
+}
+
+Value OperatorProduct::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() >= 2)
+	{
+		float product{ 1.0f };
+
+		for (size_t i=0; i<mValues.size(); i++)
+		{
+			Value number = GetValue(mValues[i], feature, zoom);
+			if (!number.IsFloat())
+			{
+				return {};
+			}
+			product *= number.GetFloat();
+		}
+
+		return { product };
+	}
+
+	return {};
+}
+
+Value OperatorDivision::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 2)
+	{
+		Value number1 = GetValue(mValues[0], feature, zoom);
+		Value number2 = GetValue(mValues[1], feature, zoom);
+
+		if (number1.IsFloat() && number2.IsFloat())
+		{
+			return { number1.GetFloat() / number2.GetFloat() };
+		}
+	}
+
+	return {};
+}
+
+Value OperatorRemainder::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 2)
+	{
+		Value number1 = GetValue(mValues[0], feature, zoom);
+		Value number2 = GetValue(mValues[1], feature, zoom);
+
+		if (number1.IsFloat() && number2.IsFloat())
+		{
+			float f1 = number1.GetFloat();
+			float f2 = number2.GetFloat();
+
+			if (f1 < 0.0f || f2 < 0.0f) return {};
+
+			int remainder = static_cast<int>(std::round(f1)) % static_cast<int>(std::round(f2));
+			return { static_cast<float>(remainder) };
+		}
+	}
+
+	return {};
+}
+
+Value OperatorPow::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 2)
+	{
+		Value number1 = GetValue(mValues[0], feature, zoom);
+		Value number2 = GetValue(mValues[1], feature, zoom);
+
+		if (number1.IsFloat() && number2.IsFloat())
+		{
+			float f1 = number1.GetFloat();
+			float f2 = number2.GetFloat();
+
+			return { std::pow(f1, f2) };
+		}
+	}
+
+	return {};
+}
+
 
 Value OperatorSum::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	assert(mValues.size() >= 2);
-
-	float result{};
-	for (size_t i=0; i<mValues.size(); i++)
+	if (mValues.size() >= 2)
 	{
-		Value value = GetValue(mValues[i], feature, zoom);
+		float sum{ 0.0f };
 
-		assert(std::holds_alternative<float>(value));
-
-		if (!std::holds_alternative<float>(value))
+		for (size_t i=0; i<mValues.size(); i++)
 		{
-			return Value{};
+			Value number = GetValue(mValues[i], feature, zoom);
+			if (!number.IsFloat())
+			{
+				return {};
+			}
+			sum += number.GetFloat();
 		}
 
-		result += std::get<float>(value);
+		return { sum };
 	}
 
-	return result;
+	return {};
 }
 
+bool OperatorAbs::ParseFromJson(const json& data)
+{
+	if (data.is_array())
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() == 1;
+		}
+	}
+
+	return false;
+}
+
+Value OperatorAbs::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		Value number = GetValue(mValues[0], feature, zoom);
+
+		if (number.IsFloat())
+		{
+			return { std::abs(number.GetFloat()) };
+		}
+	}
+
+	return {};
+}
 
 
 
 bool OperatorZoom::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() == 1)
+	if (IsOperatorOfType(data, "zoom") && data.size() == 1)
 	{
-		return IsStringOfValue(data[0], "zoom");
+		return true;
 	}
 
 	return false;

@@ -29,8 +29,14 @@ using ValueVariant = std::variant<std::monostate, float, std::string, bool, Colo
 
 export class Value : public ValueVariant
 {
-	using ValueVariant::variant;
+	//using ValueVariant::operator=;
+
 public:
+	using ValueVariant::ValueVariant;
+
+	Value& operator=(const Value&) = default;
+	Value& operator=(Value&) = default;
+
 	bool IsNull(void) const { return std::holds_alternative<std::monostate>(*this); }
 	bool IsFloat(void) const { return std::holds_alternative<float>(*this); }
 	bool IsString(void) const { return std::holds_alternative<std::string>(*this); }
@@ -313,6 +319,14 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+export class OperatorAtInterpolated : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 export class OperatorGet : public IOperator
 {
 public:
@@ -354,8 +368,30 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+export class OperatorSlice : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorSplit : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
 
 
+export class OperatorNegate : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
 
 // Helper base class for Decision Operators (==, !=, <, <=, >, >=)
 class _OperatorDecision : public IOperator
@@ -501,11 +537,50 @@ public:
 
 };
 
+class OperatorSubtraction : public _OperatorMath
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorProduct : public _OperatorMath
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorDivision : public _OperatorMath
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorRemainder : public _OperatorMath
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorPow: public _OperatorMath
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 class OperatorSum : public _OperatorMath
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
+
+class OperatorAbs : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+
 
 
 

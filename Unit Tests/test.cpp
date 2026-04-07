@@ -307,10 +307,10 @@ TEST(Operators, Decision)
 	};
 
 	Test tests[] = {
-		{ R"([ "all", true, false ])", { false } },
-		{ R"([ "all", true, true ])", { true } },
-		{ R"([ "all", true, [ "get", "boolean1" ] ])", { false } },
-		{ R"([ "all", true, [ "get", "boolean2" ] ])", { true } },
+		{ R"([ "!", true ])", { false } },
+		{ R"([ "!", false ])", { true } },
+		{ R"([ "!", [ "get", "boolean1" ] ])", { true } },
+		{ R"([ "!", [ "get", "boolean2" ] ])", { false } },
 
 		{ R"([ "!=", 12.34, 12.34 ])", { false } },
 		{ R"([ "!=", 12.34, 56.78 ])", { true } },
@@ -365,6 +365,11 @@ TEST(Operators, Decision)
 		{ R"([ ">=", "aaa", [ "get", "string1"] ])", { false }},
 		{ R"([ ">=", "zzz", [ "get", "string1"] ])", { true }},
 		{ R"([ ">=", "hello", [ "get", "string1"] ])", { true }},
+
+		{ R"([ "all", true, false ])", { false } },
+		{ R"([ "all", true, true ])", { true } },
+		{ R"([ "all", true, [ "get", "boolean1" ] ])", { false } },
+		{ R"([ "all", true, [ "get", "boolean2" ] ])", { true } },
 
 		{ R"([ "any", true, false ])", { true } },
 		{ R"([ "any", true, true ])", { true } },
@@ -472,15 +477,18 @@ TEST(Operators, Lookup)
 		{ R"([ "length", "abcdef" ])", { 6.0f }},
 
 		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0 ])", { FloatArray{ 30.0f, 40.0f, 50.0f } }},
-		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0, 3.0 ])", { FloatArray{ 30.0f, 40.0f } }},
-		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0, 3.0 ])", { StringArray{ "bb", "cc", "dd" } }},
+		{ R"([ "slice", [ 10, 20, 30, 40, 50], 2.0, 4.0 ])", { FloatArray{ 30.0f, 40.0f } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0, 3.0 ])", { StringArray{ "bb", "cc" } }},
 		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 2.0 ])", { StringArray{ "cc", "dd", "ee" } }},
-		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0, 3.0 ])", { StringArray{ "bb", "cc", "dd" } }},
+		{ R"([ "slice", [ "aa", "bb", "cc", "dd", "ee" ], 1.0, 4.0 ])", { StringArray{ "bb", "cc", "dd" } }},
 
 		{ R"([ "slice", "abcdefghi", 5.0 ])", { "fghi"} },
-		{ R"([ "slice", "abcdefghi", 3.0, 6.0 ])", { "defg"} },
+		{ R"([ "slice", "abcdefghi", 3.0, 6.0 ])", { "def"} },
 
 		{ R"([ "split", "aaa,bbb, ccc, ddd", "," ])", { StringArray{ "aaa", "bbb", " ccc", " ddd" } }},
+		{ R"([ "split", ",bbb, ccc, ddd", "," ])", { StringArray{ "", "bbb", " ccc", " ddd" } }},
+		{ R"([ "split", "aaa,bbb, ccc, ddd,", "," ])", { StringArray{ "aaa", "bbb", " ccc", " ddd", "" } }},
+		{ R"([ "split", "aaa||bbb|| ccc|| ddd", "||" ])", { StringArray{ "aaa", "bbb", " ccc", " ddd" } }},
 	};
 
 	for (const auto& test : tests)
@@ -543,6 +551,88 @@ TEST(Expressions, Decision)
 	EXPECT_TRUE(expr.GetValue(feature, 10));
 	*/
 }
+
+
+
+TEST(Operators, Math)
+{
+	mvt::feature::Feature feature;
+
+	feature.mValues["float1"] = { 10.0f };
+	feature.mValues["float2"] = { -10.0f };
+	feature.mValues["string1"] = "hello";
+	feature.mValues["boolean1"] = false;
+	feature.mValues["boolean2"] = true;
+
+	struct Test
+	{
+		std::string json;
+		Value result {};
+	};
+
+	Test tests[] = {
+		{ R"([ "-", 3.0, 1.0 ])", { 2.0f } },
+		{ R"([ "-", 1.0, 3.0 ])", { -2.0f } },
+		{ R"([ "-", [ "get", "float1" ], 5.0 ])", { 5.0f } },
+
+		{ R"([ "*", 3.0, 2.0 ])", { 6.0f } },
+		{ R"([ "*", 3.0, 2.0, 4.0 ])", { 24.0f } },
+		{ R"([ "*", 2.0, -5.0 ])", { -10.0f } },
+		{ R"([ "*", [ "get", "float1" ], 2.0 ])", { 20.0f } },
+
+		{ R"([ "/", 3.0, 2.0 ])", { 1.5f } },
+		{ R"([ "/", 5.0, -2.0 ])", { -2.5f } },
+		{ R"([ "/", [ "get", "float1" ], 2.0 ])", { 5.0f } },
+
+		{ R"([ "%", 7.0, 2.0 ])", { 1.0f } },
+		{ R"([ "%", 5.0, -2.0 ])", { } },	// Presumably undefined.
+		{ R"([ "%", [ "get", "float1" ], 2.0 ])", { 0.0f } },
+
+		{ R"([ "^", 7.0, 2.0 ])", { 49.0f } },
+		{ R"([ "^", 5.0, -1.0 ])", { 0.2f } },
+		{ R"([ "^", [ "get", "float1" ], 2.0 ])", { 100.0f } },
+
+		{ R"([ "+", 3.0, 1.0 ])", { 4.0f } },
+		{ R"([ "+", 3.0, 1.0, 5.0 ])", { 9.0f } },
+		{ R"([ "+", -1.0, 3.0 ])", { 2.0f } },
+		{ R"([ "+", -3.0, 1.0 ])", { -2.0f } },
+		{ R"([ "+", [ "get", "float1" ], 5.0 ])", { 15.0f } },
+
+
+		{ R"([ "abs", 3.0 ])", { 3.0f } },
+		{ R"([ "abs", -1.0 ])", { 1.0f } },
+		{ R"([ "abs", [ "get", "float1" ] ])", { 10.0f } },
+		{ R"([ "abs", [ "get", "float2" ] ])", { 10.0f } },
+
+
+	};
+
+	for (const auto& test : tests)
+	{
+		SCOPED_TRACE("json: " + test.json);
+
+		nlohmann::json data;
+		EXPECT_NO_THROW( data = nlohmann::json::parse(test.json) ) << "Invalid JSON was '" << test.json << "'";
+
+		auto op = CreateOperatorFromJson(data);
+
+		EXPECT_TRUE(op != nullptr) << "Failed Operator was '" << test.json << "'";
+
+		if (op)
+		{
+			auto value = op->Evaluate(feature, 10);
+
+			if (value != test.result)
+			{
+				int i{};
+			}
+
+			EXPECT_TRUE(value == test.result)  << "Wrong result was from'" << test.json << "'";
+		}
+	}
+}
+
+
 
 TEST(Operators, Filter)
 {
