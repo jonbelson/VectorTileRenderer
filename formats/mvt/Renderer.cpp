@@ -286,6 +286,8 @@ namespace mvt::renderer
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
+		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, 512.0f, 512.0f));
+
 		for (const auto& symbol : symbols)
 		{
 			//if (symbol.second->mId.find("contour labels") != std::string::npos)

@@ -31,15 +31,6 @@ Value Expression::Evaluate(const mvt::feature::Feature& feature, float zoom) con
 }
 
 
-/*
-FloatFuncExpression::FloatFuncExpression(const nlohmann::json& data)
-{
-	if (ParseFromJson(data))
-	{
-	}
-}
-*/
-
 StringExpression::StringExpression(const nlohmann::json& data)
 {
 	if (ParseFromJson(data))
@@ -202,7 +193,7 @@ static bool TryReadFilterValue(const json& data, Value& value)
 }
 
 // Create FilterOperator equivalent of Existential, Comparison and Set membership operators.
-_FilterOperator* CreateFilterOperator(const json& data)
+std::unique_ptr<_FilterOperator> CreateFilterOperator(const json& data)
 {
 	if (data.is_array() && data.size() > 0)
 	{
@@ -216,7 +207,7 @@ _FilterOperator* CreateFilterOperator(const json& data)
 					std::string key;
 					if (TryReadString(data[1], key))
 					{
-						return new FilterOperatorExistential(it->second, key);
+						return std::make_unique<FilterOperatorExistential>(it->second, key);
 					}
 				}
 			}
@@ -229,7 +220,7 @@ _FilterOperator* CreateFilterOperator(const json& data)
 					Value value;
 					if (TryReadString(data[1], key) && TryReadFilterValue(data[2], value))
 					{
-						return new FilterOperatorComparison(it->second, key, value);
+						return std::make_unique<FilterOperatorComparison>(it->second, key, value);
 					}
 				}
 			}
@@ -246,7 +237,7 @@ _FilterOperator* CreateFilterOperator(const json& data)
 						{
 							values.push_back(JsonTypeToValue(data[i]));
 						}
-						return new FilterOperatorMembership(it->second, key, values);
+						return std::make_unique<FilterOperatorMembership>(it->second, key, values);
 					}
 				}
 			}
@@ -274,13 +265,13 @@ bool FilterExpression::ParseFromJson(const nlohmann::json& data)
 			auto it = CombiningOperatorMap.find(type);
 			if (it != CombiningOperatorMap.end())
 			{
-				std::vector<_FilterOperator*> filters;
+				std::vector< std::unique_ptr<_FilterOperator> > filters;
 				for (size_t i= 1; i < data.size(); i++)
 				{
-					_FilterOperator* filter = CreateFilterOperator(data[i]);
+					auto filter = CreateFilterOperator(data[i]);
 					if (filter)
 					{
-						filters.push_back(filter);
+						filters.push_back(std::move(filter));
 					}
 				}
 
@@ -290,10 +281,10 @@ bool FilterExpression::ParseFromJson(const nlohmann::json& data)
 		}
 		else
 		{
-			_FilterOperator* filter = CreateFilterOperator(data);
+			std::unique_ptr<_FilterOperator> filter = CreateFilterOperator(data);
 			if (filter)
 			{
-				std::shared_ptr<IOperator> spfilter { filter };
+				std::shared_ptr<IOperator> spfilter { std::move(filter) };
 				mValue = spfilter;
 			}
 		}

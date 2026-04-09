@@ -25,6 +25,9 @@ namespace mvt::symbol
 
 		std::vector<Entry> mPlaced;
 
+		// If non-empty, all symbols must fit within this boundary.
+		Rect mBoundary{};
+
 		float MagnitudeSqr(const Point& p1, const Point& p2)
 		{
 			return (p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y);
@@ -225,7 +228,21 @@ namespace mvt::symbol
 			return bb;
 		}
 
+		bool IsWithinBoundary(const Rect& rect)
+		{
+			return mBoundary.IsEmpty() || mBoundary.IsInside(rect);
+		}
+
+		bool IsWithinBoundary(const PointArray& line, float width = 0.0f)
+		{
+			Rect bb = GetBBox(line, width);
+
+			return mBoundary.IsEmpty() || IsWithinBoundary(bb);
+		}
+
 	public:
+		void SetBoundary(const Rect& boundary) { mBoundary = boundary; }
+		void ClearBoundary(void) { mBoundary = Rect(); }
 
 		void Clear(void) { mPlaced.clear(); }
 
@@ -234,7 +251,7 @@ namespace mvt::symbol
 			Rect bb = GetBBox(line, fontHeight/2.0f);
 			Entry entry{ .line = line, .width = fontHeight/2.0f, .boundingBox = bb };
 
-			if (!HasIntersection(entry))
+			if (IsWithinBoundary(bb) && !HasIntersection(entry))
 			{
 				mPlaced.push_back(entry);
 
@@ -248,7 +265,7 @@ namespace mvt::symbol
 		{
 			Entry entry{ .boundingBox = r };
 
-			if (!HasIntersection(entry))
+			if (IsWithinBoundary(r) && !HasIntersection(entry))
 			{
 				mPlaced.push_back(entry);
 
@@ -262,7 +279,7 @@ namespace mvt::symbol
 		{
 			Entry entry{ .boundingBox = r };
 
-			return HasIntersection(entry);
+			return !IsWithinBoundary(r) || HasIntersection(entry);
 		}
 
 		bool HasOverlap(const core::geometry::PointArray& line, float fontHeight = 0.0f)
@@ -270,12 +287,7 @@ namespace mvt::symbol
 			Rect bb = GetBBox(line, fontHeight/2.0f);
 			Entry entry{ .line = line, .width = fontHeight/2.0f, .boundingBox = bb };
 
-			if (entry.line.empty() || (entry.line.size() != line.size()))
-			{
-				int i=0;
-			}
-
-			return HasIntersection(entry);
+			return !IsWithinBoundary(bb) || HasIntersection(entry);
 		}
 	};
 

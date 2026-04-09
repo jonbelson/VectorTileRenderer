@@ -39,7 +39,7 @@ public:
 
 
 // Create an Operator for the old-style Filter format.
-export _FilterOperator* CreateFilterOperator(const json& data);
+export std::unique_ptr<_FilterOperator> CreateFilterOperator(const json& data);
 
 // An Expression that implements a filter, supporting the new Expression format or the old format.
 // https://docs.mapbox.com/style-spec/reference/other/#other-filters

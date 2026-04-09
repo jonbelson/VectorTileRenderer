@@ -77,6 +77,11 @@ export namespace core::geometry
 		Point BottomRight(void) const { return Point(Right(), Bottom()); }
 		Point BottomLeft(void) const { return Point(x, Bottom()); }
 
+		bool IsEmpty(void) const
+		{
+			return width == 0.0f && height == 0.0f;
+		}
+
 		bool IsInside(const Point& p) const
 		{
 			return p.x >= x && p.x < x+width && p.y >= y && p.y < y+height;
@@ -88,6 +93,14 @@ export namespace core::geometry
 				return false;
 
 			return true;
+		}
+
+		bool IsInside(const Rect& rect) const
+		{
+			if (IsInside(rect.TopLeft()) && IsInside(rect.TopRight()) && IsInside(rect.BottomRight()) && IsInside(rect.BottomLeft()))
+				return true;
+
+			return false;
 		}
 
 	};

@@ -735,12 +735,12 @@ enum struct FilterCombining
 class FilterOperatorCombining: public _FilterOperator
 {
 	FilterCombining mType{ FilterCombining::All };
-	std::vector<_FilterOperator*> mFilters;
+	std::vector< std::unique_ptr<_FilterOperator> > mFilters;
 
 	virtual bool ParseFromJson(const nlohmann::json& data) override { return false; }
 
 public:
-	FilterOperatorCombining(FilterCombining type, const std::vector<_FilterOperator*>& filters)
+	FilterOperatorCombining(FilterCombining type, std::vector< std::unique_ptr<_FilterOperator> >& filters)
 			: mType(type), mFilters(std::move(filters)) {}
 
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;

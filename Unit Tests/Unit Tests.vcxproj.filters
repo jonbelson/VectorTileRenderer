@@ -120,6 +120,9 @@
     <ClCompile Include="..\core\Logger.ixx">
       <Filter>Project Modules\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\Symbol.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

@@ -747,7 +747,7 @@ Value OperatorAtInterpolated::Evaluate(const mvt::feature::Feature& feature, flo
 
 			// Interpolate for non-integer index.
 
-			int idx1 = static_cast<int>(indexValue.GetFloat());
+			int idx1 = static_cast<int>(std::round(indexValue.GetFloat()));
 			int idx2 = idx1 + 1;
 			float ratio = indexValue.GetFloat() - idx1;
 
@@ -1052,7 +1052,7 @@ Value OperatorIndexOf::Evaluate(const Feature& feature, float zoom)
 				return {};
 			}
 
-			index = static_cast<int>(indexValue.GetFloat());
+			index = static_cast<int>(std::round(indexValue.GetFloat()));
 		}
 
 		if (keyword.IsBool())
