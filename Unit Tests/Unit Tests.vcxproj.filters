@@ -123,6 +123,9 @@
     <ClCompile Include="..\formats\mvt\Symbol.cpp">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\Symbols-PlacedSymbols.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

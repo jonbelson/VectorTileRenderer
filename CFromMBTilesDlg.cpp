@@ -207,6 +207,7 @@ BEGIN_MESSAGE_MAP(CFromMBTilesDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RENDER, &CFromMBTilesDlg::OnBnClickedButtonRender)
 	ON_EN_KILLFOCUS(IDC_EDIT_LATITUDE, &CFromMBTilesDlg::OnEnKillfocusEditLatitude)
 	ON_EN_KILLFOCUS(IDC_EDIT_LONGITUDE, &CFromMBTilesDlg::OnEnKillfocusEditLongitude)
+	ON_EN_CHANGE(IDC_EDIT_ZOOM, &CFromMBTilesDlg::OnEnChangeEditZoom)
 END_MESSAGE_MAP()
 
 
@@ -262,6 +263,23 @@ void CFromMBTilesDlg::OnEnKillfocusEditLatitude()
 
 void CFromMBTilesDlg::OnEnKillfocusEditLongitude()
 {
+	if (!UpdateData())
+	{
+		return;
+	}
+
+	auto [x, y] = mvt::tile::LatLongToTile(m_iZoom, m_fLatitude, m_fLongitude);
+
+	m_iX = x;
+	m_iY = y;
+
+	UpdateData(FALSE);
+}
+
+void CFromMBTilesDlg::OnEnChangeEditZoom()
+{
+	if (GetDlgItem(IDC_EDIT_X) == 0 || GetDlgItem(IDC_EDIT_Y) == 0) return;
+
 	if (!UpdateData())
 	{
 		return;

@@ -40,4 +40,5 @@ protected:
 	afx_msg void OnBnClickedButtonRender();
 	afx_msg void OnEnKillfocusEditLatitude();
 	afx_msg void OnEnKillfocusEditLongitude();
+	afx_msg void OnEnChangeEditZoom();
 };

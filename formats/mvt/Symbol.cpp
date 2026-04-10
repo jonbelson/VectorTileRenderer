@@ -517,6 +517,157 @@ namespace mvt::symbol
 
 	void Symbol::RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 	{
+		//if (attribs.textField.find("Bracknell &") != std::string::npos)
+		if (attribs.textField.find("Eastcourt Avenue") != std::string::npos)
+		{
+			int i{};
+		}
+
+		bool hasIcon = !attribs.iconImage.empty();
+		bool hasText = !attribs.textField.empty();
+
+		bool textOptional = attribs.textOptional;
+		bool iconOptional = attribs.iconOptional;
+
+		bool iconAllowOverlap = attribs.iconAllowOverlap;
+		bool textAllowOverlap = attribs.textAllowOverlap;
+
+		Rect iconBbox {};
+		Rect textBbox {};
+
+		float iconWidth {};
+		float iconHeight {};
+		float iconRotationDeg {};
+
+		BitmapHandle glyphHandle {};
+		BitmapHandle haloHandle {};
+
+		std::string textFont {};
+		FormattedText formattedText;
+
+		std::optional<const mvt::style::SpriteSpec*> spriteSpec;
+
+		if (hasIcon)
+		{
+			spriteSpec = context.sprites.Lookup(attribs.iconImage);
+
+			if (spriteSpec)
+			{
+				const auto& spec = spriteSpec.value();
+
+				float scaler = context.sprites.GetScaler();
+				iconWidth = spec->width/scaler;
+				iconHeight = spec->height/scaler;
+
+				iconWidth *= attribs.iconSize;
+				iconHeight *= attribs.iconSize;
+			}
+			else
+			{
+				hasIcon = false;
+			}
+		}
+
+
+		if (hasText)
+		{
+			for (const auto& font : attribs.textFont)
+			{
+				glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
+				haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);
+
+				if (haloHandle != InvalidHandle && glyphHandle != InvalidHandle)
+				{
+					textFont = font;
+					break;
+				}
+			}
+
+			if (glyphHandle == InvalidHandle || haloHandle == InvalidHandle)
+			{
+				hasText = false;
+			}
+
+			if (hasText)
+			{
+				auto glyphAtlas = context.glyphs.Lookup(textFont, 0);
+				formattedText = FormatText(glyphAtlas.get(), attribs, attribs.textField);
+				formattedText.font = textFont;
+			}
+		}
+
+
+
+		bool willDrawIcon { false };
+		bool willDrawText { false };
+
+
+		if (hasIcon)
+		{
+			// XXX icon anchor etc.
+			iconBbox = Rect::CreateCentred(point, iconWidth, iconHeight);
+
+			willDrawIcon = iconAllowOverlap || !placedSymbols.HasOverlap(iconBbox);
+
+		}
+
+		if (hasText)
+		{
+			// XXX text-rotate.
+			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+
+			// Calculate bounding box of text and check if it overlaps.
+			Rect bbox (cursor, formattedText.widthPx*attribs.textScale, formattedText.heightPx*attribs.textScale);
+
+			textBbox = bbox;
+			willDrawText = textAllowOverlap || !placedSymbols.HasOverlap(bbox);
+		}
+
+
+		// Is there anything to draw?
+		if (hasIcon && (willDrawIcon || iconOptional) || (hasText && (willDrawText || textOptional)))
+		{
+			if (willDrawIcon)
+			{
+				std::optional<RotateAtPoint> rap;
+
+				if (attribs.iconRotationAlignment == IconRotationAlignment::Map)
+				{
+					// Align x axis with line.
+					rap.emplace(renderTarget, point, iconRotationDeg /*attribs.iconRotate*/);
+				}
+
+				const auto& spec = spriteSpec.value();
+				renderTarget->SetActiveBitmap(context.spritesHandle);
+				renderTarget->DrawBitmap(spec->rect, iconBbox);
+
+				placedSymbols.Place(iconBbox);
+
+
+				if constexpr (debug::visual::DrawPointLabelOutline)
+				{
+					DrawRect(renderTarget, iconBbox, Color("hotpink"));
+				}
+			}
+
+			if (willDrawText)
+			{
+
+				RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
+
+				placedSymbols.Place(textBbox);
+
+
+
+			}
+
+
+		}
+
+
+
+#if 0
+
 		if (!attribs.iconImage.empty())
 		{
 			auto spriteSpec = context.sprites.Lookup(attribs.iconImage);
@@ -550,7 +701,7 @@ namespace mvt::symbol
 
 		if (!attribs.textField.empty())
 		{
-			float haloScale = attribs.textSize/24.0f;
+			float haloScale = attribs.textSize/style::GlyphSize;
 
 			for (const auto& font : attribs.textFont)
 			{
@@ -592,6 +743,7 @@ namespace mvt::symbol
 				}
 			}
 		}
+#endif
 	}
 
 
@@ -602,6 +754,9 @@ namespace mvt::symbol
 
 		bool textOptional = attribs.textOptional;
 		bool iconOptional = attribs.iconOptional;
+
+		bool iconAllowOverlap = attribs.iconAllowOverlap;
+		bool textAllowOverlap = attribs.textAllowOverlap;
 
 		float minSpacing = attribs.symbolSpacing;
 
@@ -704,7 +859,7 @@ namespace mvt::symbol
 
 				iconBbox = Rect::CreateCentred(point, iconWidth, iconHeight);
 
-				willDrawIcon = !placedSymbols.HasOverlap(iconBbox);
+				willDrawIcon = iconAllowOverlap || !placedSymbols.HasOverlap(iconBbox);
 			}
 
 
@@ -752,7 +907,7 @@ namespace mvt::symbol
 					Rect bbox (cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 
 					textBbox = bbox;
-					willDrawText = !placedSymbols.HasOverlap(bbox);
+					willDrawText = textAllowOverlap || !placedSymbols.HasOverlap(bbox);
 				}
 			}
 
@@ -798,9 +953,10 @@ namespace mvt::symbol
 	}
 
 
-	// Draw formatted text.
-	// point	
-	void Symbol::RenderTextAtPoint(RenderTarget* renderTarget, renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point /*, PlacedSymbols& placedSymbols*/)
+	// Draw formatted text at a specified position.
+	// Note there is no checking for overlapping, this should be done by the caller if require.
+	// point	Position to draw text.
+	void Symbol::RenderTextAtPoint(RenderTarget* renderTarget, renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point)
 	{
 		const std::string& font = formattedText.font;
 

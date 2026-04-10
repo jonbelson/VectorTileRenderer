@@ -9,6 +9,7 @@ module formats.mvt.renderer;
 
 import core.color;
 import core.logger;
+import formats.mvt.debug;
 import formats.mvt.layer;
 import formats.mvt.symbol;
 
@@ -314,6 +315,11 @@ namespace mvt::renderer
 					s.Render(mRenderTarget, context, attribs, TileToWorld(symbol.first->mMultiPolygon), placedSymbols);
 					break;
 			}
+		}
+
+		if constexpr (mvt::debug::visual::DrawPlacedSymbols)
+		{
+			placedSymbols.DrawSymbolPositions(mRenderTarget);
 		}
 
 		return true;

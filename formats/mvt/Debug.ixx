@@ -14,4 +14,5 @@ namespace mvt::debug::visual
 	export constexpr bool DrawPointLabelOutline = false;
 	export constexpr bool DrawLineLabelPath = false;
 	export constexpr bool NoCheckSymbolOverlap = false;
+	export constexpr bool DrawPlacedSymbols = false;
 };

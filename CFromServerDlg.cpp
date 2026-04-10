@@ -189,6 +189,7 @@ BEGIN_MESSAGE_MAP(CFromServerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RENDER, &CFromServerDlg::OnBnClickedButtonRender)
 	ON_EN_KILLFOCUS(IDC_EDIT_LATITUDE, &CFromServerDlg::OnEnKillfocusEditLatitude)
 	ON_EN_KILLFOCUS(IDC_EDIT_LONGITUDE, &CFromServerDlg::OnEnKillfocusEditLongitude)
+	ON_EN_CHANGE(IDC_EDIT_ZOOM, &CFromServerDlg::OnEnChangeEditZoom)
 END_MESSAGE_MAP()
 
 
@@ -240,6 +241,23 @@ void CFromServerDlg::OnEnKillfocusEditLatitude()
 
 void CFromServerDlg::OnEnKillfocusEditLongitude()
 {
+	if (!UpdateData())
+	{
+		return;
+	}
+
+	auto [x, y] = mvt::tile::LatLongToTile(m_iZoom, m_fLatitude, m_fLongitude);
+
+	m_iX = x;
+	m_iY = y;
+
+	UpdateData(FALSE);
+}
+
+void CFromServerDlg::OnEnChangeEditZoom()
+{
+	if (GetDlgItem(IDC_EDIT_X) == 0 || GetDlgItem(IDC_EDIT_Y) == 0) return;
+
 	if (!UpdateData())
 	{
 		return;

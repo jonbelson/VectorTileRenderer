@@ -46,6 +46,7 @@ export namespace mvt::symbol
 	export struct SymbolAttribs
 	{
 		// Icon
+		bool iconAllowOverlap { false };
 		IconAnchor iconAnchor { IconAnchor::Centre };
 		std::string iconImage;
 		std::vector<float> iconOffset { 0.0f, 0.0f };
@@ -60,6 +61,7 @@ export namespace mvt::symbol
 		float symbolSpacing{ 250.0f };
 
 		// Text
+		bool textAllowOverlap { false };
 		TextAnchor textAnchor {};
 		Color textColor { "#000000" };
 		std::string textField;
@@ -109,6 +111,7 @@ export namespace mvt::symbol
 						else
 						{
 							core::logger::Write(std::format("Could not substitute '{{}}' \n", key.c_str()));
+							value = "";
 							break;
 						}
 					}
@@ -120,6 +123,7 @@ export namespace mvt::symbol
 		// Constructor.
 		SymbolAttribs(const layer::Layer* layer, const feature::Feature& feature, float zoom)
 		{
+			iconAllowOverlap = layer->mIconAllowOverlap.GetValue(feature, zoom);
 			iconAnchor = IconAnchorToEnum(layer->mIconAnchor.GetValue(feature, zoom));
 			iconImage = layer->mIconImage.GetValue(feature, zoom);
 			iconOffset = layer->mIconOffset.GetValue(feature, zoom);
@@ -132,6 +136,7 @@ export namespace mvt::symbol
 			symbolPlacement = SymbolPlacementToEnum(layer->mSymbolPlacement.GetValue(feature, zoom));
 			symbolSpacing = layer->mSymbolSpacing.GetValue(feature, zoom);
 
+			textAllowOverlap = layer->mTextAllowOverlap.GetValue(feature, zoom);
 			textAnchor = TextAnchorToEnum(layer->mTextAnchor.GetValue(feature, zoom));
 			textColor = layer->mTextColor.GetValue(feature, zoom);
 			textField = layer->mTextField.GetValue(feature, zoom);
@@ -404,6 +409,24 @@ export namespace mvt::symbol
 			}
 		}
 
+		static Point GetCentroid(const PointArray& pointArray)
+		{
+			Point centroid{};
+
+			if (!pointArray.empty())
+			{
+				for (const auto& p : pointArray)
+				{
+					centroid.x += p.x;
+					centroid.y += p.y;
+				}
+				centroid.x /= pointArray.size();
+				centroid.y /= pointArray.size();
+			}
+
+			return centroid;
+		}
+
 	public:
 		Symbol() {}
 
@@ -425,7 +448,10 @@ export namespace mvt::symbol
 			}
 			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)
 			{
-			//	RenderAtLineStringCentre(renderTarget, context, attribs, lineString, placedSymbols);
+				for (const auto& line : lineString.lines)
+				{
+					RenderPoint(renderTarget, context, attribs, GetCentroid(line), placedSymbols);
+				}
 			}
 
 			return true;
@@ -433,13 +459,31 @@ export namespace mvt::symbol
 
 		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPolygon& multiPolygon, PlacedSymbols& placedSymbols)
 		{
-			if (attribs.symbolPlacement == SymbolPlacement::Line)
+			if (attribs.symbolPlacement == SymbolPlacement::Point)
 			{
-				//RenderAlongLineString(renderTarget, sprites, attribs, lineString, placedSymbols);
+				for (const auto& polygon : multiPolygon.polygons)
+				{
+					// XXX Centroid not best since it might be outside of the polygon (e.g. if concave).
+					RenderPoint(renderTarget, context, attribs, GetCentroid(polygon.exteriorRing), placedSymbols);
+				}
+			}
+			else if (attribs.symbolPlacement == SymbolPlacement::Line)
+			{
+				PointArray line;
+				for (const auto& polygon : multiPolygon.polygons)
+				{
+					line = polygon.exteriorRing;
+					line.emplace_back(polygon.exteriorRing.front());
+
+					RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols);
+				}
 			}
 			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)
 			{
-				//RenderAtLineStringCentre(renderTarget, context, attribs, lineString, placedSymbols);
+				for (const auto& polygon : multiPolygon.polygons)
+				{
+					RenderPoint(renderTarget, context, attribs, GetCentroid(polygon.exteriorRing), placedSymbols);
+				}
 			}
 
 			return true;
