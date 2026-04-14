@@ -89,9 +89,6 @@
     <ClCompile Include="formats\mvt\TileFetcher.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
-    <ClCompile Include="formats\mvt\Types.ixx">
-      <Filter>Source Files\Formats\Mvt</Filter>
-    </ClCompile>
     <ClCompile Include="formats\mvt\Style.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
@@ -102,9 +99,6 @@
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
     <ClCompile Include="formats\mvt\Layer.cpp">
-      <Filter>Source Files\Formats\Mvt</Filter>
-    </ClCompile>
-    <ClCompile Include="formats\mvt\Filter.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
     <ClCompile Include="formats\mvt\Feature.ixx">

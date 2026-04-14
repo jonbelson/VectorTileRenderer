@@ -305,7 +305,7 @@ namespace core::rendertarget
 //			bool hasDashes = !mDashes.empty();
 			bool hasDashes = !scaledDashes.empty();
 			D2D1_STROKE_STYLE_PROPERTIES1 props = D2D1::StrokeStyleProperties1(mCapStyle, mCapStyle, D2D1_CAP_STYLE_FLAT, mLineJoin, 5.0f, hasDashes ? D2D1_DASH_STYLE_CUSTOM : D2D1_DASH_STYLE_SOLID,
-					0.0f, D2D1_STROKE_TRANSFORM_TYPE_FIXED);
+					0.0f, D2D1_STROKE_TRANSFORM_TYPE_NORMAL /*D2D1_STROKE_TRANSFORM_TYPE_FIXED*/);
 
 //			const float* dashes = hasDashes ? mDashes.data() : nullptr;
 			const float* dashes = hasDashes ? scaledDashes.data() : nullptr;
@@ -1149,12 +1149,12 @@ namespace core::rendertarget
 
 	void D2DRenderTarget::DrawLine(const geometry::LineString* lineString)
 	{
-		if (mImpl) mImpl->DrawLine(lineString);
+		if (mImpl && lineString) mImpl->DrawLine(lineString);
 	}
 
 	void D2DRenderTarget::DrawPolygon(const geometry::MultiPolygon* multiPolygon)
 	{
-		if (mImpl)
+		if (mImpl && multiPolygon)
 		{
 			for (const auto& polygon : multiPolygon->polygons)
 			{
@@ -1165,7 +1165,7 @@ namespace core::rendertarget
 
 	void D2DRenderTarget::FillPolygon(const geometry::MultiPolygon* multiPolygon)
 	{
-		if (mImpl)
+		if (mImpl && multiPolygon)
 		{
 			for (const auto& polygon : multiPolygon->polygons)
 			{
@@ -1176,7 +1176,7 @@ namespace core::rendertarget
 
 	void D2DRenderTarget::DrawCircle(const geometry::MultiPoint* multiPoint)
 	{
-		if (mImpl)
+		if (mImpl && multiPoint)
 		{
 			for (const auto& point : multiPoint->points)
 			{
@@ -1187,7 +1187,7 @@ namespace core::rendertarget
 
 	void D2DRenderTarget::FillCircle(const geometry::MultiPoint* multiPoint)
 	{
-		if (mImpl)
+		if (mImpl && multiPoint)
 		{
 			for (const auto& point : multiPoint->points)
 			{

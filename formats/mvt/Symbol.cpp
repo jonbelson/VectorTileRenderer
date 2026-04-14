@@ -98,6 +98,7 @@ namespace mvt::symbol
 		}
 
 		// Return the interpolated point at specified distance from start of line geometry.
+		// Angle is in radians, in the range -PI to +PI, with clockwise rotation.
 		std::pair<Point, float> GetPointOffset(float offset) const
 		{
 			namespace ranges = std::ranges;
@@ -244,7 +245,8 @@ namespace mvt::symbol
 				float angleDeg = RadiansToDegrees(angleRad);
 
 				// if line angle is >90 and <180, characater is 'upside down'.
-				if (angleDeg > 90.0f && angleDeg < 180.0f) numUpsideDown++;
+//				if (angleDeg > 90.0f && angleDeg < 180.0f) numUpsideDown++;
+				if (angleDeg > 90.0f || angleDeg < -90.0f) numUpsideDown++;
 
 				offset += glyphSpec.advance*textScale;
 			}
@@ -400,6 +402,11 @@ namespace mvt::symbol
 	{
 		if (pointArray.empty()) return;
 		if (!renderTarget) return;
+
+		if (attribs.textField == "Palmer Park Avenue")
+		{
+			int i {};
+		}
 
 		BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
 		BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);

@@ -23,6 +23,9 @@ namespace mvt::renderer
 	export class Renderer
 	{
 		int mTileSize { 512 };
+//		int mTileSize { 1024 };
+
+		float mDpiScale { 1.0f };
 
 		rendertarget::RenderTarget* mRenderTarget = nullptr;
 		tilecache::TileCache* mTileCache = nullptr;
@@ -47,6 +50,9 @@ namespace mvt::renderer
 	public:
 		Renderer(core::rendertarget::RenderTarget* renderTarget, tilecache::TileCache* tileCache, style::Style* style, int tileSize = 512)
 			: mRenderTarget(renderTarget), mTileCache(tileCache), mStyle(style), mTileSize(tileSize) {}
+
+		void SetTileSize(int size) { mTileSize = size; }
+		void SetDpiScale(float dpiScale) { mDpiScale = dpiScale; }
 
 		bool RenderTile(const tile::TileSpec& tileSpec);
 		bool RenderTile(int x, int y, float zoom);

@@ -60,9 +60,6 @@
     <ClCompile Include="..\formats\mvt\Feature.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
-    <ClCompile Include="..\formats\mvt\Filter.ixx">
-      <Filter>Project Modules\formats\mvt</Filter>
-    </ClCompile>
     <ClCompile Include="..\formats\mvt\Layer.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
@@ -82,9 +79,6 @@
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
     <ClCompile Include="..\formats\mvt\TileFetcher.ixx">
-      <Filter>Project Modules\formats\mvt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\formats\mvt\Types.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
     <ClCompile Include="..\formats\mvt\Tile.cpp">

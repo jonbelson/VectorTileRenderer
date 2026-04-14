@@ -131,9 +131,16 @@ public:
 
 		mvt::tilecache::TileCache tileCache(tileFetcher.value());
 
-		auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+
+		constexpr int TileSize = 512;
+		float dpiScale = dpi/96.0f;
+
+		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
 
 		mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, mStyle.get());
+		tileRenderer.SetTileSize(TileSize);
+		tileRenderer.SetDpiScale(dpiScale);
 
 		mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
 		tileRenderer.RenderTile(tileSpec);

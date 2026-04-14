@@ -287,7 +287,7 @@ namespace mvt::renderer
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
-		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, 512.0f, 512.0f));
+		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, mTileSize, mTileSize));
 
 		for (const auto& symbol : symbols)
 		{
@@ -424,7 +424,7 @@ namespace mvt::renderer
 			renderContext.spritesHandle = spriteHandle;
 
 			//mTileSize = 1024;
-			mRenderTarget->PushScale(2.0f);
+			mRenderTarget->PushScale(mDpiScale);
 
 			for (const auto& background : mStyle->mBackground)
 			{
@@ -454,7 +454,7 @@ namespace mvt::renderer
 		renderContext.spritesHandle = spriteHandle;
 
 //		mTileSize = 1024;
-		mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
+		//mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
 
 		for (const auto& background : mStyle->mBackground)
 		{
@@ -485,7 +485,7 @@ namespace mvt::renderer
 		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
 		renderContext.spritesHandle = spriteHandle;
 
-		mTileSize = 1024;
+		//mTileSize = 1024;
 		////////mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
 
 		for (const auto& background : mStyle->mBackground)

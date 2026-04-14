@@ -10,8 +10,6 @@ import core.color;
 import core.rendertarget;
 import formats.mvt.expressions;
 import formats.mvt.feature;
-//import formats.mvt.tile;
-import formats.mvt.filter;
 
 using namespace core;
 using namespace mvt;
