@@ -133,7 +133,8 @@ namespace mvt::style
 		std::string mSpriteUrl;
 		std::string mGlyphUrl;
 
-		std::unordered_map<std::string, Source> mSources;
+		// https://docs.mapbox.com/style-spec/reference/sources/
+		std::map<std::string, Source> mSources;
 
 		SourceType mSourceType;		// XXX Only 'vector' supported.
 		std::string mSourceTileUrl;

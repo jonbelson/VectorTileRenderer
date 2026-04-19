@@ -105,36 +105,50 @@ public:
 			m_bServerChanged = false;
 		}
 
-		const std::string& tileSource = mStyle->mSourceTileUrl;
-		auto tileFetcher = HttpTileFetcher::Create(tileSource);
-
-		if (!tileFetcher)
+		if (!mStyle)
 		{
-			switch (tileFetcher.error())
-			{
-				case HttpTileFetcher::Error::InvalidUrl:
-					return Status::ServerAddressInvalid;
-				//case HttpTileFetcher::Error::CouldNotAccessServer:
-				//	return Status::CouldNotAccessServer;
-			}
-			return Status::CouldNotAccessServer;
+			return Status::CouldNotLoadStyle;
 		}
-
-		mvt::tilecache::TileCache tileCache(tileFetcher.value());
 
 		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
 
 		constexpr int TileSize = 512;
-//		constexpr int TileSize = 1024;
 		float dpiScale = dpi/96.0f;
 		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
 
-		mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, mStyle.get());
-		tileRenderer.SetTileSize(TileSize);
-		tileRenderer.SetDpiScale(dpiScale);
+		for (const auto& source : mStyle->mSources)
+		{
+			if (source.second.mTiles.empty())
+			{
+				core::logger::Write(std::format("Source '{}' has no defined tile urls\n", mStyle->mName));
+				continue;
+			}
 
-		mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
-		tileRenderer.RenderTile(tileSpec);
+			const std::string& tileSource = source.second.mTiles[0];	// XXX Just use first entry for now.
+			auto tileFetcher = HttpTileFetcher::Create(tileSource);
+
+			if (!tileFetcher)
+			{
+				switch (tileFetcher.error())
+				{
+					case HttpTileFetcher::Error::InvalidUrl:
+						return Status::ServerAddressInvalid;
+					//case HttpTileFetcher::Error::CouldNotAccessServer:
+					//	return Status::CouldNotAccessServer;
+				}
+				return Status::CouldNotAccessServer;
+			}
+
+			mvt::tilecache::TileCache tileCache(tileFetcher.value());
+
+
+			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, mStyle.get());
+			tileRenderer.SetTileSize(TileSize);
+			tileRenderer.SetDpiScale(dpiScale);
+
+			mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
+			tileRenderer.RenderTile(tileSpec);
+		}
 
 		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };
 		renderTarget->Save((LPCSTR)utf8Filename);

@@ -9,6 +9,43 @@ namespace core::rendertarget
 {
 	constexpr const std::string_view SvgHeader = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
 
+	void Transform::Apply(geometry::Point& p) const
+	{
+		switch (mType)
+		{
+			case Scale:			p.x *= v.i; p.y *= v.j; break;
+			case Translation:	p.x += v.i; p.y += v.j; break;
+			case Rotation:		p.x = p.x*std::cos(v.i) - p.y*std::sin(v.i);
+								p.y = p.x*std::sin(v.i) + p.y*std::cos(v.i); break;
+		}
+	}
+
+	Transform MakeScale(float x, float y)
+	{
+		return Transform(Transform::Scale, core::geometry::Vector{x, y});
+	}
+
+	Transform MakeTranslation(float x, float y)
+	{
+		return Transform(Transform::Translation, core::geometry::Vector{x, y});
+	}
+
+	Transform MakeRotation(float angleDeg)
+	{
+		return Transform(Transform::Rotation, core::geometry::Vector{angleDeg, 0.0f});
+	}
+
+
+	geometry::Point SvgRenderTarget::ApplyTransforms(const geometry::Point& p) const
+	{
+		geometry::Point transformed = p;
+		for (const auto& transform : mTransforms)
+		{
+			transform.Apply(transformed);
+		}
+		return transformed;
+	}
+
 	void SvgRenderTarget::WritePointsAttrib(const geometry::PointArray& line, std::string& s)
 	{
 		if (!line.empty())
@@ -16,7 +53,8 @@ namespace core::rendertarget
 			s += " points=\"";
 			for (const auto& point : line)
 			{
-				std::format_to(std::back_inserter(mSvgDocument), "{},{} ", point.x, point.y); 
+				geometry::Point transformed = ApplyTransforms(point);
+				std::format_to(std::back_inserter(mSvgDocument), "{},{} ", transformed.x, transformed.y); 
 			}
 			s += "\"";
 		}
@@ -26,10 +64,13 @@ namespace core::rendertarget
 	{
 		if (!line.empty())
 		{
-			std::format_to(std::back_inserter(s), "M {} {} ", line[0].x, line[0].y);
+			geometry::Point transformed = ApplyTransforms(line[0]);
+			std::format_to(std::back_inserter(s), "M {} {} ", transformed.x, transformed.y);
+
 			for (size_t i = 1; i < line.size(); ++i)
 			{
-				std::format_to(std::back_inserter(s), "L {} {} ", line[i].x, line[i].y);
+				transformed = ApplyTransforms(line[i]);
+				std::format_to(std::back_inserter(s), "L {} {} ", transformed.x, transformed.y);
 			}
 			s += "Z\n";
 		}
@@ -281,6 +322,31 @@ namespace core::rendertarget
 		}
 	}
 
+	void SvgRenderTarget::PushScale(float scale)
+	{
+		mTransforms.emplace_back(MakeScale(scale, scale));
+	}
+
+	void SvgRenderTarget::PushTranslation(float x, float y)
+	{
+		mTransforms.emplace_back(MakeTranslation(x, y));
+	}
+
+	void SvgRenderTarget::PushRotation(float angleRad)
+	{
+		mTransforms.emplace_back(MakeRotation(angleRad));
+	}
+
+	void SvgRenderTarget::PopTransform(void)
+	{
+		mTransforms.pop_back();
+	}
+
+	void SvgRenderTarget::ClearTransforms(void)
+	{
+		mTransforms.clear();
+	}
+
 	void SvgRenderTarget::Save(const std::string& outputName)
 	{
 		//sSvg = SvgHeader;
@@ -311,5 +377,7 @@ namespace core::rendertarget
 
 		int i{};
 	}
+
+
 
 };

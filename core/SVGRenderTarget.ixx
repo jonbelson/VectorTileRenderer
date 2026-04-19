@@ -5,8 +5,19 @@ import std;
 import core.color;
 import core.rendertarget;
 
+import core.geometry;
+
 namespace core::rendertarget
 {
+	struct Transform {
+		core::geometry::Vector v;
+		enum Type { Scale, Translation, Rotation } mType;
+
+		void Apply(geometry::Point& p) const;
+
+		Transform(Type type, const core::geometry::Vector& v) : mType(type), v(v) {}
+	};
+
 	// RenderTarget that produces an SVG.
 	export class SvgRenderTarget : public StatefulRenderTarget
 	{
@@ -16,6 +27,10 @@ namespace core::rendertarget
 		Color mBackground;
 
 		std::string mSvgDocument;
+
+		std::vector<Transform> mTransforms;
+
+		geometry::Point ApplyTransforms(const geometry::Point& p) const;
 
 		void WriteRGB(const Color& c, std::string& s);
 
@@ -50,11 +65,11 @@ namespace core::rendertarget
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override {}
 		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) override {}
 
-		virtual void PushScale(float scale) override {}
-		virtual void PushTranslation(float x, float y) override {}
-		virtual void PushRotation(float angleRad) override {}
-		virtual void PopTransform(void) override {}
-		virtual void ClearTransforms(void) override {}
+		virtual void PushScale(float scale) override;
+		virtual void PushTranslation(float x, float y) override;
+		virtual void PushRotation(float angleRad) override;
+		virtual void PopTransform(void) override;
+		virtual void ClearTransforms(void) override;
 
 		virtual void Save(const std::string& outputName) override;
 

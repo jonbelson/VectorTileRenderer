@@ -244,10 +244,18 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 			mvt::tilecache::TileCache tileCache(fetcher.get());
 
-			auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
-//			auto renderTarget = new core::rendertarget::SvgRenderTarget(1024, 1024);
+			UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+
+			constexpr int TileSize = 512;
+			//constexpr int TileSize = 1024;
+			float dpiScale = dpi/96.0f;
+
+//			auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+			auto renderTarget = new core::rendertarget::SvgRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
 
 			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
+			tileRenderer.SetTileSize(TileSize);
+			tileRenderer.SetDpiScale(dpiScale);
 
 			mvt::tile::TileSpec tileSpec{ .zoom = 15, .y = 10904, .x = 16299 };
 			//mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };

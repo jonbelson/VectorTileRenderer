@@ -13,6 +13,9 @@ import formats.mvt.debug;
 import formats.mvt.layer;
 import formats.mvt.symbol;
 
+import formats.mvt.tilefetcher;
+
+
 namespace mvt::renderer
 {
 	using namespace core;
@@ -281,38 +284,28 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderSymbols(const FeatureSymbols& symbols, RenderContext& context, float zoom)
+	bool Renderer::RenderVectorTileSymbols(const FeatureSymbols& symbols, RenderContext& context, float zoom)
 	{
-		mvt::symbol::Symbol s;
+		mvt::symbol::Symbol symbol;
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
-		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, mTileSize, mTileSize));
+		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
 
-		for (const auto& symbol : symbols)
+		for (const auto& [ feature, layer ] : symbols)
 		{
-			//if (symbol.second->mId.find("contour labels") != std::string::npos)
-			//{
-			//	int i{};
-			//}
+			mvt::symbol::SymbolAttribs attribs(layer, *feature, zoom);
 
-			mvt::symbol::SymbolAttribs attribs(symbol.second, *symbol.first, zoom);
-
-			if (attribs.textField.find("North Downs Line") != std::string::npos)
-			{
-				int i{};
-			}
-
-			switch (symbol.first->mGeometryType)
+			switch (feature->mGeometryType)
 			{
 				case geometry::GeometryType::MultiPoint:
-					s.Render(mRenderTarget, context, attribs, TileToWorld(symbol.first->mMultiPoint), placedSymbols);
+					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPoint), placedSymbols);
 					break;
 				case geometry::GeometryType::LineString:
-					s.Render(mRenderTarget, context, attribs, TileToWorld(symbol.first->mLineString), placedSymbols);
+					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mLineString), placedSymbols);
 					break;
 				case geometry::GeometryType::MultiPolygon:
-					s.Render(mRenderTarget, context, attribs, TileToWorld(symbol.first->mMultiPolygon), placedSymbols);
+					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPolygon), placedSymbols);
 					break;
 			}
 		}
@@ -325,7 +318,7 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, float zoom)
+	bool Renderer::RenderVectorTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, float zoom)
 	{
 		if (!tile) return false;
 		if (!mStyle) return false;
@@ -405,6 +398,48 @@ namespace mvt::renderer
 		return true;
 	}
 
+	bool Renderer::RenderRasterTile(const style::Source& source, RenderContext& context, float zoom, int x, int y)
+	{
+		if (source.mTiles.empty())
+		{
+			return false;
+		}
+
+		auto result = HttpTileFetcher::Create(source.mTiles.front());
+
+		if (result)
+		{
+			std::unique_ptr<HttpTileFetcher> fetcher { result.value() };
+
+			auto data = fetcher->FetchTile(static_cast<int>(zoom), x, y);
+			if (!data.empty())
+			{
+				auto result = core::bitmap::LoadBitmapFromResource(data);
+				if (result)
+				{
+					auto bitmap = std::make_shared<core::bitmap::Bitmap>(std::move(result.value()));
+
+					auto bitmapHandle = mRenderTarget->RegisterBitmap(bitmap);
+					if (bitmapHandle != rendertarget::InvalidHandle)
+					{
+						//mRenderTarget->SetActiveBitmap(bitmapHandle);
+						mRenderTarget->SetActiveBitmap(bitmapHandle);
+
+						geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
+						geometry::Rect dest(0.0f, 0.0f, mDpiScale*mTileSize, mDpiScale*mTileSize);
+						mRenderTarget->DrawBitmap(src, dest);
+
+						mRenderTarget->UnregisterBitmap(bitmapHandle);
+					}
+
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	bool Renderer::RenderTile(const tile::TileSpec& tileSpec)
 	{
 		return RenderTile(tileSpec.x, tileSpec.y, static_cast<float>(tileSpec.zoom));
@@ -415,32 +450,46 @@ namespace mvt::renderer
 		if (!mTileCache) return false;
 		if (!mStyle) return false;
 
-		const auto tile = mTileCache->GetTile(x, y, static_cast<int>(zoom));
-		if (tile)
+		RenderContext renderContext(*mStyle);
+
+		for (const auto& [ name, source ] : mStyle->mSources)
 		{
-			RenderContext renderContext(*mStyle);
-
-			rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
-			renderContext.spritesHandle = spriteHandle;
-
-			//mTileSize = 1024;
-			mRenderTarget->PushScale(mDpiScale);
-
-			for (const auto& background : mStyle->mBackground)
+			if (source.mType == "raster")
 			{
-				RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+				RenderRasterTile(source, renderContext, zoom, x, y);
 			}
+			else if (source.mType == "vector")
+			{
+				const auto tile = mTileCache->GetTile(x, y, static_cast<int>(zoom));
+				if (tile)
+				{
+					rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+					renderContext.spritesHandle = spriteHandle;
 
-			FeatureSymbols symbols;
+					//mTileSize = 1024;
+					mRenderTarget->PushScale(mDpiScale);
 
-			RenderTile(tile, symbols, renderContext, zoom);
+					for (const auto& background : mStyle->mBackground)
+					{
+						RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+					}
 
-			RenderSymbols(symbols, renderContext, zoom);
+					FeatureSymbols symbols;
 
-			return true;
+					RenderVectorTile(tile, symbols, renderContext, zoom);
+
+					RenderVectorTileSymbols(symbols, renderContext, zoom);
+
+					//return true;
+				}
+				else
+				{
+					core::logger::Write(std::format("Failed to fetch Tile for ZYX {} {} {}\n", zoom, y, x));
+				}
+			}
 		}
 
-		return false;
+		return true;
 	}
 
 	bool Renderer::RenderTile(const mvt::tile::Tile* tile, float zoom)
@@ -463,11 +512,11 @@ namespace mvt::renderer
 
 		FeatureSymbols symbols;
 
-		RenderTile(tile, symbols, renderContext, zoom);
+		RenderVectorTile(tile, symbols, renderContext, zoom);
 
 		///////std::reverse(symbols.begin(), symbols.end());
 
-		RenderSymbols(symbols, renderContext, zoom);
+		RenderVectorTileSymbols(symbols, renderContext, zoom);
 
 		//mRenderTarget->SetBitmap(mStyle->mSprites.GetBitmap());
 		//mRenderTarget->DrawBitmap(core::geometry::Rect{0, 0, 100, 100});
@@ -518,7 +567,7 @@ namespace mvt::renderer
 			const auto tile = mTileCache->GetTile(tileSpec.x, tileSpec.y, tileSpec.zoom);
 			if (tile)
 			{
-				RenderTile(tile, tileFeatureSymbols[i], renderContext, zoom);
+				RenderVectorTile(tile, tileFeatureSymbols[i], renderContext, zoom);
 			}
 
 			mRenderTarget->PopTransform();
@@ -535,7 +584,7 @@ namespace mvt::renderer
 
 			mRenderTarget->PushTranslation(offx, offy);
 
-			RenderSymbols(tileFeatureSymbols[i], renderContext, zoom);
+			RenderVectorTileSymbols(tileFeatureSymbols[i], renderContext, zoom);
 
 			mRenderTarget->PopTransform();
 		}

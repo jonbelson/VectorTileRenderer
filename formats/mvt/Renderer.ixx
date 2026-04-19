@@ -44,8 +44,9 @@ namespace mvt::renderer
 
 		using FeatureSymbols = std::vector< std::pair<const feature::Feature*, layer::Layer*> >;
 
-		bool RenderSymbols(const FeatureSymbols& symbols, RenderContext& context, float zoom);
-		bool RenderTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, float zoom);
+		bool RenderVectorTileSymbols(const FeatureSymbols& symbols, RenderContext& context, float zoom);
+		bool RenderVectorTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, float zoom);
+		bool RenderRasterTile(const style::Source& source, RenderContext& context, float zoom, int x, int y);
 
 	public:
 		Renderer(core::rendertarget::RenderTarget* renderTarget, tilecache::TileCache* tileCache, style::Style* style, int tileSize = 512)

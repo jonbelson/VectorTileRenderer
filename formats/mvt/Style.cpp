@@ -10,6 +10,7 @@ import std;
 
 import core.logger;
 import formats.mvt.parser;
+import io.gzip;
 import io.resource;
 
 using json = nlohmann::json;
@@ -65,13 +66,20 @@ namespace mvt::style
 
 				if (jsonResult && pngResult)
 				{
-					//io::resource::SaveData(jsonResult.value(), "t:/jsonResult.json");
+					io::resource::Data json = std::move(jsonResult.value());
+
+					if (io::gzip::IsGzipped(json))
+					{
+						json = io::gzip::Decompress(json);
+					}
+
+					//io::resource::SaveData(json, "t:/jsonResult.json");
 					//io::resource::SaveData(pngResult.value(), "t:/pngResult.png");
 
-					const auto jsonData = nlohmann::json::parse(jsonResult.value().begin(), jsonResult.value().end(), nullptr, false);
+					const auto jsonData = nlohmann::json::parse(json.begin(), json.end(), nullptr, false);
 					auto bitmap = core::bitmap::LoadBitmapFromResource(pngResult.value());
 
-					if (bitmap && jsonData != json::value_t::discarded)
+					if (bitmap && !jsonData.is_discarded())
 					{
 						for (const auto& [key, value] : jsonData.items())
 						{
@@ -102,6 +110,8 @@ namespace mvt::style
 			}
 
 		}
+
+		core::logger::Write(std::format("Failed to load sprites from '{}'\n", spriteUrl));
 
 		return false;
 	}
