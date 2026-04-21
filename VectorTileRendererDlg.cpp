@@ -7,6 +7,7 @@
 #include "VectorTileRenderer.h"
 #include "VectorTileRendererDlg.h"
 #include "afxdialogex.h"
+#include "CFromPbfDlg.h"
 #include "CFromMBTilesDlg.h"
 #include "CFromServerDlg.h"
 
@@ -101,6 +102,7 @@ BEGIN_MESSAGE_MAP(CVectorTileRendererDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_FROM_SERVER, &CVectorTileRendererDlg::OnBnClickedButtonFromServer)
 	ON_BN_CLICKED(IDC_BUTTON_FROM_MBTILES, &CVectorTileRendererDlg::OnBnClickedButtonFromMbtiles)
+	ON_BN_CLICKED(IDC_BUTTON_FROM_pBF, &CVectorTileRendererDlg::OnBnClickedButtonFrompbf)
 END_MESSAGE_MAP()
 
 
@@ -453,5 +455,11 @@ void CVectorTileRendererDlg::OnBnClickedButtonFromServer()
 void CVectorTileRendererDlg::OnBnClickedButtonFromMbtiles()
 {
 	CFromMBTilesDlg dlg;
+	dlg.DoModal();
+}
+
+void CVectorTileRendererDlg::OnBnClickedButtonFrompbf()
+{
+	CFromPbfDlg dlg;
 	dlg.DoModal();
 }

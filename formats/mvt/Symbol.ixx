@@ -399,13 +399,15 @@ export namespace mvt::symbol
 		void RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols);
 
 		// Render a symbool along a PointArray.
-		void RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols);
+		void RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols, float& startPos);
 
 		void RenderAlongLineString(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
 		{
+			float startPos { 0.0f };
+
 			for (const auto& line : lineString.lines)
 			{
-				RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols);
+				RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols, startPos);
 			}
 		}
 
@@ -475,7 +477,8 @@ export namespace mvt::symbol
 					line = polygon.exteriorRing;
 					line.emplace_back(polygon.exteriorRing.front());
 
-					RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols);
+					float startPos { 0.0f };
+					RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols, startPos);
 				}
 			}
 			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)

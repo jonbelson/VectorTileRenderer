@@ -193,6 +193,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CFromMBTilesDlg.h" />
+    <ClInclude Include="CFromPbfDlg.h" />
     <ClInclude Include="CFromServerDlg.h" />
     <ClInclude Include="formats\mvt\glyphs.pb.h" />
     <ClInclude Include="formats\mvt\vector_tile.pb.h" />
@@ -205,6 +206,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFromMBTilesDlg.cpp" />
+    <ClCompile Include="CFromPbfDlg.cpp" />
     <ClCompile Include="CFromServerDlg.cpp" />
     <ClCompile Include="core\Bitmap.cpp" />
     <ClCompile Include="core\Bitmap.ixx" />

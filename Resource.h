@@ -10,9 +10,13 @@
 #define IDD_FROM_SERVER_DIALOG          130
 #define IDD_DIALOG_FROM_MBTILES         132
 #define IDD_FROM_MBTILES_DIALOG         132
+#define IDD_DIALOG1                     135
+#define IDD_FROM_PBF_DIALOG             135
 #define IDC_BUTTON_FROM_SERVER          1000
 #define IDC_BUTTON_FROM_MBTILES         1001
 #define IDC_EDIT_SERVER                 1002
+#define IDC_BUTTON_FROM_MBTILES2        1002
+#define IDC_BUTTON_FROM_pBF             1002
 #define IDC_EDIT_X                      1003
 #define IDC_EDIT_Y                      1004
 #define IDC_EDIT_ZOOM                   1005
@@ -30,9 +34,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1014
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

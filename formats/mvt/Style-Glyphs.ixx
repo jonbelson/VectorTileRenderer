@@ -171,7 +171,7 @@ namespace mvt::style
 
 		glyphAtlas.bitmap = std::make_shared<Bitmap>(width, height, Format::RGBA);
 
-		glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 255.0f, 0, 0));
+		glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 255, 0, 0));
 
 		auto& bitmapData = glyphAtlas.bitmap->GetBitmapData();
 		std::uint32_t* pixelData = bitmapData.data();

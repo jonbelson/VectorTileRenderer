@@ -115,6 +115,7 @@ public:
 		constexpr int TileSize = 512;
 		float dpiScale = dpi/96.0f;
 		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+		renderTarget->PushScale(dpiScale);
 
 		for (const auto& source : mStyle->mSources)
 		{

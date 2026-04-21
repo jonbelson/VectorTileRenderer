@@ -632,7 +632,10 @@ namespace mvt::symbol
 
 
 		// Is there anything to draw?
-		if (hasIcon && (willDrawIcon || iconOptional) || (hasText && (willDrawText || textOptional)))
+		//if (hasIcon && (willDrawIcon || iconOptional) || (hasText && (willDrawText || textOptional)))
+		if ((hasIcon && (willDrawIcon || iconOptional) && hasText && (willDrawText || textOptional)) ||
+			(!hasText && (hasIcon && willDrawIcon)) ||
+			(!hasIcon && (hasText && willDrawText)))
 		{
 			if (willDrawIcon)
 			{
@@ -754,7 +757,7 @@ namespace mvt::symbol
 	}
 
 
-	void Symbol::RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols)
+	void Symbol::RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols, float& startPos)
 	{
 		bool iconFollowsLine = attribs.iconRotationAlignment == IconRotationAlignment::Map;
 		bool textFollowsLine = attribs.textRotationAlignment == TextRotationAlignment::Map;
@@ -845,11 +848,12 @@ namespace mvt::symbol
 		//	start = lineWalker.GetTotalDist()/2;
 		//}
 
-		float start = style::GlyphSize;
+		float start = (startPos == 0.0f) ? style::GlyphSize : startPos;
 
-		bool placedFirst = false;
+		bool placedFirst = (startPos == 0.0f) ? false : true;
 
-		for (float offset = start; offset < lineWalker.GetTotalDist(); offset += placedFirst ? minSpacing : style::GlyphSize)
+		float offset = start;
+		for (/*float offset = start*/ ; offset < lineWalker.GetTotalDist(); offset += placedFirst ? minSpacing : style::GlyphSize)
 		{
 			auto [ point, angle ] = lineWalker.GetPointOffset(offset);
 
@@ -918,7 +922,14 @@ namespace mvt::symbol
 				}
 			}
 
-			if ((hasIcon && (willDrawIcon || iconOptional)) || (hasText && (willDrawText || textOptional)))
+			// Draw if:
+			// hasIcon and (willDrawIcon or iconOptional) and hasText and (willDrawText or textOptional)
+			// !hasText and (hasIcon and willDrawIcon)
+			// !hasIcon and (hasText && willDrawText)
+
+			if ((hasIcon && (willDrawIcon || iconOptional) && hasText && (willDrawText || textOptional)) ||
+				(!hasText && (hasIcon && willDrawIcon)) ||
+				(!hasIcon && (hasText && willDrawText)))
 			{
 				if (willDrawIcon)
 				{
@@ -934,7 +945,7 @@ namespace mvt::symbol
 					renderTarget->SetActiveBitmap(context.spritesHandle);
 					renderTarget->DrawBitmap(spec->rect, iconBbox);
 
-					placedSymbols.TryPlace(iconBbox);
+					placedSymbols.Place(iconBbox);
 				}
 
 				if (willDrawText)
@@ -943,13 +954,13 @@ namespace mvt::symbol
 					{
 						RenderTextAlongLine(renderTarget, context, textFont, attribs, textLine);
 
-						placedSymbols.TryPlace(textLine, style::GlyphSize*textScale);
+						placedSymbols.Place(textLine, style::GlyphSize*textScale);
 					}
 					else
 					{
 						RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
 
-						placedSymbols.TryPlace(textBbox);
+						placedSymbols.Place(textBbox);
 					}
 
 				}
@@ -957,6 +968,8 @@ namespace mvt::symbol
 				placedFirst = willDrawIcon || willDrawText;
 			}
 		}
+
+		startPos = offset - lineWalker.GetTotalDist();
 	}
 
 

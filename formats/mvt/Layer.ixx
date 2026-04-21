@@ -131,7 +131,7 @@ export namespace mvt::layer
 		int mMaxZoom = 24;
 
 		// Background.
-		ColorExpression mBackgroundColor{ Color("#000000") };
+		ColorExpression mBackgroundColor{ core::color::Color("#000000") };
 		FloatExpression mBackgroundEmissiveStrength{ 0.0f };
 		FloatExpression mBackgroundOpacity{ 1.0f };
 		StringExpression mBackgroundPattern;
@@ -156,7 +156,7 @@ export namespace mvt::layer
 		BoolExpression mFillAntialias{ true };
 		ColorExpression mFillColor{ "#000000" };
 		FloatExpression mFillOpacity{ 1.0f };
-		ColorExpression mFillOutlineColor{ Color() };
+		ColorExpression mFillOutlineColor{ core::color::Color() };
 		StringExpression mFillPattern;
 		StringExpression mFillPatternCrossFade;
 		FloatArrayExpression mFillTranslate{ FloatArray({0, 0}) };

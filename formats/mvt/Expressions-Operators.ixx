@@ -25,7 +25,7 @@ export using NullValue = std::monostate;
 // Variant for supported Expression types.
 // XXX Should use std::vector<Value> instead of std::vector<std::string> and std::vector<float>.
 // XXX Should support std::map<std::string, Value> for objects.
-using ValueVariant = std::variant<std::monostate, float, std::string, bool, Color, FloatArray, StringArray, BoolArray, OperatorPtr>;
+using ValueVariant = std::variant<std::monostate, float, std::string, bool, core::color::Color, FloatArray, StringArray, BoolArray, OperatorPtr>;
 
 export class Value : public ValueVariant
 {
@@ -41,7 +41,7 @@ public:
 	bool IsFloat(void) const { return std::holds_alternative<float>(*this); }
 	bool IsString(void) const { return std::holds_alternative<std::string>(*this); }
 	bool IsBool(void) const { return std::holds_alternative<bool>(*this); }
-	bool IsColor(void) const { return std::holds_alternative<Color>(*this); }
+	bool IsColor(void) const { return std::holds_alternative<core::color::Color>(*this); }
 	bool IsFloatArray(void) const { return std::holds_alternative<FloatArray>(*this); }
 	bool IsStringArray(void) const { return std::holds_alternative<StringArray>(*this); }
 	bool IsBoolArray(void) const { return std::holds_alternative<BoolArray>(*this); }
@@ -50,7 +50,7 @@ public:
 	float GetFloat(void) const { return std::get<float>(*this); }
 	std::string GetString(void) const { return std::get<std::string>(*this); }
 	bool GetBool(void) const { return std::get<bool>(*this); }
-	Color GetColor(void) const { return std::get<Color>(*this); }
+	core::color::Color GetColor(void) const { return std::get<core::color::Color>(*this); }
 	FloatArray GetFloatArray(void) const { return std::get<FloatArray>(*this); }
 	StringArray GetStringArray(void) const { return std::get<StringArray>(*this); }
 	BoolArray GetBoolArray(void) const { return std::get<BoolArray>(*this); }
@@ -59,7 +59,7 @@ public:
 	std::optional<float> TryGetFloat(void) const { if (auto* p = std::get_if<float>(this)) return *p; return {}; }
 	std::optional<std::string> TryGetString(void) const { if (auto* p = std::get_if<std::string>(this)) return *p; return {}; }
 	std::optional<bool> TryGetBool(void) const { if (auto* p = std::get_if<bool>(this)) return *p; return {}; }
-	std::optional<Color> TryGetColor(void) const { if (auto* p = std::get_if<Color>(this)) return *p; return {}; }
+	std::optional<core::color::Color> TryGetColor(void) const { if (auto* p = std::get_if<core::color::Color>(this)) return *p; return {}; }
 	std::optional<FloatArray> TryGetFloatArray(void) const { if (auto* p = std::get_if<FloatArray>(this)) return *p; return {}; }
 	std::optional<StringArray> TryGetStringArray(void) const { if (auto* p = std::get_if<StringArray>(this)) return *p; return {}; }
 	std::optional<BoolArray> TryGetBoolArray(void) const { if (auto* p = std::get_if<BoolArray>(this)) return *p; return {}; }

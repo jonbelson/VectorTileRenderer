@@ -4,6 +4,7 @@ module;
 
 module formats.mvt.symbol:placedsymbols;
 
+import core.color;
 import core.geometry;
 import core.rendertarget;
 import formats.mvt.debug;
@@ -11,6 +12,7 @@ import formats.mvt.debug;
 
 namespace mvt::symbol
 {
+	using namespace core::color;
 	using namespace core::geometry;
 
 	static void DrawOutline(core::rendertarget::RenderTarget* renderTarget, const Rect& r, Color c= Color("#0000ff"))

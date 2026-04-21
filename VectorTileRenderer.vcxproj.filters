@@ -63,6 +63,9 @@
     <ClInclude Include="CFromMBTilesDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CFromPbfDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorTileRenderer.cpp">
@@ -208,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="formats\mvt\Symbol.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="CFromPbfDlg.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

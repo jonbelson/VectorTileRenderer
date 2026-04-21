@@ -12,6 +12,7 @@ import core.color;
 
 using json = nlohmann::json;
 
+using namespace core::color;
 using namespace mvt::feature;
 
 

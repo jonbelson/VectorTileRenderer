@@ -28,6 +28,10 @@ namespace mvt::tilecache
 	public:
 		TileCache(ITileFetcher* tileFetcher) : mTileFetcher(tileFetcher) {}
 
+		void SetTileFetcher(ITileFetcher* tileFetcher)
+		{
+			mTileFetcher = tileFetcher;
+		}
 
 		const mvt::tile::Tile* GetTile(int x, int y, int zoom)
 		{

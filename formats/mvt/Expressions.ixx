@@ -60,16 +60,16 @@ public:
 // An Expression that returns a Color value.
 export class ColorExpression : public Expression
 {
-	Color mDefault;
+	core::color::Color mDefault;
 
 public:
-	explicit ColorExpression(const Color& color) : mDefault(color) {}
+	explicit ColorExpression(const core::color::Color& color) : mDefault(color) {}
 	explicit ColorExpression(const nlohmann::json& data);
 	virtual ~ColorExpression() = default;
 
 	virtual bool ParseFromJson(const nlohmann::json& data) override;
 
-	Color GetValue(const mvt::feature::Feature& feature, float zoom) const;
+	core::color::Color GetValue(const mvt::feature::Feature& feature, float zoom) const;
 };
 
 

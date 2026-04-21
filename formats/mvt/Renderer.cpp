@@ -290,6 +290,7 @@ namespace mvt::renderer
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
+//		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mDpiScale*mTileSize), static_cast<float>(mDpiScale*mTileSize)));
 		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
 
 		for (const auto& [ feature, layer ] : symbols)
@@ -426,7 +427,8 @@ namespace mvt::renderer
 						mRenderTarget->SetActiveBitmap(bitmapHandle);
 
 						geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
-						geometry::Rect dest(0.0f, 0.0f, mDpiScale*mTileSize, mDpiScale*mTileSize);
+//						geometry::Rect dest(0.0f, 0.0f, mDpiScale*mTileSize, mDpiScale*mTileSize);
+						geometry::Rect dest(0.0f, 0.0f, mTileSize, mTileSize);
 						mRenderTarget->DrawBitmap(src, dest);
 
 						mRenderTarget->UnregisterBitmap(bitmapHandle);
@@ -460,27 +462,36 @@ namespace mvt::renderer
 			}
 			else if (source.mType == "vector")
 			{
-				const auto tile = mTileCache->GetTile(x, y, static_cast<int>(zoom));
-				if (tile)
+				if (!source.mTiles.empty())
 				{
-					rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
-					renderContext.spritesHandle = spriteHandle;
+					auto tileFetcher = HttpTileFetcher::Create(source.mTiles.front());
 
-					//mTileSize = 1024;
-					mRenderTarget->PushScale(mDpiScale);
-
-					for (const auto& background : mStyle->mBackground)
+					if (tileFetcher)
 					{
-						RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+						mTileCache->SetTileFetcher(tileFetcher.value());
+
+						const auto tile = mTileCache->GetTile(x, y, static_cast<int>(zoom));
+						if (tile)
+						{
+							rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+							renderContext.spritesHandle = spriteHandle;
+
+							//mTileSize = 1024;
+							//mRenderTarget->PushScale(mDpiScale);
+
+							for (const auto& background : mStyle->mBackground)
+							{
+								RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+							}
+
+							FeatureSymbols symbols;
+
+							RenderVectorTile(tile, symbols, renderContext, zoom);
+
+							RenderVectorTileSymbols(symbols, renderContext, zoom);
+
+						}
 					}
-
-					FeatureSymbols symbols;
-
-					RenderVectorTile(tile, symbols, renderContext, zoom);
-
-					RenderVectorTileSymbols(symbols, renderContext, zoom);
-
-					//return true;
 				}
 				else
 				{

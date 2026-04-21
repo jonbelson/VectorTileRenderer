@@ -34,4 +34,5 @@ protected:
 public:
 	afx_msg void OnBnClickedButtonFromServer();
 	afx_msg void OnBnClickedButtonFromMbtiles();
+	afx_msg void OnBnClickedButtonFrompbf();
 };

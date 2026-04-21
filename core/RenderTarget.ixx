@@ -26,6 +26,8 @@ namespace core::rendertarget
 	export using BitmapHandle = uint32_t;
 	export constexpr BitmapHandle InvalidHandle = 0;
 
+	export using Color = core::color::Color;
+
 	// Interface for an abstract render target.
 	export class RenderTarget
 	{

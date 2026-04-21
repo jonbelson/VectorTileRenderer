@@ -11,6 +11,7 @@ import core.logger;
 import formats.mvt.feature;
 import formats.mvt.parser;
 
+using namespace core::color;
 using namespace mvt::feature;
 
 
