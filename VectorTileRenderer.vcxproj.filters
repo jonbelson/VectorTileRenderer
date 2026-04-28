@@ -215,6 +215,9 @@
     <ClCompile Include="CFromPbfDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\TileFetcher.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

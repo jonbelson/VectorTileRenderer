@@ -26,7 +26,7 @@ namespace mvt::tilecache
 		}
 
 	public:
-		TileCache(ITileFetcher* tileFetcher) : mTileFetcher(tileFetcher) {}
+		TileCache(ITileFetcher* tileFetcher = nullptr) : mTileFetcher(tileFetcher) {}
 
 		void SetTileFetcher(ITileFetcher* tileFetcher)
 		{

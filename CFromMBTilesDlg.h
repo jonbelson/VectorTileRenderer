@@ -13,7 +13,6 @@ class CFromMBTilesDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CFromMBTilesDlg)
 
-	CString m_sMBTilesFile;
 	CString m_sStyleFile;
 	int m_iX {};
 	int m_iY {};

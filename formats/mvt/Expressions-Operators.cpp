@@ -1529,10 +1529,14 @@ Value OperatorCase::Evaluate(const mvt::feature::Feature& feature, float zoom)
 		// XXX Type error means expression returns default value for property?
 		if (!value.IsBool()) return {  };
 
-		if (value.IsBool() && value.GetBool() == true) return test.output;
+		if (value.IsBool() && value.GetBool() == true)
+		{
+			Value output = GetValue(test.output, feature, zoom);
+			return output;
+		}
 	}
 
-	return mFallback;
+	return GetValue(mFallback, feature, zoom);
 }
 
 
@@ -1753,8 +1757,15 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 		}
 	}
 
+	// XXX https://docs.mapbox.com/style-spec/reference/expressions/#interpolate
+	// OutputType can be float, FloatArray, or Color (though the colour may be in string form).
+	//result = GetValue(result, feature, zoom);
 
-	return result;
+	//if (result.IsAnyOfTypes<float, FloatArray, std::string, Color>())
+	//{
+	//}
+
+	return GetValue(result, feature, zoom);
 }
 
 
@@ -1809,11 +1820,12 @@ Value OperatorMatch::Evaluate(const mvt::feature::Feature& feature, float zoom)
 	{
 		if (std::visit(MatchCallable(), input, inputOutput.labelList))
 		{
-			return inputOutput.output;
+			Value output = GetValue(inputOutput.output, feature, zoom);
+			return output;
 		}
 	}
 
-	return mFallback;
+	return GetValue(mFallback, feature, zoom);
 }
 
 
@@ -2159,6 +2171,8 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 	}
 
 	if (result.IsNull()) result = mDefault;
+
+	result = GetValue(result, feature, zoom);
 
 	return result;
 }

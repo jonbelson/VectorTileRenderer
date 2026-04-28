@@ -228,7 +228,7 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 #endif
 
 
-#if 1
+#if 0
 
 	//int zoom = 15;
 	//geo::latlong::LatLong latLong(51.448839, -0.932772);

@@ -326,21 +326,6 @@ namespace mvt::renderer
 
 		for (const auto& layer : mStyle->mLayers)
 		{
-			//if (layer->mSourceLayer != "sites" && layer->mSourceLayer != "buildings") continue;
-			//if (layer->mSourceLayer != "roads" && layer->mId != "roads 1 Primary Road Casing") continue;
-
-			//if (layer->mId.find("road/footway/line") == std::string::npos)
-			//	continue;
-
-			//assert(layer->mId != "greenspace outlines");
-
-			//if (layer->mId != "greenspace") continue;
-
-			//if (layer->mId.find("contour labels") != std::string::npos)
-			//{
-			//	int i{};
-			//}
-
 			if (layer->mSourceLayer == "building")
 			{
 				//continue;
@@ -442,6 +427,34 @@ namespace mvt::renderer
 		return false;
 	}
 
+	static ITileFetcher* CreateFetcher(const mvt::style::Source& source)
+	{
+		ITileFetcher* tileFetcher {};
+		
+		if (!source.mTiles.empty())
+		{
+			auto result = HttpTileFetcher::Create(source.mTiles.front());
+			if (result)
+			{
+				tileFetcher = result.value();
+			}
+		}
+		else if (!source.mUrl.empty())
+		{
+			auto result = CreateTileFetcher(source.mUrl);
+			if (result)
+			{
+				tileFetcher = result.value();
+			}
+			else
+			{
+				core::logger::Write(std::format("Failed to create TileFetcher from url '{}'\n", source.mUrl));
+			}
+		}
+
+		return tileFetcher;
+	}
+
 	bool Renderer::RenderTile(const tile::TileSpec& tileSpec)
 	{
 		return RenderTile(tileSpec.x, tileSpec.y, static_cast<float>(tileSpec.zoom));
@@ -449,7 +462,6 @@ namespace mvt::renderer
 
 	bool Renderer::RenderTile(int x, int y, float zoom)
 	{
-		if (!mTileCache) return false;
 		if (!mStyle) return false;
 
 		RenderContext renderContext(*mStyle);
@@ -462,40 +474,37 @@ namespace mvt::renderer
 			}
 			else if (source.mType == "vector")
 			{
-				if (!source.mTiles.empty())
+				ITileFetcher* tileFetcher = CreateFetcher(source);
+
+				if (tileFetcher)
 				{
-					auto tileFetcher = HttpTileFetcher::Create(source.mTiles.front());
+					mTileCache.SetTileFetcher(tileFetcher);
 
-					if (tileFetcher)
+					const auto tile = mTileCache.GetTile(x, y, static_cast<int>(zoom));
+					if (tile)
 					{
-						mTileCache->SetTileFetcher(tileFetcher.value());
+						rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+						renderContext.spritesHandle = spriteHandle;
 
-						const auto tile = mTileCache->GetTile(x, y, static_cast<int>(zoom));
-						if (tile)
+						for (const auto& background : mStyle->mBackground)
 						{
-							rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
-							renderContext.spritesHandle = spriteHandle;
-
-							//mTileSize = 1024;
-							//mRenderTarget->PushScale(mDpiScale);
-
-							for (const auto& background : mStyle->mBackground)
-							{
-								RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
-							}
-
-							FeatureSymbols symbols;
-
-							RenderVectorTile(tile, symbols, renderContext, zoom);
-
-							RenderVectorTileSymbols(symbols, renderContext, zoom);
-
+							RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
 						}
+
+						FeatureSymbols symbols;
+
+						RenderVectorTile(tile, symbols, renderContext, zoom);
+
+						RenderVectorTileSymbols(symbols, renderContext, zoom);
+					}
+					else
+					{
+						core::logger::Write(std::format("Failed to fetch Tile for ZYX {} {} {}\n", zoom, y, x));
 					}
 				}
 				else
 				{
-					core::logger::Write(std::format("Failed to fetch Tile for ZYX {} {} {}\n", zoom, y, x));
+					core::logger::Write(std::format("Failed to create TileFetcher for Source '{}'\n", name));
 				}
 			}
 		}
@@ -537,7 +546,6 @@ namespace mvt::renderer
 
 	bool Renderer::RenderTiles(const tile::TileSpecArray& tileSpecArray, float zoom)
 	{
-		if (!mTileCache) return false;
 		if (!mStyle) return false;
 
 		RenderContext renderContext(*mStyle);
@@ -575,7 +583,7 @@ namespace mvt::renderer
 
 			mRenderTarget->PushTranslation(offx, offy);
 
-			const auto tile = mTileCache->GetTile(tileSpec.x, tileSpec.y, tileSpec.zoom);
+			const auto tile = mTileCache.GetTile(tileSpec.x, tileSpec.y, tileSpec.zoom);
 			if (tile)
 			{
 				RenderVectorTile(tile, tileFeatureSymbols[i], renderContext, zoom);

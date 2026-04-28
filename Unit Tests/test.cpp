@@ -382,6 +382,9 @@ TEST(Operators, Decision)
 		{ R"([ "case", false, 10.0, false, 20.0, 999.0 ])", { 999.0f }},
 		{ R"([ "case", false, 10.0, [ "get", "boolean2" ], 20.0, 999.0 ])", { 20.0f }},
 
+		{ R"([ "case", false, 10.0, [ "get", "boolean2" ], [ "get", "float1" ], 999.0 ])", { 12.34f }},
+
+
 		{ R"([ "coalesce", "arg1", "arg2" ])", { "arg1"}},
 		{ R"([ "coalesce", [ "image", "sprite_name" ], "arg2" ])", { "arg2"}},
 
@@ -414,6 +417,11 @@ TEST(Operators, Decision)
 		if (op)
 		{
 			auto value = op->Evaluate(feature, 10);
+
+			if (value != test.result)
+			{
+				int i{};
+			}
 
 			EXPECT_TRUE(value == test.result)  << "Wrong result was from'" << test.json << "'";
 		}

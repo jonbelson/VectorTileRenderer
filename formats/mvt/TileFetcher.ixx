@@ -143,3 +143,4 @@ public:
 	}
 };
 
+export std::expected<ITileFetcher*, bool> CreateTileFetcher(std::string_view uri);

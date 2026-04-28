@@ -19,7 +19,6 @@ import io.resource;
 
 class CFromMBTilesViewModel
 {
-	CString m_sMBTilesFile;
 	CString m_sStyleFile;
 	bool m_StyleChanged { true };
 
@@ -36,7 +35,6 @@ public:
 		XOutOfRange,
 		YOutOfRange,
 		ZoomOutOfRange,
-		MBTilesFileInvalid,
 		StyleFileInvalid,
 		CouldNotLoadStyle,
 		CouldNotAccessFile
@@ -54,18 +52,6 @@ public:
 		m_StyleChanged = m_sStyleFile != s;
 
 		m_sStyleFile = s;
-
-		return Status::Ok;
-	}
-
-	Status SetMBTilesFile(const CString& s)
-	{
-		if (s.IsEmpty())
-		{
-			return Status::MBTilesFileInvalid;
-		}
-
-		m_sMBTilesFile = s;
 
 		return Status::Ok;
 	}
@@ -112,7 +98,7 @@ public:
 
 			m_StyleChanged = false;
 		}
-
+/*
 		//const std::string& tileSource = mStyle->mSourceTileUrl;
 		CStringA utf8MBTiles { CW2A(m_sMBTilesFile, CP_UTF8) };
 		auto tileFetcher = MbTilesFetcher::Create((LPCSTR) utf8MBTiles);
@@ -130,15 +116,16 @@ public:
 		}
 
 		mvt::tilecache::TileCache tileCache(tileFetcher.value());
-
+*/
 		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
 
 		constexpr int TileSize = 512;
 		float dpiScale = dpi/96.0f;
 
 		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+		renderTarget->PushScale(dpiScale);
 
-		mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, mStyle.get());
+		mvt::renderer::Renderer tileRenderer(renderTarget, mStyle.get());
 		tileRenderer.SetTileSize(TileSize);
 		tileRenderer.SetDpiScale(dpiScale);
 
@@ -160,7 +147,6 @@ IMPLEMENT_DYNAMIC(CFromMBTilesDlg, CDialogEx)
 
 CFromMBTilesDlg::CFromMBTilesDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FROM_MBTILES_DIALOG, pParent)
-	, m_sMBTilesFile(_T(""))
 	, m_sStyleFile(_T(""))
 {
 	m_pViewModel = std::make_unique<CFromMBTilesViewModel>();
@@ -173,7 +159,6 @@ CFromMBTilesDlg::~CFromMBTilesDlg()
 void CFromMBTilesDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Text(pDX, IDC_MFCEDITBROWSE_MBTILES, m_sMBTilesFile);
 	DDX_Text(pDX, IDC_MFCEDITBROWSE_STYLE, m_sStyleFile);
 	DDX_Text(pDX, IDC_EDIT_X, m_iX);
 	DDV_MinMaxInt(pDX, m_iX, 0, INT_MAX);
@@ -238,8 +223,6 @@ void CFromMBTilesDlg::OnBnClickedButtonRender()
 		auto status = m_pViewModel->SetXYZoom(m_iX, m_iY, m_iZoom);
 		if (status == CFromMBTilesViewModel::Status::Ok)
 		{
-			status = m_pViewModel->SetMBTilesFile(m_sMBTilesFile);
-
 			if (status == CFromMBTilesViewModel::Status::Ok)
 			{
 				status = m_pViewModel->SetStyleFile(m_sStyleFile);

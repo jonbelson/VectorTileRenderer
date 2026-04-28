@@ -116,7 +116,7 @@ public:
 		float dpiScale = dpi/96.0f;
 		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
 		renderTarget->PushScale(dpiScale);
-
+/*
 		for (const auto& source : mStyle->mSources)
 		{
 			if (source.second.mTiles.empty())
@@ -141,15 +141,15 @@ public:
 			}
 
 			mvt::tilecache::TileCache tileCache(tileFetcher.value());
+*/
 
-
-			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, mStyle.get());
+			mvt::renderer::Renderer tileRenderer(renderTarget, mStyle.get());
 			tileRenderer.SetTileSize(TileSize);
 			tileRenderer.SetDpiScale(dpiScale);
 
 			mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
 			tileRenderer.RenderTile(tileSpec);
-		}
+//		}
 
 		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };
 		renderTarget->Save((LPCSTR)utf8Filename);

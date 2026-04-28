@@ -111,6 +111,7 @@ public:
 			m_StyleChanged = false;
 		}
 
+/*
 		CStringA utf8Pbf { CW2A(m_sPbfFile, CP_UTF8) };
 		auto tileFetcher = TestTileFetcher::Create((LPCSTR) utf8Pbf);
 
@@ -127,10 +128,11 @@ public:
 		}
 
 		mvt::tilecache::TileCache tileCache(tileFetcher.value());
+*/
 
 		auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
 
-		mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, mStyle.get());
+		mvt::renderer::Renderer tileRenderer(renderTarget, mStyle.get());
 
 		mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
 		tileRenderer.RenderTile(tileSpec);

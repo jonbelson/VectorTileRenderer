@@ -28,7 +28,7 @@ namespace mvt::renderer
 		float mDpiScale { 1.0f };
 
 		rendertarget::RenderTarget* mRenderTarget = nullptr;
-		tilecache::TileCache* mTileCache = nullptr;
+		tilecache::TileCache mTileCache;
 		style::Style* mStyle = nullptr;
 
 		geometry::MultiPolygon TileToWorld(const geometry::MultiPolygon& multiPolygon) const;
@@ -49,8 +49,8 @@ namespace mvt::renderer
 		bool RenderRasterTile(const style::Source& source, RenderContext& context, float zoom, int x, int y);
 
 	public:
-		Renderer(core::rendertarget::RenderTarget* renderTarget, tilecache::TileCache* tileCache, style::Style* style, int tileSize = 512)
-			: mRenderTarget(renderTarget), mTileCache(tileCache), mStyle(style), mTileSize(tileSize) {}
+		Renderer(core::rendertarget::RenderTarget* renderTarget, style::Style* style, int tileSize = 512)
+			: mRenderTarget(renderTarget), mStyle(style), mTileSize(tileSize) {}
 
 		void SetTileSize(int size) { mTileSize = size; }
 		void SetDpiScale(float dpiScale) { mDpiScale = dpiScale; }
