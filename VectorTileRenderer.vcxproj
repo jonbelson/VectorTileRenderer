@@ -195,6 +195,7 @@
     <ClInclude Include="CFromMBTilesDlg.h" />
     <ClInclude Include="CFromPbfDlg.h" />
     <ClInclude Include="CFromServerDlg.h" />
+    <ClInclude Include="CRenderAreaDlg.h" />
     <ClInclude Include="formats\mvt\glyphs.pb.h" />
     <ClInclude Include="formats\mvt\vector_tile.pb.h" />
     <ClInclude Include="framework.h" />
@@ -218,6 +219,7 @@
     <ClCompile Include="core\RenderTarget.ixx" />
     <ClCompile Include="core\SVGRenderTarget.cpp" />
     <ClCompile Include="core\SVGRenderTarget.ixx" />
+    <ClCompile Include="CRenderAreaDlg.cpp" />
     <ClCompile Include="formats\mvt\Debug.ixx" />
     <ClCompile Include="formats\mvt\Expressions-Operators.cpp" />
     <ClCompile Include="formats\mvt\Expressions-Operators.ixx" />

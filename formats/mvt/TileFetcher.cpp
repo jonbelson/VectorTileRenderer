@@ -24,6 +24,11 @@ std::expected<ITileFetcher*, bool> CreateTileFetcher(std::string_view uri)
 		auto result = MbTilesFetcher::Create(uri.substr(10, uri.length() - 10));
 		if (result) return result.value();
 	}
+	else if (uri.starts_with("tilepbf://"))
+	{
+		auto result = TestTileFetcher::Create(uri.substr(10, uri.length() - 10));
+		if (result) return result.value();
+	}
 
 	return std::unexpected(false);
 }

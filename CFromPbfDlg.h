@@ -13,7 +13,6 @@ class CFromPbfDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CFromPbfDlg)
 
-	CString m_sPbfFile;
 	CString m_sStyleFile;
 	int m_iX {};
 	int m_iY {};

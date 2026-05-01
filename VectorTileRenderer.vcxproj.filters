@@ -66,6 +66,9 @@
     <ClInclude Include="CFromPbfDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CRenderAreaDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorTileRenderer.cpp">
@@ -217,6 +220,9 @@
     </ClCompile>
     <ClCompile Include="formats\mvt\TileFetcher.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="CRenderAreaDlg.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

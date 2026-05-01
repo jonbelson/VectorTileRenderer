@@ -18,7 +18,7 @@ import core.logger;
 import core.rendertarget;
 import formats.mvt.debug;
 import formats.mvt.layer;
-import formats.mvt.renderer;
+//import formats.mvt.renderer;
 import formats.mvt.rendercontext;
 import formats.mvt.style;
 import formats.mvt.feature;

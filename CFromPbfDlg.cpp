@@ -17,7 +17,6 @@ import io.resource;
 
 class CFromPbfViewModel
 {
-	CString m_sPbfFile;
 	CString m_sStyleFile;
 	bool m_StyleChanged { true };
 
@@ -52,18 +51,6 @@ public:
 		m_StyleChanged = m_sStyleFile != s;
 
 		m_sStyleFile = s;
-
-		return Status::Ok;
-	}
-
-	Status SetPbfFile(const CString& s)
-	{
-		if (s.IsEmpty())
-		{
-			return Status::PbfFileInvalid;
-		}
-
-		m_sPbfFile = s;
 
 		return Status::Ok;
 	}
@@ -130,9 +117,17 @@ public:
 		mvt::tilecache::TileCache tileCache(tileFetcher.value());
 */
 
-		auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+
+		constexpr int TileSize = 512;
+		float dpiScale = dpi/96.0f;
+
+		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+		renderTarget->PushScale(dpiScale);
 
 		mvt::renderer::Renderer tileRenderer(renderTarget, mStyle.get());
+		tileRenderer.SetTileSize(TileSize);
+		tileRenderer.SetDpiScale(dpiScale);
 
 		mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
 		tileRenderer.RenderTile(tileSpec);
@@ -163,6 +158,13 @@ CFromPbfDlg::~CFromPbfDlg()
 void CFromPbfDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_MFCEDITBROWSE_STYLE, m_sStyleFile);
+	DDX_Text(pDX, IDC_EDIT_X, m_iX);
+	DDV_MinMaxInt(pDX, m_iX, 0, INT_MAX);
+	DDX_Text(pDX, IDC_EDIT_Y, m_iY);
+	DDV_MinMaxInt(pDX, m_iY, 0, INT_MAX);
+	DDX_Text(pDX, IDC_EDIT_ZOOM, m_iZoom);
+	DDV_MinMaxInt(pDX, m_iZoom, 0, INT_MAX);
 }
 
 
@@ -191,16 +193,11 @@ void CFromPbfDlg::OnBnClickedButtonRender()
 		auto status = m_pViewModel->SetXYZoom(m_iX, m_iY, m_iZoom);
 		if (status == CFromPbfViewModel::Status::Ok)
 		{
-			status = m_pViewModel->SetPbfFile(m_sPbfFile);
+			status = m_pViewModel->SetStyleFile(m_sStyleFile);
 
 			if (status == CFromPbfViewModel::Status::Ok)
 			{
-				status = m_pViewModel->SetStyleFile(m_sStyleFile);
-
-				if (status == CFromPbfViewModel::Status::Ok)
-				{
-					m_pViewModel->RenderTile(sFileName);
-				}
+				m_pViewModel->RenderTile(sFileName);
 			}
 		}
 	}

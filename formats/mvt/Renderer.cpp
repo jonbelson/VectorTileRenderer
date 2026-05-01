@@ -11,7 +11,7 @@ import core.color;
 import core.logger;
 import formats.mvt.debug;
 import formats.mvt.layer;
-import formats.mvt.symbol;
+//import formats.mvt.symbol;
 
 import formats.mvt.tilefetcher;
 
@@ -47,61 +47,61 @@ namespace mvt::renderer
 		return LineJoin::Miter;
 	}
 
-	geometry::MultiPolygon Renderer::TileToWorld(const geometry::MultiPolygon& multiPolygon) const
+	geometry::MultiPolygon Renderer::TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc) const
 	{
 		geometry::MultiPolygon transformed;
 
 		for (const auto& polygon : multiPolygon.polygons)
 		{
-			transformed.polygons.emplace_back(TileToWorld(polygon));
+			transformed.polygons.emplace_back(TileToWorld(polygon, wc));
 		}
 
 		return transformed;
 	}
 
-	geometry::Polygon Renderer::TileToWorld(const geometry::Polygon& polygon) const
+	geometry::Polygon Renderer::TileToWorld(const geometry::Polygon& polygon, const WorldContext& wc) const
 	{
 		geometry::Polygon transformed;
 
-		transformed.exteriorRing = TileToWorld(polygon.exteriorRing);
+		transformed.exteriorRing = TileToWorld(polygon.exteriorRing, wc);
 
 		for (const auto& inner : polygon.interiorRings)
 		{
 			//const auto& r = ;
-			transformed.interiorRings.emplace_back(TileToWorld(inner));
+			transformed.interiorRings.emplace_back(TileToWorld(inner, wc));
 		}
 
 		return transformed;
 	}
 
 
-	geometry::LineString Renderer::TileToWorld(const geometry::LineString& lineString) const
+	geometry::LineString Renderer::TileToWorld(const geometry::LineString& lineString, const WorldContext& wc) const
 	{
 		geometry::LineString transformed;
 		for (const auto& pointArray : lineString.lines)
 		{
-			transformed.lines.emplace_back(TileToWorld(pointArray));
+			transformed.lines.emplace_back(TileToWorld(pointArray, wc));
 		}
 
 		return transformed;
 	}
 
-	geometry::MultiPoint Renderer::TileToWorld(const geometry::MultiPoint& multiPoint) const
+	geometry::MultiPoint Renderer::TileToWorld(const geometry::MultiPoint& multiPoint, const WorldContext& wc) const
 	{
 		geometry::MultiPoint transformed;
 
-		transformed.points = std::move(TileToWorld(multiPoint.points));
+		transformed.points = std::move(TileToWorld(multiPoint.points, wc));
 
 		return transformed;
 	}
 
-	geometry::PointArray Renderer::TileToWorld(const geometry::PointArray& pointArray) const
+	geometry::PointArray Renderer::TileToWorld(const geometry::PointArray& pointArray, const WorldContext& wc) const
 	{
 		geometry::PointArray transformed(pointArray.size());
 
 		for (size_t i=0; i<pointArray.size(); i++)
 		{
-			transformed[i] = { pointArray[i].x*mTileSize, pointArray[i].y*mTileSize };
+			transformed[i] = { pointArray[i].x*wc.tileSize + wc.tileSize*wc.x, pointArray[i].y*wc.tileSize + wc.tileSize*wc.y };
 		}
 
 		return transformed;
@@ -164,7 +164,7 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderFill(RenderContext& context, const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
+	bool Renderer::RenderFill(RenderContext& context, const Renderer::WorldContext& wc, const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
 
@@ -188,7 +188,7 @@ namespace mvt::renderer
 					float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
 					mRenderTarget->SetFillOpacity(fillOpacity);
 
-					auto transformed = TileToWorld(feature.mMultiPolygon);
+					auto transformed = TileToWorld(feature.mMultiPolygon, wc);
 					mRenderTarget->FillPolygon(&transformed);
 				}
 					
@@ -206,7 +206,7 @@ namespace mvt::renderer
 				mRenderTarget->SetFillColor(fillColor);
 				mRenderTarget->SetLineColor(outlineColor);
 
-				auto transformed = TileToWorld(feature.mMultiPolygon);
+				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
 				mRenderTarget->FillPolygon(&transformed);
 				mRenderTarget->DrawPolygon(&transformed);
 			}
@@ -215,7 +215,7 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderLine(RenderContext& context, const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
+	bool Renderer::RenderLine(RenderContext& context, const WorldContext& wc, const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
 
@@ -271,12 +271,12 @@ namespace mvt::renderer
 
 			if (feature.mGeometryType == core::geometry::GeometryType::LineString)
 			{
-				auto transformed = TileToWorld(feature.mLineString);
+				auto transformed = TileToWorld(feature.mLineString, wc);
 				mRenderTarget->DrawLine(&transformed);
 			}
 			else if (feature.mGeometryType == core::geometry::GeometryType::MultiPolygon)
 			{
-				auto transformed = TileToWorld(feature.mMultiPolygon);
+				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
 				mRenderTarget->DrawPolygon(&transformed);
 			}
 		}
@@ -284,14 +284,20 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderVectorTileSymbols(const FeatureSymbols& symbols, RenderContext& context, float zoom)
+	bool Renderer::RenderVectorTileSymbols(const FeatureSymbols& symbols, RenderContext& context, const WorldContext& wc, float zoom)
+	{
+		mvt::symbol::PlacedSymbols placedSymbols;
+
+		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
+
+		return RenderVectorTileSymbols(symbols, context, wc, placedSymbols, zoom);
+	}
+
+	bool Renderer::RenderVectorTileSymbols(const FeatureSymbols& symbols, RenderContext& context, const WorldContext& wc, mvt::symbol::PlacedSymbols& placedSymbols, float zoom)
 	{
 		mvt::symbol::Symbol symbol;
 
-		mvt::symbol::PlacedSymbols placedSymbols;
-
-//		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mDpiScale*mTileSize), static_cast<float>(mDpiScale*mTileSize)));
-		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
+		//placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
 
 		for (const auto& [ feature, layer ] : symbols)
 		{
@@ -300,13 +306,13 @@ namespace mvt::renderer
 			switch (feature->mGeometryType)
 			{
 				case geometry::GeometryType::MultiPoint:
-					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPoint), placedSymbols);
+					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPoint, wc), placedSymbols);
 					break;
 				case geometry::GeometryType::LineString:
-					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mLineString), placedSymbols);
+					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mLineString, wc), placedSymbols);
 					break;
 				case geometry::GeometryType::MultiPolygon:
-					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPolygon), placedSymbols);
+					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPolygon, wc), placedSymbols);
 					break;
 			}
 		}
@@ -319,7 +325,7 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderVectorTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, float zoom)
+	bool Renderer::RenderVectorTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, const WorldContext& wc, float zoom)
 	{
 		if (!tile) return false;
 		if (!mStyle) return false;
@@ -359,13 +365,13 @@ namespace mvt::renderer
 					case LayerType::Fill:
 						if (feature.mGeometryType == geometry::GeometryType::MultiPolygon)
 						{
-							RenderFill(context, layer.get(), feature, zoom);
+							RenderFill(context, wc, layer.get(), feature, zoom);
 						}
 						break;
 					case LayerType::Line:
 						if (feature.mGeometryType == geometry::GeometryType::LineString || feature.mGeometryType == geometry::GeometryType::MultiPolygon)
 						{
-							RenderLine(context, layer.get(), feature, zoom);
+							RenderLine(context, wc, layer.get(), feature, zoom);
 						}
 						break;
 					case LayerType::Symbol:
@@ -384,7 +390,7 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderRasterTile(const style::Source& source, RenderContext& context, float zoom, int x, int y)
+	bool Renderer::RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y)
 	{
 		if (source.mTiles.empty())
 		{
@@ -408,12 +414,13 @@ namespace mvt::renderer
 					auto bitmapHandle = mRenderTarget->RegisterBitmap(bitmap);
 					if (bitmapHandle != rendertarget::InvalidHandle)
 					{
-						//mRenderTarget->SetActiveBitmap(bitmapHandle);
 						mRenderTarget->SetActiveBitmap(bitmapHandle);
 
+						float destX = static_cast<float>(wc.x*wc.tileSize);
+						float destY = static_cast<float>(wc.y*wc.tileSize);
+
 						geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
-//						geometry::Rect dest(0.0f, 0.0f, mDpiScale*mTileSize, mDpiScale*mTileSize);
-						geometry::Rect dest(0.0f, 0.0f, mTileSize, mTileSize);
+						geometry::Rect dest(destX, destY, static_cast<float>(mTileSize), static_cast<float>(mTileSize));
 						mRenderTarget->DrawBitmap(src, dest);
 
 						mRenderTarget->UnregisterBitmap(bitmapHandle);
@@ -465,12 +472,13 @@ namespace mvt::renderer
 		if (!mStyle) return false;
 
 		RenderContext renderContext(*mStyle);
+		WorldContext wc;
 
 		for (const auto& [ name, source ] : mStyle->mSources)
 		{
 			if (source.mType == "raster")
 			{
-				RenderRasterTile(source, renderContext, zoom, x, y);
+				RenderRasterTile(source, renderContext, wc, zoom, x, y);
 			}
 			else if (source.mType == "vector")
 			{
@@ -493,9 +501,9 @@ namespace mvt::renderer
 
 						FeatureSymbols symbols;
 
-						RenderVectorTile(tile, symbols, renderContext, zoom);
+						RenderVectorTile(tile, symbols, renderContext, wc, zoom);
 
-						RenderVectorTileSymbols(symbols, renderContext, zoom);
+						RenderVectorTileSymbols(symbols, renderContext, wc, zoom);
 					}
 					else
 					{
@@ -518,6 +526,7 @@ namespace mvt::renderer
 		if (!tile) return false;
 
 		RenderContext renderContext(*mStyle);
+		WorldContext wc;
 
 		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
 		renderContext.spritesHandle = spriteHandle;
@@ -532,11 +541,11 @@ namespace mvt::renderer
 
 		FeatureSymbols symbols;
 
-		RenderVectorTile(tile, symbols, renderContext, zoom);
+		RenderVectorTile(tile, symbols, renderContext, wc, zoom);
 
 		///////std::reverse(symbols.begin(), symbols.end());
 
-		RenderVectorTileSymbols(symbols, renderContext, zoom);
+		RenderVectorTileSymbols(symbols, renderContext, wc, zoom);
 
 		//mRenderTarget->SetBitmap(mStyle->mSprites.GetBitmap());
 		//mRenderTarget->DrawBitmap(core::geometry::Rect{0, 0, 100, 100});
@@ -553,9 +562,6 @@ namespace mvt::renderer
 		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
 		renderContext.spritesHandle = spriteHandle;
 
-		//mTileSize = 1024;
-		////////mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
-
 		for (const auto& background : mStyle->mBackground)
 		{
 			RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
@@ -567,10 +573,15 @@ namespace mvt::renderer
 
 		int startx { std::numeric_limits<int>::max() };
 		int starty { std::numeric_limits<int>::max() };
+		int endx { std::numeric_limits<int>::min() };
+		int endy { std::numeric_limits<int>::min() };
+
 		for (const auto& tileSpec : tileSpecArray)
 		{
 			startx = std::min(startx, tileSpec.x);
 			starty = std::min(starty, tileSpec.y);
+			endx = std::max(endx, tileSpec.x);
+			endy = std::max(endy, tileSpec.y);
 		}
 
 		//for (const auto& tileSpec : tileSpecArray)
@@ -578,34 +589,70 @@ namespace mvt::renderer
 		{
 			const auto& tileSpec = tileSpecArray[i];
 
-			float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
-			float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
+			//float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
+			//float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
 
-			mRenderTarget->PushTranslation(offx, offy);
+			//mRenderTarget->PushTranslation(offx, offy);
 
-			const auto tile = mTileCache.GetTile(tileSpec.x, tileSpec.y, tileSpec.zoom);
-			if (tile)
+			int offx = tileSpec.x - startx;
+			int offy = tileSpec.y - starty;
+
+			WorldContext wc { .x = offx, .y = offy };
+
+			for (const auto& [ name, source ] : mStyle->mSources)
 			{
-				RenderVectorTile(tile, tileFeatureSymbols[i], renderContext, zoom);
+				if (source.mType == "raster")
+				{
+					RenderRasterTile(source, renderContext, wc, zoom, tileSpec.x, tileSpec.y);
+				}
+				else if (source.mType == "vector")
+				{
+					ITileFetcher* tileFetcher = CreateFetcher(source);
+
+					if (tileFetcher)
+					{
+						mTileCache.SetTileFetcher(tileFetcher);
+
+						const auto tile = mTileCache.GetTile(tileSpec.x, tileSpec.y, static_cast<int>(zoom) /*tileSpec.zoom*/);
+						if (tile)
+						{
+							RenderVectorTile(tile, tileFeatureSymbols[i], renderContext, wc, zoom);
+						}
+					}
+				}
 			}
 
-			mRenderTarget->PopTransform();
+			//mRenderTarget->PopTransform();
 		}
 
 		///////std::reverse(symbols.begin(), symbols.end());
+
+		mvt::symbol::PlacedSymbols placedSymbols;
+
+		float width = mTileSize*(endx - startx + 1);
+		float height = mTileSize*(endy - starty + 1);
+		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, width, height));
 
 		for (size_t i=0; i<tileSpecArray.size(); i++)
 		{
 			const auto& tileSpec = tileSpecArray[i];
 
-			float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
-			float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
+			//float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
+			//float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
 
-			mRenderTarget->PushTranslation(offx, offy);
+			//mRenderTarget->PushTranslation(offx, offy);
 
-			RenderVectorTileSymbols(tileFeatureSymbols[i], renderContext, zoom);
+			int offx = tileSpec.x - startx;
+			int offy = tileSpec.y - starty;
 
-			mRenderTarget->PopTransform();
+			RenderVectorTileSymbols(tileFeatureSymbols[i], renderContext, WorldContext { .x = offx, .y = offy }, placedSymbols, zoom);
+
+			//mRenderTarget->PopTransform();
+		}
+
+		if constexpr (mvt::debug::visual::DrawPlacedSymbols)
+		{
+			placedSymbols.DrawSymbolPositions(mRenderTarget);
 		}
 
 		//mRenderTarget->SetBitmap(mStyle->mSprites.GetBitmap());
@@ -614,6 +661,7 @@ namespace mvt::renderer
 		return true;
 
 	}
+
 
 
 
