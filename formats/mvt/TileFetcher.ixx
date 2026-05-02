@@ -11,136 +11,140 @@ import formats.mvt.tile;
 import io.gzip;
 import io.resource;
 
-// Base class for Tile fetchers.
-export class ITileFetcher
+namespace mvt::tilefetcher
 {
+	// Base class for Tile fetchers.
+	export class ITileFetcher
+	{
+		public:
+			ITileFetcher() {}
+			virtual ~ITileFetcher() {}
+
+			// Fetch the Tile PBF, decompressing if necessary.
+			virtual std::vector<std::byte> FetchTile(int x, int y, int zoom) = 0;
+			virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
+	};
+
+
+	// Test Tile Fetcher that always returns the same test file.
+	export class TestTileFetcher : public ITileFetcher
+	{
+		std::string mFilePath;
+
+		// filePath		PBF test file to return for all FetchTile calls.
+		TestTileFetcher(std::string_view filePath) : mFilePath(filePath) {}
+
 	public:
-		ITileFetcher() {}
-		virtual ~ITileFetcher() {}
+		virtual ~TestTileFetcher() {}
 
-		// Fetch the Tile PBF, decompressing if necessary.
-		virtual std::vector<std::byte> FetchTile(int x, int y, int zoom) = 0;
-		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
-};
+		enum Error
+		{
+			FileNotFound
+		};
 
+		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+		{
+			std::ifstream f(mFilePath, std::ios::binary);
+			if (f.is_open())
+			{
+				f.seekg(0, std::ios::end);
+				std::streamsize size = f.tellg();
+				f.seekg(0, std::ios::beg);
+				std::vector<std::byte> buffer(size);
+				if (f.read((char*)buffer.data(), size))
+				{
+					return buffer;
+				}
+			}
 
-// Test Tile Fetcher that always returns the same test file.
-export class TestTileFetcher : public ITileFetcher
-{
-	std::string mFilePath;
+			return std::vector<std::byte>{ };
+		}
 
-	// filePath		PBF test file to return for all FetchTile calls.
-	TestTileFetcher(std::string_view filePath) : mFilePath(filePath) {}
+		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
+		{
+			return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
+		}
 
-public:
-	virtual ~TestTileFetcher() {}
+		static std::expected<TestTileFetcher*, Error> Create(std::string_view filePath)
+		{
+			std::error_code ec {};
+			bool exists = std::filesystem::is_regular_file(filePath, ec);
+		
+			if (!exists) return std::unexpected(Error::FileNotFound);
 
-	enum Error
-	{
-		FileNotFound
+			return { new TestTileFetcher(filePath) };
+		}
 	};
 
-	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+
+	// Fetch Tiles from a VectorTile server.
+	export class HttpTileFetcher : public ITileFetcher
 	{
-		std::ifstream f(mFilePath, std::ios::binary);
-		if (f.is_open())
+		std::string mUrl;
+
+		HttpTileFetcher(std::string_view url) : mUrl(url) {}
+
+	public:
+		virtual ~HttpTileFetcher() {}
+
+		enum Error
 		{
-			f.seekg(0, std::ios::end);
-			std::streamsize size = f.tellg();
-			f.seekg(0, std::ios::beg);
-			std::vector<std::byte> buffer(size);
-			if (f.read((char*)buffer.data(), size))
+			InvalidUrl, MissingTemplates
+		};
+
+		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+		{
+			std::string url { mUrl };
+		
+			url.replace(url.find("{z}"), 3, std::to_string(zoom));
+			url.replace(url.find("{y}"), 3, std::to_string(y));
+			url.replace(url.find("{x}"), 3, std::to_string(x));
+
+			auto data = io::resource::LoadFromHttp(url);
+
+			if (data)
 			{
-				return buffer;
+				auto& tileData = data.value();
+
+				if (io::gzip::IsGzipped(std::span<std::byte>(tileData)))
+				{
+					tileData = io::gzip::Decompress(tileData);
+				}
+
+				return tileData;
 			}
+
+			core::logger::Write(std::format("Failed to load tile from '{}'\n", url));
+
+			return {};
 		}
 
-		return std::vector<std::byte>{ };
-	}
+		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
+		{
+			return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
+		}
 
-	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
-	{
-		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
-	}
+		// url	Url of tile source, with {z}, {y}, {x} templates.
+		static std::expected<HttpTileFetcher*, Error> Create(std::string_view url)
+		{
+			if (url.find("http://") != 0 && url.find("https://") != 0)
+			{
+				return std::unexpected(InvalidUrl);
+			}
 
-	static std::expected<TestTileFetcher*, Error> Create(std::string_view filePath)
-	{
-		std::error_code ec {};
-		bool exists = std::filesystem::is_regular_file(filePath, ec);
-		
-		if (!exists) return std::unexpected(Error::FileNotFound);
+			for (const auto& t : { "{z}", "{y}", "{x}" })
+			{
+				if (url.find(t) == std::string::npos)
+				{
+					return std::unexpected(MissingTemplates);
+				}
+			}
 
-		return { new TestTileFetcher(filePath) };
-	}
-};
+			return new HttpTileFetcher(url);
 
-
-// Fetch Tiles from a VectorTile server.
-export class HttpTileFetcher : public ITileFetcher
-{
-	std::string mUrl;
-
-	HttpTileFetcher(std::string_view url) : mUrl(url) {}
-
-public:
-	virtual ~HttpTileFetcher() {}
-
-	enum Error
-	{
-		InvalidUrl, MissingTemplates
+		}
 	};
 
-	virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
-	{
-		std::string url { mUrl };
-		
-		url.replace(url.find("{z}"), 3, std::to_string(zoom));
-		url.replace(url.find("{y}"), 3, std::to_string(y));
-		url.replace(url.find("{x}"), 3, std::to_string(x));
+	export std::expected<ITileFetcher*, bool> CreateTileFetcher(std::string_view uri);
 
-		auto data = io::resource::LoadFromHttp(url);
-
-		if (data)
-		{
-			auto& tileData = data.value();
-
-			if (io::gzip::IsGzipped(std::span<std::byte>(tileData)))
-			{
-				tileData = io::gzip::Decompress(tileData);
-			}
-
-			return tileData;
-		}
-
-		core::logger::Write(std::format("Failed to load tile from '{}'\n", url));
-
-		return {};
-	}
-
-	virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override
-	{
-		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
-	}
-
-	// url	Url of tile source, with {z}, {y}, {x} templates.
-	static std::expected<HttpTileFetcher*, Error> Create(std::string_view url)
-	{
-		if (url.find("http://") != 0 && url.find("https://") != 0)
-		{
-			return std::unexpected(InvalidUrl);
-		}
-
-		for (const auto& t : { "{z}", "{y}", "{x}" })
-		{
-			if (url.find(t) == std::string::npos)
-			{
-				return std::unexpected(MissingTemplates);
-			}
-		}
-
-		return new HttpTileFetcher(url);
-
-	}
-};
-
-export std::expected<ITileFetcher*, bool> CreateTileFetcher(std::string_view uri);
+}

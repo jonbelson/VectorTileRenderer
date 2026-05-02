@@ -79,7 +79,7 @@ namespace core::rendertarget
 		return D2D1_LINE_JOIN_BEVEL;
 	}
 
-		// Case insensitive compare, assumes ASCII (shoudl be OK for file extensions).
+		// Case insensitive compare, assumes ASCII (should be OK for file extensions).
 	static bool IsEqual(std::string_view a, std::string_view b)
 	{
 		if (a.size() != b.size()) return false;
@@ -160,6 +160,8 @@ namespace core::rendertarget
 
 		using Matrix = D2D1_MATRIX_3X2_F;
 		std::stack<Matrix> mTransforms;
+
+		bool mHasClipRect { false };
 
 		void PushTransform(const Matrix& matrix)
 		{
@@ -1042,6 +1044,31 @@ namespace core::rendertarget
 			return false;
 		}
 
+		void SetClipRect(const geometry::Rect& clip)
+		{
+			if (mRenderTarget)
+			{
+				ClearClipRect();
+
+				D2D1_RECT_F d2dClip = ToRectF(clip);
+				mRenderTarget->PushAxisAlignedClip(&d2dClip, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+
+				mHasClipRect = true;
+			}
+		}
+
+		void ClearClipRect(void)
+		{
+			if (mRenderTarget)
+			{
+				if (mHasClipRect)
+				{
+					mRenderTarget->PopAxisAlignedClip();
+					mHasClipRect = false;
+				}
+			}
+		}
+
 	};
 
 
@@ -1244,6 +1271,16 @@ namespace core::rendertarget
 	void D2DRenderTarget::ClearTransforms(void)
 	{
 		if (mImpl) mImpl->ClearTransforms();
+	}
+
+	void D2DRenderTarget::SetClipRect(const geometry::Rect& clip)
+	{
+		if (mImpl) mImpl->SetClipRect(clip);
+	}
+
+	void D2DRenderTarget::ClearClipRect(void)
+	{
+		if (mImpl) mImpl->ClearClipRect();
 	}
 
 	void D2DRenderTarget::Save(const std::string& outputName)

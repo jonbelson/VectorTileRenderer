@@ -7,9 +7,11 @@ import formats.mvt.tile;
 
 namespace mvt::tilecache
 {
+	using namespace mvt;
+
 	export class TileCache
 	{
-		ITileFetcher* mTileFetcher = nullptr;
+		tilefetcher::ITileFetcher* mTileFetcher = nullptr;
 
 		static constexpr int MaxCacheSize { 32 };
 
@@ -26,9 +28,9 @@ namespace mvt::tilecache
 		}
 
 	public:
-		TileCache(ITileFetcher* tileFetcher = nullptr) : mTileFetcher(tileFetcher) {}
+		TileCache(tilefetcher::ITileFetcher* tileFetcher = nullptr) : mTileFetcher(tileFetcher) {}
 
-		void SetTileFetcher(ITileFetcher* tileFetcher)
+		void SetTileFetcher(tilefetcher::ITileFetcher* tileFetcher)
 		{
 			mTileFetcher = tileFetcher;
 		}

@@ -75,6 +75,9 @@ namespace core::rendertarget
 		virtual void PopTransform(void) = 0;
 		virtual void ClearTransforms(void) = 0;
 
+		virtual void SetClipRect(const geometry::Rect& clip) = 0;
+		virtual void ClearClipRect(void) = 0;
+
 		virtual void Save(const std::string& outputName) = 0;
 	};
 

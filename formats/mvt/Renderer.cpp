@@ -24,6 +24,7 @@ namespace mvt::renderer
 	using namespace mvt::layer;
 	using namespace mvt::renderer;
 	using namespace mvt::tile;
+	using namespace mvt::tilefetcher;
 
 	using LineCap = core::rendertarget::LineCap;
 	using LineJoin = core::rendertarget::LineJoin;
@@ -589,15 +590,12 @@ namespace mvt::renderer
 		{
 			const auto& tileSpec = tileSpecArray[i];
 
-			//float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
-			//float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
-
-			//mRenderTarget->PushTranslation(offx, offy);
-
 			int offx = tileSpec.x - startx;
 			int offy = tileSpec.y - starty;
 
 			WorldContext wc { .x = offx, .y = offy };
+
+			mRenderTarget->SetClipRect(geometry::Rect(static_cast<float>(offx*mTileSize), static_cast<float>(offy*mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
 
 			for (const auto& [ name, source ] : mStyle->mSources)
 			{
@@ -622,15 +620,15 @@ namespace mvt::renderer
 				}
 			}
 
-			//mRenderTarget->PopTransform();
+			mRenderTarget->ClearClipRect();
 		}
 
 		///////std::reverse(symbols.begin(), symbols.end());
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
-		float width = mTileSize*(endx - startx + 1);
-		float height = mTileSize*(endy - starty + 1);
+		float width = mTileSize*(endx - startx + 1.0f);
+		float height = mTileSize*(endy - starty + 1.0f);
 		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, width, height));
 
 		for (size_t i=0; i<tileSpecArray.size(); i++)
