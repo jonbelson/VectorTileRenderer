@@ -230,7 +230,7 @@ namespace mvt::renderer
 			//assert((lineColor.Red > 0.9f && lineColor.Green < 0.8f && lineColor.Blue < 0.8f));
 
 			float lineOpacity = layer->mLineOpacity.GetValue(feature, zoom);
-			lineColor.Alpha = lineOpacity;
+			lineColor.Alpha *= lineOpacity;
 
 			float lineWidth = layer->mLineWidth.GetValue(feature, zoom);
 
@@ -402,7 +402,8 @@ namespace mvt::renderer
 
 		if (result)
 		{
-			std::unique_ptr<HttpTileFetcher> fetcher { result.value() };
+			//std::unique_ptr<HttpTileFetcher> fetcher { result.value() };
+			std::unique_ptr<HttpTileFetcher> fetcher { std::move(result.value()) };
 
 			auto data = fetcher->FetchTile(static_cast<int>(zoom), x, y);
 			if (!data.empty())
@@ -435,16 +436,18 @@ namespace mvt::renderer
 		return false;
 	}
 
-	static ITileFetcher* CreateFetcher(const mvt::style::Source& source)
+	static std::unique_ptr<ITileFetcher> CreateFetcher(const mvt::style::Source& source)
 	{
-		ITileFetcher* tileFetcher {};
-		
+		//ITileFetcher* tileFetcher {};
+		std::unique_ptr<ITileFetcher> tileFetcher;
+
 		if (!source.mTiles.empty())
 		{
 			auto result = HttpTileFetcher::Create(source.mTiles.front());
 			if (result)
 			{
-				tileFetcher = result.value();
+				//tileFetcher = result.value();
+				return std::move(result.value());
 			}
 		}
 		else if (!source.mUrl.empty())
@@ -452,7 +455,8 @@ namespace mvt::renderer
 			auto result = CreateTileFetcher(source.mUrl);
 			if (result)
 			{
-				tileFetcher = result.value();
+				//tileFetcher = result.value();
+				return std::move(result.value());
 			}
 			else
 			{
@@ -460,7 +464,7 @@ namespace mvt::renderer
 			}
 		}
 
-		return tileFetcher;
+		return {};//tileFetcher;
 	}
 
 	bool Renderer::RenderTile(const tile::TileSpec& tileSpec)
@@ -483,7 +487,7 @@ namespace mvt::renderer
 			}
 			else if (source.mType == "vector")
 			{
-				ITileFetcher* tileFetcher = CreateFetcher(source);
+				auto tileFetcher = CreateFetcher(source);
 
 				if (tileFetcher)
 				{
@@ -605,7 +609,7 @@ namespace mvt::renderer
 				}
 				else if (source.mType == "vector")
 				{
-					ITileFetcher* tileFetcher = CreateFetcher(source);
+					auto tileFetcher = CreateFetcher(source);
 
 					if (tileFetcher)
 					{

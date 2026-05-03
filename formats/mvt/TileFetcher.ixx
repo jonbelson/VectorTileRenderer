@@ -1,6 +1,7 @@
 module;
 
 #include <fstream>
+#include <memory>
 
 export module formats.mvt.tilefetcher;
 
@@ -25,6 +26,9 @@ namespace mvt::tilefetcher
 			virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
 	};
 
+
+	export class TestTileFetcher;
+	using TestTileFetcherPtr = std::unique_ptr<TestTileFetcher>;
 
 	// Test Tile Fetcher that always returns the same test file.
 	export class TestTileFetcher : public ITileFetcher
@@ -65,17 +69,20 @@ namespace mvt::tilefetcher
 			return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 		}
 
-		static std::expected<TestTileFetcher*, Error> Create(std::string_view filePath)
+		static std::expected<TestTileFetcherPtr, Error> Create(std::string_view filePath)
 		{
 			std::error_code ec {};
 			bool exists = std::filesystem::is_regular_file(filePath, ec);
 		
 			if (!exists) return std::unexpected(Error::FileNotFound);
 
-			return { new TestTileFetcher(filePath) };
+			return { std::unique_ptr<TestTileFetcher>(new TestTileFetcher(filePath)) };
 		}
 	};
 
+
+	export class HttpTileFetcher;
+	using HttpTileFetcherPtr = std::unique_ptr<HttpTileFetcher>;
 
 	// Fetch Tiles from a VectorTile server.
 	export class HttpTileFetcher : public ITileFetcher
@@ -125,7 +132,7 @@ namespace mvt::tilefetcher
 		}
 
 		// url	Url of tile source, with {z}, {y}, {x} templates.
-		static std::expected<HttpTileFetcher*, Error> Create(std::string_view url)
+		static std::expected<HttpTileFetcherPtr, Error> Create(std::string_view url)
 		{
 			if (url.find("http://") != 0 && url.find("https://") != 0)
 			{
@@ -140,11 +147,14 @@ namespace mvt::tilefetcher
 				}
 			}
 
-			return new HttpTileFetcher(url);
+			HttpTileFetcher* fetcher = new HttpTileFetcher(url);
+			return { std::unique_ptr<HttpTileFetcher>(fetcher) };
+
+			//return { std::make_unique<HttpTileFetcher>(url) };
 
 		}
 	};
 
-	export std::expected<ITileFetcher*, bool> CreateTileFetcher(std::string_view uri);
+	export std::expected<std::unique_ptr<ITileFetcher>, bool> CreateTileFetcher(std::string_view uri);
 
 }

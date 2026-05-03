@@ -87,7 +87,7 @@ namespace mvt::tilefetcher
 	}
 
 
-	std::expected<MbTilesFetcher*, MbTilesFetcher::Error> MbTilesFetcher::Create(std::string_view filePath)
+	std::expected<MbTileFetcherPtr, MbTilesFetcher::Error> MbTilesFetcher::Create(std::string_view filePath)
 	{
 		std::error_code ec {};
 		bool exists = std::filesystem::is_regular_file(filePath, ec);
@@ -96,7 +96,7 @@ namespace mvt::tilefetcher
 
 		// XXX Test for valid SQLite format.
 
-		return { new MbTilesFetcher(filePath) };
+		return { std::unique_ptr<MbTilesFetcher>(new MbTilesFetcher(filePath)) };
 	}
 
 }

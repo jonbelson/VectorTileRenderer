@@ -11,7 +11,7 @@ namespace mvt::tilecache
 
 	export class TileCache
 	{
-		tilefetcher::ITileFetcher* mTileFetcher = nullptr;
+		std::unique_ptr<tilefetcher::ITileFetcher> mTileFetcher;
 
 		static constexpr int MaxCacheSize { 32 };
 
@@ -30,9 +30,9 @@ namespace mvt::tilecache
 	public:
 		TileCache(tilefetcher::ITileFetcher* tileFetcher = nullptr) : mTileFetcher(tileFetcher) {}
 
-		void SetTileFetcher(tilefetcher::ITileFetcher* tileFetcher)
+		void SetTileFetcher(std::unique_ptr<tilefetcher::ITileFetcher>& tileFetcher)
 		{
-			mTileFetcher = tileFetcher;
+			mTileFetcher = std::move(tileFetcher);
 		}
 
 		const mvt::tile::Tile* GetTile(int x, int y, int zoom)

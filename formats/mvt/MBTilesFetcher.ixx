@@ -11,6 +11,9 @@ extern "C" { struct sqlite3; }
 
 namespace mvt::tilefetcher
 {
+	export class MbTilesFetcher;
+	using MbTileFetcherPtr = std::unique_ptr<MbTilesFetcher>;
+
 	// Fetch Tiles from an MBTile database.
 	// https://github.com/mapbox/mbtiles-spec
 	export class MbTilesFetcher : public ITileFetcher
@@ -34,6 +37,6 @@ namespace mvt::tilefetcher
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
 
-		static std::expected<MbTilesFetcher*, Error> Create(std::string_view filePath);
+		static std::expected<MbTileFetcherPtr, Error> Create(std::string_view filePath);
 	};
 }
