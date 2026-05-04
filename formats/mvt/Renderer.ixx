@@ -32,8 +32,8 @@ namespace mvt::renderer
 
 		struct WorldContext
 		{
-			int x { 1 };	// X index of Tile in world space.
-			int y { 1 };	// Y index of TIle in world space.
+			int x { 0 };	// X index of Tile in world space.
+			int y { 0 };	// Y index of TIle in world space.
 			int tileSize { DefaultTileSize };
 		};
 
