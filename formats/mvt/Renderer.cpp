@@ -198,14 +198,17 @@ namespace mvt::renderer
 			{
 				Color fillColor = layer->mFillColor.GetValue(feature, zoom);
 				float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
-				fillColor.Alpha = fillOpacity;
+				fillColor.Alpha *= fillOpacity;
 				mRenderTarget->SetFillOpacity(fillOpacity);
 
 				Color outlineColor = layer->mFillOutlineColor.GetValue(feature, zoom);
 				if (!outlineColor.IsValid()) outlineColor = fillColor;
 
+				outlineColor.Alpha *= fillOpacity;
+
 				mRenderTarget->SetFillColor(fillColor);
 				mRenderTarget->SetLineColor(outlineColor);
+				mRenderTarget->SetLineWidth(1.0f);		// https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-color
 
 				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
 				mRenderTarget->FillPolygon(&transformed);

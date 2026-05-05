@@ -69,7 +69,7 @@ namespace mvt::style
 	{
 		std::map<uint32_t, GlyphSpec> glyphs;	// Map of glyph id to spec.
 
-		int start{};	// Index of first glyph in block.
+		/////int start{};	// Index of first glyph in block.
 
 		//uint32_t threshold{ 192 };
 		uint32_t haloSize;	// Halo size as lround(text-halo-width*10.0f)
@@ -153,7 +153,7 @@ namespace mvt::style
 	// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
 	// https://blog.mapbox.com/drawing-text-with-signed-distance-fields-in-mapbox-gl-b0933af6f817
 	// https://observablehq.com/@jjhembd/mapbox-glyph-pbfs
-	export std::optional<GlyphAtlas> CreateAtlas(const proto::GlyphFontStack& fontStack, float haloSize)
+	export std::optional<GlyphAtlas> CreateAtlas(const proto::GlyphFontStack& fontStack, float haloSizePx)
 	{
 		using namespace core::bitmap;
 
@@ -167,7 +167,10 @@ namespace mvt::style
 
 		float aa = 2.0f;
 
+		uint32_t haloSize10 = lround(haloSizePx*10.0f);
+
 		GlyphAtlas glyphAtlas;
+		glyphAtlas.haloSize = haloSize10;
 
 		glyphAtlas.bitmap = std::make_shared<Bitmap>(width, height, Format::RGBA);
 
@@ -239,7 +242,7 @@ namespace mvt::style
 					*/
 
 					float buffer = 192.0f/255.0f;// (192 - haloSize/PixelsPerUnit)/255.0f;//32.0f;
-					buffer -= haloSize/PixelsPerUnit;
+					buffer -= haloSizePx/PixelsPerUnit;
 					float gamma = 0.1f;//2.0f/255.0f;//PixelsPerUnit;//0.01f;
 					float alpha = smoothstep(buffer - gamma, buffer + gamma, sdf);
 
@@ -296,13 +299,13 @@ namespace mvt::style
 		mutable std::unordered_map<std::string /*uri*/, proto::Glyphs> mUriMap;
 
 		// Check for existing GlyphAtlas entry.
-		std::shared_ptr<const GlyphAtlas> _Lookup(const std::string& font, int size, int start) const
+		std::shared_ptr<const GlyphAtlas> _Lookup(const std::string& font, int haloSize10, int start) const
 		{
 			if (!mFontMap.contains(font)) return {};
-			if (!mFontMap.at(font).contains(size)) return {};
-			if (!mFontMap.at(font).at(size).contains(start)) return {};
+			if (!mFontMap.at(font).contains(haloSize10)) return {};
+			if (!mFontMap.at(font).at(haloSize10).contains(start)) return {};
 
-			return { mFontMap.at(font).at(size).at(start) };
+			return { mFontMap.at(font).at(haloSize10).at(start) };
 		}
 
 		std::optional<std::string> MakeUri(std::string_view fontStack, int rangeStart) const
@@ -346,12 +349,13 @@ namespace mvt::style
 
 		// Fetch glyph Bitmap with specified name and block start number (e.g. 1024 for 1024-1279 range).
 		// font			Name of font.
+		// start		First glyph in 256-glyph block (e.g. 0, 256, 512...).
 		// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
 		std::shared_ptr<const GlyphAtlas> Lookup(const std::string& font, int start, float haloSizePx = 0.0f) const
 		{
-			uint32_t haloSize = lround(haloSizePx*10.0f);
+			uint32_t haloSize10 = lround(haloSizePx*10.0f);
 
-			auto result = _Lookup(font, haloSize, start);
+			auto result = _Lookup(font, haloSize10, start);
 			if (result) return result;
 
 			// Required GlyphAtlas is not cached, so create it.
@@ -385,40 +389,16 @@ namespace mvt::style
 						auto atlasPtr = std::make_shared<GlyphAtlas>(std::move(atlas.value()));
 						//mAtlases[uri.value()] = atlasPtr;
 
-						mFontMap[font][haloSize][start] = atlasPtr;
+						mFontMap[font][haloSize10][start] = atlasPtr;
 
 						return atlasPtr;
 					}
-
-
 				}
-/*
-				auto data = io::resource::LoadFromUri(uri.value());
-				if (data)
-				{
-					auto glyphs = DecodeGlyph(data.value());
-					if (glyphs)
-					{
-						auto atlas = CreateAtlas(glyphs->stacks[0]);
-						if (atlas)
-						{
-							auto atlasPtr = std::make_shared<GlyphAtlas>(std::move(atlas.value()));
-							mAtlases[uri.value()] = atlasPtr;
-
-							return atlasPtr;
-						}
-					}
-				}
-	*/
 			}
 
 			return {};
 		}
 	};
-
-
-
-
 
 
 }

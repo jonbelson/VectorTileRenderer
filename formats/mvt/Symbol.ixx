@@ -42,6 +42,8 @@ export namespace mvt::symbol
 		std::string operator()(auto) const { return ""; }
 	};
 
+	export std::vector<uint32_t> DecodeUtf8(std::string_view sv);
+
 	// Symbol attributes for specific feature in a specific feature layer at a specific zoom level.
 	export struct SymbolAttribs
 	{
@@ -196,6 +198,17 @@ export namespace mvt::symbol
 	class LineWalker;
 
 
+	int GetGlyphBlockStart(uint32_t codePoint)
+	{
+		return (codePoint >> 8)*256;
+	}
+
+	int GetGlyphBlockIndex(uint32_t codePoint)
+	{
+		return codePoint - (codePoint >> 8);
+	}
+
+
 	// Represents a Symbol from a Feature.
 	export class Symbol
 	{
@@ -211,9 +224,12 @@ export namespace mvt::symbol
 		//	float lengthPx { 0.0f };
 		//};
 
+		using Utf32Text = std::vector<uint32_t>;
+
 		struct Line
 		{
-			std::string_view text;
+			//std::string_view text;
+			std::vector<uint32_t> text;	// utf32
 			float widthPx { 0.0f };
 		};
 
@@ -242,6 +258,30 @@ export namespace mvt::symbol
 			return lengthPx;
 		}
 
+		// Get word length in pixels when drawn using glyphs from specified Glyphs instance.
+		// Result calculated for glyphs of GlyphSize pixels.
+		// text		Array of utf32 codepoints.
+		float GetWordLength(const mvt::style::Glyphs& glyphs, const std::string& textFont, Utf32Text& text)
+		{
+			float lengthPx { 0.0f };
+
+			for (const auto& cp : text)
+			{
+				int blockStart = GetGlyphBlockStart(cp);
+				//int index = GetGlyphBlockIndex(cp);
+
+				auto glyphAtlas = glyphs.Lookup(textFont, blockStart);
+				if (glyphAtlas)
+				{
+					if (glyphAtlas->glyphs.contains(cp))
+					{
+						lengthPx += glyphAtlas->glyphs.at(cp).advance;
+					}
+				}
+			}
+			return lengthPx;
+		}
+
 		void OffsetPointList(core::geometry::PointArray& pointList, float offX, float offY)
 		{
 			for (auto& point : pointList)
@@ -258,7 +298,7 @@ export namespace mvt::symbol
 		bool ExceedsMaxAngle(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, const LineWalker& lineWalker, float start);
 
 		// Add charcters to a line until it exceeds max-text-length, then search backwards for somewhere to split onto a new line.
-		FormattedText FormatText(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, std::string_view textField);
+		FormattedText FormatText(const mvt::style::Glyphs& glyphs, const SymbolAttribs& attribs, const std::string& font, std::string_view textField);
 
 		/*
 		// Split a string into an array of Words using a delimiter of ' '.
@@ -285,10 +325,10 @@ export namespace mvt::symbol
 		}
 		*/
 
-
+		// Get the BitmapHandle for specified glyph block. Bitmap is registered if not already done.
 		BitmapHandle GetGlyphBitmapHandle(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
 		{
-			BitmapHandle glyphHandle = context.GetBitmapHandle(font, /*start,*/ haloWidth);
+			BitmapHandle glyphHandle = context.GetBitmapHandle(font, start, haloWidth);
 
 			if (glyphHandle == InvalidHandle)
 			{
@@ -299,7 +339,7 @@ export namespace mvt::symbol
 				}
 				if (glyphHandle != InvalidHandle)
 				{
-					context.glyphHandles[font][haloWidth] = glyphHandle;
+					context.glyphHandles[font][haloWidth][start] = glyphHandle;
 				}
 			}
 

@@ -10,6 +10,18 @@ import formats.mvt.feature;
 import formats.mvt.symbol;
 
 
+TEST(Unicode, Utf32)
+{
+	std::vector<uint8_t> utf8 { 0xe6, 0xb0, 0xb4 /*, 0x00*/ };
+
+	std::string_view sv(reinterpret_cast<const char*>(utf8.data()), utf8.size());
+
+	auto utf32 = mvt::symbol::DecodeUtf8(sv);
+
+	EXPECT_TRUE(utf32.size() == 1);
+	EXPECT_EQ(utf32[0], 0x6c34);
+}
+
 TEST(Core, Geometry)
 {
 	using core::geometry::Rect;

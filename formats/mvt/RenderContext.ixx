@@ -21,17 +21,17 @@ namespace mvt::renderer
 		// Map font names to BitmapHandles.
 		//std::unordered_map<std::string, core::rendertarget::BitmapHandle> glyphHandles;
 
-//		using SizeMap = std::unordered_map<int /*size*/, core::rendertarget::BitmapHandle>;
-		using SizeMap = std::unordered_map<float /*size*/, core::rendertarget::BitmapHandle>;
+		using StartMap = std::unordered_map<int /*start*/, core::rendertarget::BitmapHandle>;
+		using SizeMap = std::unordered_map<float /*size*/, StartMap>;
 		using FontMap = std::unordered_map<std::string /*font*/, SizeMap>;
 
 		// Map of font BitmapHandles.
 		FontMap glyphHandles;
 
-		core::rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, float size) const
+		core::rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, int start, float size) const
 		{
-			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(size))
-				return glyphHandles.at(font).at(size);
+			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(size) && glyphHandles.at(font).at(size).contains(start))
+				return glyphHandles.at(font).at(size).at(start);
 
 			return core::rendertarget::InvalidHandle;
 		}
