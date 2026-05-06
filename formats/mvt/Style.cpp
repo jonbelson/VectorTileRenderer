@@ -111,7 +111,7 @@ namespace mvt::style
 
 		}
 
-		core::logger::Write(std::format("Failed to load sprites from '{}'\n", spriteUrl));
+		core::logger::Error("Failed to load sprites from '{}'\n", spriteUrl);
 
 		return false;
 	}
@@ -186,7 +186,7 @@ namespace mvt::style
 					}
 					else
 					{
-						core::logger::Write(std::format("Failed to parse 'tiles' from Style\n"));
+						core::logger::Error(std::format("Failed to parse 'tiles' from Style\n"));
 					}
 
 					mSources[key] = source;
@@ -229,7 +229,7 @@ namespace mvt::style
 
 		if (!mSprites.Load(mSpriteUrl))
 		{
-			core::logger::Write(std::format("Failed to load sprites from {}\n", mSpriteUrl));
+			core::logger::Error("Failed to load sprites from {}\n", mSpriteUrl);
 		}
 
 		mGlyphs = Glyphs(mGlyphUrl);
@@ -250,7 +250,7 @@ namespace mvt::style
 				return style;
 		}
 
-		core::logger::Write(std::format("Failed to load style from {}\n", fileName));
+		core::logger::Error("Failed to load style from {}\n", fileName);
 
 		return nullptr;
 	}
@@ -264,7 +264,7 @@ namespace mvt::style
 		if (style->ParseFromJson(data))
 			return style;
 
-		core::logger::Write(std::format("Failed to load style from {}\n", s));
+		core::logger::Error("Failed to load style from {}\n", s);
 
 		return nullptr;
 	}
@@ -279,7 +279,7 @@ namespace mvt::style
 
 			if (parsedJson.size() == 1 && parsedJson.contains("error"))
 			{
-				core::logger::Write(parsedJson.dump() + "\n");
+				core::logger::Error(parsedJson.dump() + "\n");
 
 				return nullptr;
 			}
@@ -290,7 +290,7 @@ namespace mvt::style
 				return style;
 		}
 
-		core::logger::Write(std::format("Failed to load style from {}\n", url));
+		core::logger::Error("Failed to load style from {}\n", url);
 
 		return nullptr;
 	}

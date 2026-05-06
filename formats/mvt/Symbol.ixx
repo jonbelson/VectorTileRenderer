@@ -203,12 +203,6 @@ export namespace mvt::symbol
 		return (codePoint >> 8)*256;
 	}
 
-	int GetGlyphBlockIndex(uint32_t codePoint)
-	{
-		return codePoint - (codePoint >> 8);
-	}
-
-
 	// Represents a Symbol from a Feature.
 	export class Symbol
 	{
@@ -243,32 +237,16 @@ export namespace mvt::symbol
 			float heightPx { 0.0f };
 		};
 
-		// Get word length in pixels when drawn using glyphs from specified GlyphAtlas.
-		// Result calculated for glyphs of GlyphSize pixels.
-		float GetWordLength(const mvt::style::GlyphAtlas* glyphAtlas, std::string_view word)
-		{
-			float lengthPx { 0.0f };
-			for (const auto& ch : word)
-			{
-				if (glyphAtlas->glyphs.contains(ch))
-				{
-					lengthPx += glyphAtlas->glyphs.at(ch).advance;
-				}
-			}
-			return lengthPx;
-		}
-
 		// Get word length in pixels when drawn using glyphs from specified Glyphs instance.
 		// Result calculated for glyphs of GlyphSize pixels.
 		// text		Array of utf32 codepoints.
-		float GetWordLength(const mvt::style::Glyphs& glyphs, const std::string& textFont, Utf32Text& text)
+		float GetWordLength(const mvt::style::Glyphs& glyphs, const std::string& textFont, const Utf32Text& text)
 		{
 			float lengthPx { 0.0f };
 
 			for (const auto& cp : text)
 			{
 				int blockStart = GetGlyphBlockStart(cp);
-				//int index = GetGlyphBlockIndex(cp);
 
 				auto glyphAtlas = glyphs.Lookup(textFont, blockStart);
 				if (glyphAtlas)
@@ -298,7 +276,7 @@ export namespace mvt::symbol
 		bool ExceedsMaxAngle(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, const LineWalker& lineWalker, float start);
 
 		// Add charcters to a line until it exceeds max-text-length, then search backwards for somewhere to split onto a new line.
-		FormattedText FormatText(const mvt::style::Glyphs& glyphs, const SymbolAttribs& attribs, const std::string& font, std::string_view textField);
+		FormattedText FormatText(const mvt::style::Glyphs& glyphs, const SymbolAttribs& attribs, const std::string& font, const Utf32Text& utf32);
 
 		/*
 		// Split a string into an array of Words using a delimiter of ' '.
@@ -421,7 +399,7 @@ export namespace mvt::symbol
 		// Draw text along a PointArray.
 		// Caller should check for symbol overlap (if required).
 		// pointArray should be long enough to contain the text.
-		void RenderTextAlongLine(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const PointArray& pointArray);
+		void RenderTextAlongLine(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32, const PointArray& pointArray);
 
 		// Draw formatted text at specified point.
 		// point	

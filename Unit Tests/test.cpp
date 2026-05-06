@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include <format>
+
 #include "json.hpp"
 
 import core.color;
@@ -12,14 +14,35 @@ import formats.mvt.symbol;
 
 TEST(Unicode, Utf32)
 {
-	std::vector<uint8_t> utf8 { 0xe6, 0xb0, 0xb4 /*, 0x00*/ };
+	struct Test
+	{
+		std::vector<uint8_t> utf8;
+		uint32_t utf32 {};
+	};
 
-	std::string_view sv(reinterpret_cast<const char*>(utf8.data()), utf8.size());
+	Test tests[] = {
+		{ { 0x41 }, 0x41 }, 
+		{ { 0xc2, 0xa3 }, 0xa3 }, 
+		{ { 0xe6, 0xb0, 0xb4 }, 0x6c34 }, 
+		{ { 0xe2, 0x82, 0xac }, 0x20ac }, 
+		{ { 0xf0, 0x90, 0x90, 0xb7 }, 0x10437 }, 
+	};
 
-	auto utf32 = mvt::symbol::DecodeUtf8(sv);
+	std::vector<uint8_t> utf8 { 0xe6, 0xb0, 0xb4 };
 
-	EXPECT_TRUE(utf32.size() == 1);
-	EXPECT_EQ(utf32[0], 0x6c34);
+	for (const auto& test : tests)
+	{
+		std::string_view sv(reinterpret_cast<const char*>(test.utf8.data()), test.utf8.size());
+
+		auto utf32 = mvt::symbol::DecodeUtf8(sv);
+
+		EXPECT_TRUE(utf32.size() == 1) << "Size incorrect : " << std::format("{}", test.utf8) << "\n";
+
+		if (!utf32.empty())
+		{
+			EXPECT_EQ(utf32[0], test.utf32) << "UTF-32 value incorrect : " << std::format("{}", test.utf8) << "\n";
+		}
+	}
 }
 
 TEST(Core, Geometry)

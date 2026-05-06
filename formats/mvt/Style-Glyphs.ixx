@@ -288,7 +288,7 @@ namespace mvt::style
 		// Template for glyphs containing {fontstack} and {range} placeholders.
 		std::string mGlyphUri;
 
-		using StartMap = std::unordered_map<int /*start*/, std::shared_ptr<GlyphAtlas> >;
+		using StartMap = std::unordered_map<int /*rangeStart*/, std::shared_ptr<GlyphAtlas> >;
 		using SizeMap = std::unordered_map<int /*size*/, StartMap>;
 		using FontMap = std::unordered_map<std::string /*font*/, SizeMap>;
 
@@ -299,13 +299,13 @@ namespace mvt::style
 		mutable std::unordered_map<std::string /*uri*/, proto::Glyphs> mUriMap;
 
 		// Check for existing GlyphAtlas entry.
-		std::shared_ptr<const GlyphAtlas> _Lookup(const std::string& font, int haloSize10, int start) const
+		std::shared_ptr<const GlyphAtlas> _Lookup(const std::string& font, int haloSize10, int rangeStart) const
 		{
 			if (!mFontMap.contains(font)) return {};
 			if (!mFontMap.at(font).contains(haloSize10)) return {};
-			if (!mFontMap.at(font).at(haloSize10).contains(start)) return {};
+			if (!mFontMap.at(font).at(haloSize10).contains(rangeStart)) return {};
 
-			return { mFontMap.at(font).at(haloSize10).at(start) };
+			return { mFontMap.at(font).at(haloSize10).at(rangeStart) };
 		}
 
 		std::optional<std::string> MakeUri(std::string_view fontStack, int rangeStart) const
@@ -349,17 +349,17 @@ namespace mvt::style
 
 		// Fetch glyph Bitmap with specified name and block start number (e.g. 1024 for 1024-1279 range).
 		// font			Name of font.
-		// start		First glyph in 256-glyph block (e.g. 0, 256, 512...).
+		// rangeStart	First glyph in 256-glyph block (e.g. 0, 256, 512...).
 		// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
-		std::shared_ptr<const GlyphAtlas> Lookup(const std::string& font, int start, float haloSizePx = 0.0f) const
+		std::shared_ptr<const GlyphAtlas> Lookup(const std::string& font, int rangeStart, float haloSizePx = 0.0f) const
 		{
 			uint32_t haloSize10 = lround(haloSizePx*10.0f);
 
-			auto result = _Lookup(font, haloSize10, start);
+			auto result = _Lookup(font, haloSize10, rangeStart);
 			if (result) return result;
 
 			// Required GlyphAtlas is not cached, so create it.
-			auto uri = MakeUri(font, start);
+			auto uri = MakeUri(font, rangeStart);
 			if (uri)
 			{
 				// Fetch the glyph PBF if not already cached.
@@ -389,7 +389,7 @@ namespace mvt::style
 						auto atlasPtr = std::make_shared<GlyphAtlas>(std::move(atlas.value()));
 						//mAtlases[uri.value()] = atlasPtr;
 
-						mFontMap[font][haloSize10][start] = atlasPtr;
+						mFontMap[font][haloSize10][rangeStart] = atlasPtr;
 
 						return atlasPtr;
 					}

@@ -31,16 +31,16 @@ namespace mvt::symbol
 		uint32_t i {};
 
 		bool decodeError { false };
-		
-		constexpr uint32_t TwoByte = 0xc0;
-		constexpr uint32_t ThreeByte = 0xe0;
-		constexpr uint32_t FourByte = 0xf8;
 
-		constexpr uint32_t TwoByteMask = 0xe0;
-		constexpr uint32_t ThreeByteMask = 0xf0;
-		constexpr uint32_t FourByteMask = 0xf8;
+		constexpr uint32_t TwoByte		= 0b1100'0000;	//0xc0;
+		constexpr uint32_t ThreeByte	= 0b1110'0000;	//0xe0;
+		constexpr uint32_t FourByte		= 0b1111'0000;	//0xf0;
 
-		constexpr uint32_t ContinuationMask = 0x3f;
+		constexpr uint32_t TwoByteMask		= 0b1110'0000;	//0xe0;
+		constexpr uint32_t ThreeByteMask	= 0b1111'0000;	//0xf0;
+		constexpr uint32_t FourByteMask		= 0b1111'1000;	//0xf8;
+
+		constexpr uint32_t ContinuationMask = 0b0011'1111;	//0x3f
 
 		while (i < sv.size())
 		{
@@ -53,6 +53,7 @@ namespace mvt::symbol
 			}
 			else if ((ch & TwoByteMask) == TwoByte)
 			{
+				// Two byte sequence.
 				if (i + 1 < sv.size())
 				{
 					uint8_t byte1 = ch&~TwoByteMask;
@@ -69,7 +70,7 @@ namespace mvt::symbol
 				// Three byte sequence.
 				if (i + 2 < sv.size())
 				{
-					uint8_t byte1 = ch&~ThreeByteMask;// 0x0f;
+					uint8_t byte1 = ch&~ThreeByteMask;
 					uint8_t byte2 = sv[i + 1]&ContinuationMask; 
 					uint8_t byte3 = sv[i + 2]&ContinuationMask;
 
@@ -97,6 +98,7 @@ namespace mvt::symbol
 			}
 			else
 			{
+				utf32.emplace_back(0xfffd);
 				i += 1;
 				decodeError = true;
 			}
@@ -383,10 +385,25 @@ namespace mvt::symbol
 		return false;
 	}
 
+	// Check if a font is present by attempting to load the first glyph block.
+	bool CheckForFont(renderer::RenderContext& context, const std::string& font)
+	{
+		BitmapHandle glyphHandle = context.GetBitmapHandle(font, 0, 0);
 
+		if (glyphHandle == InvalidHandle)
+		{
+			auto atlas = context.glyphs.Lookup(font, 0, 0);
+			if (atlas)
+			{
+				return true;
+			}
+		}
+
+		return glyphHandle != InvalidHandle;
+	}
 
 	// Add charcters to a line until it exceeds max-text-length, then search backwards for somewhere to split onto a new line.
-	Symbol::FormattedText Symbol::FormatText(const mvt::style::Glyphs& glyphs, const SymbolAttribs& attribs, const std::string& font, std::string_view textField)
+	Symbol::FormattedText Symbol::FormatText(const mvt::style::Glyphs& glyphs, const SymbolAttribs& attribs, const std::string& font, const Utf32Text& utf32)
 	{
 		FormattedText ft;
 		ft.font = font;
@@ -397,11 +414,8 @@ namespace mvt::symbol
 
 		float maxTextWidthPx = attribs.textMaxWidth*style::GlyphSize;
 
-		std::vector<uint32_t> utf32 = DecodeUtf8(textField);
-
 		size_t start{} , end{};
 
-		//for (size_t i=0; i<textField.size(); i++)
 		for (size_t i=0; i<utf32.size(); i++)
 		{
 			uint32_t cp = utf32.at(i);
@@ -409,7 +423,6 @@ namespace mvt::symbol
 			float advance{};
 
 			int blockStart = GetGlyphBlockStart(cp);
-			int blockIndex = GetGlyphBlockIndex(cp);
 
 			auto glyphAtlas = glyphs.Lookup(font, blockStart);
 			if (glyphAtlas)
@@ -499,7 +512,7 @@ namespace mvt::symbol
 	// Draw text along a PointArray.
 	// Caller should check for symbol overlap (if required).
 	// pointArray should be long enough to contain the text.
-	void Symbol::RenderTextAlongLine(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const PointArray& pointArray)
+	void Symbol::RenderTextAlongLine(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32, const PointArray& pointArray)
 	{
 		if (pointArray.empty()) return;
 		if (!renderTarget) return;
@@ -516,6 +529,7 @@ namespace mvt::symbol
 		{
 			//auto glyphAtlas = context.glyphs.Lookup(font, 0, haloWidth);
 			auto glyphAtlas = context.glyphs.Lookup(font, 0);
+			auto glyphs = context.glyphs;
 
 			bool isUpsideDown = IsUpsideDown(glyphAtlas.get(), context, font, attribs, pointArray);
 
@@ -529,9 +543,9 @@ namespace mvt::symbol
 			PointArray points = isUpsideDown ? PointArray(pointArray.rbegin(), pointArray.rend()) : pointArray;
 			LineWalker lineWalker(points /*pointArray*/);
 
-			float wordLength = GetWordLength(glyphAtlas.get(), attribs.textField)*textScale;
+			float wordLength = GetWordLength(glyphs, font, utf32)*textScale;
 
-			float glyphWidth = wordLength/attribs.textField.size();
+			float glyphWidth = wordLength/utf32.size();
 
 			float offset = 0.0f;//{ glyphWidth };
 			//while (offset < lineWalker.GetTotalDist() - wordLength)
@@ -543,13 +557,17 @@ namespace mvt::symbol
 				//if (placedSymbols.TryPlace(line))
 				{
 
-					for (int i = 0; i<attribs.textField.length(); i++)
+					for (int i = 0; i<utf32.size(); i++)
 					{
-						uint32_t ch = attribs.textField[i];
+						uint32_t cp = utf32[i];
 
-						if (glyphAtlas->glyphs.contains(ch))
+						int blockStart = GetGlyphBlockStart(cp);
+
+						auto glyphAtlas = context.glyphs.Lookup(font, blockStart);
+
+						if (glyphAtlas->glyphs.contains(cp))
 						{
-							const auto& glyphSpec = glyphAtlas->glyphs.at(ch);
+							const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
 
 							Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
@@ -589,6 +607,9 @@ namespace mvt::symbol
 
 							Color textColor = attribs.textColor;
 							textColor.Alpha = attribs.textOpacity;
+
+							BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 0);
+							BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 2*attribs.textHaloWidth);
 
 							renderTarget->SetActiveBitmap(haloHandle);
 							renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
@@ -653,6 +674,8 @@ namespace mvt::symbol
 		std::string textFont {};
 		FormattedText formattedText;
 
+		Utf32Text utf32 = DecodeUtf8(attribs.textField);
+
 		std::optional<const mvt::style::SpriteSpec*> spriteSpec;
 
 		if (hasIcon)
@@ -698,9 +721,7 @@ namespace mvt::symbol
 
 			if (hasText)
 			{
-				//auto glyphAtlas = context.glyphs.Lookup(textFont, 0);
-				formattedText = FormatText(context.glyphs, attribs, textFont, attribs.textField);
-				formattedText.font = textFont;
+				formattedText = FormatText(context.glyphs, attribs, textFont, utf32);
 			}
 		}
 
@@ -733,7 +754,6 @@ namespace mvt::symbol
 
 
 		// Is there anything to draw?
-		//if (hasIcon && (willDrawIcon || iconOptional) || (hasText && (willDrawText || textOptional)))
 		if ((hasIcon && (willDrawIcon || iconOptional) && hasText && (willDrawText || textOptional)) ||
 			(!hasText && (hasIcon && willDrawIcon)) ||
 			(!hasIcon && (hasText && willDrawText)))
@@ -804,6 +824,8 @@ namespace mvt::symbol
 		std::string textFont {};
 		FormattedText formattedText;
 
+		Utf32Text utf32;
+
 		std::optional<const mvt::style::SpriteSpec*> spriteSpec;
 
 		if (hasIcon)
@@ -831,26 +853,26 @@ namespace mvt::symbol
 		{
 			for (const auto& font : attribs.textFont)
 			{
-				glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
-				haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);
-
-				if (haloHandle != InvalidHandle && glyphHandle != InvalidHandle)
+				if (CheckForFont(context, font))
 				{
 					textFont = font;
 					break;
 				}
 			}
 
-			if (glyphHandle == InvalidHandle || haloHandle == InvalidHandle)
+			if (textFont.empty())
 			{
 				hasText = false;
 			}
 
-			if (hasText && !textFollowsLine)
+			if (hasText) 
 			{
-				//auto glyphAtlas = context.glyphs.Lookup(textFont, 0);
-				formattedText = FormatText(context.glyphs, attribs, textFont, attribs.textField);
-				formattedText.font = textFont;
+				utf32 = DecodeUtf8(attribs.textField);
+
+				if (!textFollowsLine)
+				{
+					formattedText = FormatText(context.glyphs, attribs, textFont, utf32);
+				}
 			}
 		}
 
@@ -868,7 +890,7 @@ namespace mvt::symbol
 		bool placedFirst = (startPos == 0.0f) ? false : true;
 
 		float offset = start;
-		for (/*float offset = start*/ ; offset < lineWalker.GetTotalDist(); offset += placedFirst ? minSpacing : style::GlyphSize)
+		for ( ; offset < lineWalker.GetTotalDist(); offset += placedFirst ? minSpacing : style::GlyphSize)
 		{
 			auto [ point, angle ] = lineWalker.GetPointOffset(offset);
 
@@ -895,9 +917,9 @@ namespace mvt::symbol
 				if (textFollowsLine)
 				{
 					auto glyphAtlas = context.glyphs.Lookup(textFont, 0);
-					float textLength = GetWordLength(glyphAtlas.get(), attribs.textField)*textScale;
+					float textLength = GetWordLength(context.glyphs, textFont, utf32)*textScale;
 
-					float glyphWidth = textLength/attribs.textField.size();
+					//float glyphWidth = textLength/utf32.size();
 
 					float start = offset;
 
@@ -967,7 +989,8 @@ namespace mvt::symbol
 				{
 					if (textFollowsLine)
 					{
-						RenderTextAlongLine(renderTarget, context, textFont, attribs, textLine);
+//						RenderTextAlongLine(renderTarget, context, textFont, attribs, textLine);
+						RenderTextAlongLine(renderTarget, context, textFont, attribs, utf32, textLine);
 
 						placedSymbols.Place(textLine, style::GlyphSize*textScale);
 					}
@@ -995,94 +1018,77 @@ namespace mvt::symbol
 	{
 		const std::string& font = formattedText.font;
 
-		BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 0);
-		BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, 0, 2*attribs.textHaloWidth);
+		auto glyphs = context.glyphs;
 
-		if (haloHandle != InvalidHandle && glyphHandle != InvalidHandle)
+		float textScale = attribs.textScale;
+
+		float textLineHeight = textScale*attribs.textLineHeight*style::GlyphSize;
+
+		Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+
+		// Calculate bounding box of text and check if it overlaps.
+		Rect bbox (cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
+
+		const Point start = cursor;
+
+		for (size_t i=0; i<formattedText.lines.size(); i++)
 		{
-			auto glyphs = context.glyphs;
+			cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
 
-			auto glyphAtlas = context.glyphs.Lookup(font, 0);
-
-			float textScale = attribs.textScale;
-
-			float textLineHeight = textScale*attribs.textLineHeight*style::GlyphSize;
-
-			float wordLength = GetWordLength(glyphAtlas.get(), attribs.textField)*textScale;
-
-			float glyphWidth = wordLength/attribs.textField.size();
-
-
-			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
-
-			// Calculate bounding box of text and check if it overlaps.
-			Rect bbox (cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
-
-			const Point start = cursor;
-
-			for (size_t i=0; i<formattedText.lines.size(); i++)
+			if (i != 0)
 			{
-				cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
+				cursor.y += textLineHeight;
+			}
 
-				if (i != 0)
+			const auto& line = formattedText.lines[i];
+
+			for (size_t j = 0; j<line.text.size(); j++)
+			{
+				uint32_t cp = line.text[j];
+
+				int blockStart = GetGlyphBlockStart(cp);
+
+				auto glyphAtlas = context.glyphs.Lookup(font, blockStart);
+
+
+				if (glyphAtlas && glyphAtlas->glyphs.contains(cp))
 				{
-					cursor.y += textLineHeight;
-				}
+					const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
 
-				const auto& line = formattedText.lines[i];
+					Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
-				for (size_t j = 0; j<line.text.size(); j++)
-				{
-					uint32_t cp = line.text[j];
+					float x = cursor.x;
+					float y = cursor.y;
 
-					int start = GetGlyphBlockStart(cp);
-					//int index = GetGlyphBlockIndex(cp);
+					float ypos = y /* + textScale*style::GlyphSize*/ - textScale*glyphSpec.top;
+					Point topLeft{ x, ypos };
 
-					/*auto*/ glyphAtlas = context.glyphs.Lookup(font, start);
+					Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
+					Color textColor = attribs.textColor;
+					textColor.Alpha = attribs.textOpacity;
 
-					if (glyphAtlas->glyphs.contains(cp))
-					{
-						const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
+					// Get the appropriate BitmapHandles.
+					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 0);
+					BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 2*attribs.textHaloWidth);
 
-						Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
+					renderTarget->SetActiveBitmap(haloHandle);
+					renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
+					renderTarget->SetActiveBitmap(glyphHandle);
+					renderTarget->DrawSymbolWithRGB(srcRect, destRect, textColor);
 
-						float x = cursor.x;
-						float y = cursor.y;
-
-						float ypos = y /* + textScale*style::GlyphSize*/ - textScale*glyphSpec.top;
-						Point topLeft{ x, ypos };
-
-						Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
-
-						Color textColor = attribs.textColor;
-						textColor.Alpha = attribs.textOpacity;
-
-
-						// Get the appropriate BitmapHandles.
-						/*BitmapHandle*/ glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, start, 0);
-						/*BitmapHandle*/ haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, start, 2*attribs.textHaloWidth);
-
-
-
-						renderTarget->SetActiveBitmap(haloHandle);
-						renderTarget->DrawSymbolWithRGB(srcRect, destRect, attribs.textHaloColor);
-						renderTarget->SetActiveBitmap(glyphHandle);
-						renderTarget->DrawSymbolWithRGB(srcRect, destRect, textColor);
-
-						cursor.x += glyphSpec.advance*textScale;
-					}
+					cursor.x += glyphSpec.advance*textScale;
 				}
 			}
+		}
 
-			if constexpr (debug::visual::DrawPointLabelOrigin)
-			{
-				DrawDot(renderTarget, point, Color("#00ff00"));
-			}
-			if constexpr (debug::visual::DrawPointLabelOutline)
-			{
-				DrawRect(renderTarget, bbox, Color("hotpink"));
-			}
+		if constexpr (debug::visual::DrawPointLabelOrigin)
+		{
+			DrawDot(renderTarget, point, Color("#00ff00"));
+		}
+		if constexpr (debug::visual::DrawPointLabelOutline)
+		{
+			DrawRect(renderTarget, bbox, Color("hotpink"));
 		}
 	}
 
