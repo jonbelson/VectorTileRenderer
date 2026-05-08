@@ -10,6 +10,8 @@ import core.color;
 import core.logger;
 import formats.mvt.feature;
 import formats.mvt.parser;
+import unicode.casemapping;
+import unicode.convert;
 
 using namespace core::color;
 using namespace mvt::feature;
@@ -427,6 +429,17 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 					return MakeExpression<OperatorInterpolate>(data);
 				}
 
+			// String
+			case ExpressionType::Downcase:
+				{
+					return MakeExpression<OperatorDowncase>(data);
+				}
+			case ExpressionType::Upcase:
+				{
+					return MakeExpression<OperatorUpcase>(data);
+				}
+
+
 			// Camera.
 			case ExpressionType::Zoom:
 				{
@@ -765,6 +778,86 @@ Value OperatorAtInterpolated::Evaluate(const mvt::feature::Feature& feature, flo
 
 	return {};
 }
+
+
+
+bool OperatorDowncase::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "downcase"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 1);
+		}
+	}
+
+	return false;
+}
+
+Value OperatorDowncase::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	assert(mValues.size() == 1);
+
+	if (mValues.size() == 1)
+	{
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		if (auto s = value.TryGetString(); s.has_value())
+		{
+			auto utf32 = unicode::convert::Utf8ToUtf32(s.value());
+
+			unicode::casemapping::ToLower(utf32);
+
+			value = { unicode::convert::Utf32ToUtf8(utf32) };
+
+			return value;
+		}
+
+	}
+
+	return {};
+}
+
+
+bool OperatorUpcase::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "upcase"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return ArrayHasSize(mValues, 1);
+		}
+	}
+
+	return false;
+}
+
+Value OperatorUpcase::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	assert(mValues.size() == 1);
+
+	if (mValues.size() == 1)
+	{
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		if (auto s = value.TryGetString(); s.has_value())
+		{
+			auto utf32 = unicode::convert::Utf8ToUtf32(s.value());
+
+			unicode::casemapping::ToUpper(utf32);
+
+			value = { unicode::convert::Utf32ToUtf8(utf32) };
+
+			return value;
+		}
+
+	}
+
+	return {};
+}
+
+
+
 
 
 

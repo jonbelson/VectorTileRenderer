@@ -1,7 +1,3 @@
-
-
-
-
 module formats.mvt.symbol;
 
 import std;
@@ -16,6 +12,7 @@ import formats.mvt.renderer;
 import formats.mvt.rendercontext;
 import formats.mvt.style;
 import formats.mvt.feature;
+import unicode.convert;
 
 namespace mvt::symbol
 {
@@ -24,93 +21,6 @@ namespace mvt::symbol
 	using namespace mvt;
 	using namespace mvt::layer;
 
-	std::vector<uint32_t> DecodeUtf8(std::string_view sv)
-	{
-		std::vector<uint32_t> utf32;
-
-		uint32_t i {};
-
-		bool decodeError { false };
-
-		constexpr uint32_t TwoByte		= 0b1100'0000;	//0xc0;
-		constexpr uint32_t ThreeByte	= 0b1110'0000;	//0xe0;
-		constexpr uint32_t FourByte		= 0b1111'0000;	//0xf0;
-
-		constexpr uint32_t TwoByteMask		= 0b1110'0000;	//0xe0;
-		constexpr uint32_t ThreeByteMask	= 0b1111'0000;	//0xf0;
-		constexpr uint32_t FourByteMask		= 0b1111'1000;	//0xf8;
-
-		constexpr uint32_t ContinuationMask = 0b0011'1111;	//0x3f
-
-		while (i < sv.size())
-		{
-			uint8_t ch = sv[i];
-
-			if ((ch & 0x80) == 0)
-			{
-				utf32.emplace_back(static_cast<uint32_t>(ch));
-				i += 1;
-			}
-			else if ((ch & TwoByteMask) == TwoByte)
-			{
-				// Two byte sequence.
-				if (i + 1 < sv.size())
-				{
-					uint8_t byte1 = ch&~TwoByteMask;
-					uint8_t byte2 = sv[i + 1]&ContinuationMask;
-
-					uint32_t codePoint = (byte1 << 6)|(byte2 << 0);
-
-					utf32.emplace_back(codePoint);
-				}
-				i += 2;
-			}
-			else if ((ch & ThreeByteMask) == ThreeByte)
-			{
-				// Three byte sequence.
-				if (i + 2 < sv.size())
-				{
-					uint8_t byte1 = ch&~ThreeByteMask;
-					uint8_t byte2 = sv[i + 1]&ContinuationMask; 
-					uint8_t byte3 = sv[i + 2]&ContinuationMask;
-
-					uint32_t codePoint = (byte1 << 12)|(byte2 << 6)|(byte3 << 0);
-
-					utf32.emplace_back(codePoint);
-				}
-				i += 3;
-			}
-			else if ((ch & FourByteMask) == FourByte)
-			{
-				// Four byte sequence.
-				if (i + 3 < sv.size())
-				{
-					uint8_t byte1 = ch&~FourByteMask;
-					uint8_t byte2 = sv[i + 1]&ContinuationMask; 
-					uint8_t byte3 = sv[i + 2]&ContinuationMask;
-					uint8_t byte4 = sv[i + 3]&ContinuationMask;
-
-					uint32_t codePoint = (byte1 << 18)|(byte2 << 12)|(byte3 << 6)|byte4;
-
-					utf32.emplace_back(codePoint);
-				}
-				i += 4;
-			}
-			else
-			{
-				utf32.emplace_back(0xfffd);
-				i += 1;
-				decodeError = true;
-			}
-		}
-
-		if (decodeError)
-		{
-			core::logger::Write(std::format("UTF-8 decode error in '{}'\n", sv));
-		}
-
-		return utf32;
-	}
 
 	// Utility class for interpolating along a line geometry.
 	class LineWalker
@@ -674,7 +584,7 @@ namespace mvt::symbol
 		std::string textFont {};
 		FormattedText formattedText;
 
-		Utf32Text utf32 = DecodeUtf8(attribs.textField);
+		Utf32Text utf32 = unicode::convert::Utf8ToUtf32(attribs.textField);
 
 		std::optional<const mvt::style::SpriteSpec*> spriteSpec;
 
@@ -867,7 +777,7 @@ namespace mvt::symbol
 
 			if (hasText) 
 			{
-				utf32 = DecodeUtf8(attribs.textField);
+				utf32 = unicode::convert::Utf8ToUtf32(attribs.textField);
 
 				if (!textFollowsLine)
 				{

@@ -101,6 +101,15 @@ namespace mvt::layer
 		return TextRotationAlignment::Auto;
 	}
 
+	TextTransform TextTransformToEnum(std::string_view textTransform)
+	{
+		if (textTransform == "uppercase") return TextTransform::Uppercase;
+		if (textTransform == "lowercase") return TextTransform::Lowercase;
+		if (textTransform == "none") return TextTransform::None;
+
+		return TextTransform::None;
+	}
+
 	Visibility VisibilityToEnum(const std::string_view visibility)
 	{
 		if (visibility == "visible") return Visibility::Visible;

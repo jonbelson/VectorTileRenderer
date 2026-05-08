@@ -22,6 +22,7 @@ import formats.mvt.layer;
 import formats.mvt.rendercontext;
 import formats.mvt.style;
 import formats.mvt.feature;
+import unicode.casemapping;
 
 export import :placedsymbols;
 
@@ -42,7 +43,6 @@ export namespace mvt::symbol
 		std::string operator()(auto) const { return ""; }
 	};
 
-	export std::vector<uint32_t> DecodeUtf8(std::string_view sv);
 
 	// Symbol attributes for specific feature in a specific feature layer at a specific zoom level.
 	export struct SymbolAttribs
@@ -80,6 +80,7 @@ export namespace mvt::symbol
 		float textRotate { 0.0f };
 		TextRotationAlignment textRotationAlignment;
 		float textSize { 16.0f };
+		TextTransform textTransform { TextTransform::None };
 
 		float textScale { 1.0f };	// Calculated font size scaler compared with GlyphSize.
 
@@ -154,6 +155,14 @@ export namespace mvt::symbol
 			textRotate = layer->mTextRotate.GetValue(feature, zoom);
 			textRotationAlignment = TextRotationAlignmentToEnum(layer->mTextRotationAlignment.GetValue(feature, zoom));
 			textSize = layer->mTextSize.GetValue(feature, zoom);
+			textTransform = TextTransformToEnum(layer->mTextTransform.GetValue(feature, zoom));
+
+			// icon-image and text-field can use '{}' substitution for Feature fields.
+			ReplaceTokens(feature, iconImage);
+			ReplaceTokens(feature, textField);
+
+			textScale = textSize/style::GlyphSize;
+			////textScale *= 2.0f;	// XXX debugging purposes.
 
 			// Determine values of properies set to 'auto'.
 			if (iconRotationAlignment == IconRotationAlignment::Auto)
@@ -184,12 +193,15 @@ export namespace mvt::symbol
 				}
 			}
 
-			// icon-image and text-field can use '{}' substitution for Feature fields.
-			ReplaceTokens(feature, iconImage);
-			ReplaceTokens(feature, textField);
-
-			textScale = textSize/style::GlyphSize;
-			////textScale *= 2.0f;	// XXX debugging purposes.
+			switch (textTransform)
+			{
+				case TextTransform::Uppercase:
+					textField = unicode::casemapping::ToUpper(textField);
+					break;
+				case TextTransform::Lowercase:
+					textField = unicode::casemapping::ToLower(textField);
+					break;
+			}
 
 		}
 	};
@@ -206,6 +218,8 @@ export namespace mvt::symbol
 	// Represents a Symbol from a Feature.
 	export class Symbol
 	{
+		using Utf32Text = std::vector<uint32_t>;
+
 		float RadiansToDegrees(float angleRadians)
 		{
 			static constexpr float Factor = 180.0f/std::numbers::pi_v<float>;
@@ -217,8 +231,6 @@ export namespace mvt::symbol
 		//	std::string_view text;
 		//	float lengthPx { 0.0f };
 		//};
-
-		using Utf32Text = std::vector<uint32_t>;
 
 		struct Line
 		{

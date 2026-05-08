@@ -31,6 +31,9 @@
     <Filter Include="Source Files\Geo">
       <UniqueIdentifier>{28b7bf29-e205-45b6-9755-bf928c2d5592}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Unicode">
+      <UniqueIdentifier>{03d7b80a-755f-43a4-89a0-e80e810b89ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VectorTileRenderer.h">
@@ -223,6 +226,15 @@
     </ClCompile>
     <ClCompile Include="CRenderAreaDlg.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\CaseMapping.ixx">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\CaseMapping.cpp">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Convert.ixx">
+      <Filter>Source Files\Unicode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

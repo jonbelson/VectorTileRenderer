@@ -10,9 +10,11 @@ import core.geometry;
 import formats.mvt.expressions;
 import formats.mvt.feature;
 import formats.mvt.symbol;
+import unicode.casemapping;
+import unicode.convert;
 
 
-TEST(Unicode, Utf32)
+TEST(Unicode, Utf8ToUtf32)
 {
 	struct Test
 	{
@@ -34,7 +36,7 @@ TEST(Unicode, Utf32)
 	{
 		std::string_view sv(reinterpret_cast<const char*>(test.utf8.data()), test.utf8.size());
 
-		auto utf32 = mvt::symbol::DecodeUtf8(sv);
+		auto utf32 = unicode::convert::Utf8ToUtf32(sv);
 
 		EXPECT_TRUE(utf32.size() == 1) << "Size incorrect : " << std::format("{}", test.utf8) << "\n";
 
@@ -44,6 +46,44 @@ TEST(Unicode, Utf32)
 		}
 	}
 }
+
+TEST(Unicode, ToUpper)
+{
+	using namespace unicode::casemapping;
+	using namespace unicode::convert;
+
+	struct Test
+	{
+		std::string input;
+		std::string output;
+	};
+
+	Test tests[] = {
+		{ "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+		{ "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+		{ "AbCdEfGhIjKlMnOpQrStUvWxYz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+		{ "aBcDeFgHiJkLmNoPqRsTuVwXyZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+		{ "", "" },
+
+		{ "κόσμος", "ΚΌΣΜΟΣ" },
+		{ "héllo", "HÉLLO" }
+
+	};
+
+	for (const auto& test : tests)
+	{
+		auto inputUtf32 = Utf8ToUtf32(test.input);
+
+		auto outputUtf32 = ToUpper(inputUtf32);
+
+		auto outputUtf8 = Utf32ToUtf8(outputUtf32);
+
+		EXPECT_TRUE(test.input.length() == outputUtf8.length()) << "Converted size incorrect : " << std::format("{}", test.input) << "\n";
+
+		EXPECT_EQ(outputUtf8, test.output) << "Converted value incorrect : " << std::format("got {}, expected {}", outputUtf8, test.input) << "\n";
+	}
+}
+
 
 TEST(Core, Geometry)
 {

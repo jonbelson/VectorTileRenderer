@@ -109,6 +109,7 @@ export namespace mvt::layer
 	export TextAnchor TextAnchorToEnum(std::string_view textAnchor);
 	export TextJustify TextJustifyToEnum(std::string_view textJustify);
 	export TextRotationAlignment TextRotationAlignmentToEnum(std::string_view textRotationAlignment);
+	export TextTransform TextTransformToEnum(std::string_view textTransform);
 	export Visibility VisibilityToEnum(const std::string_view visibility);
 
 

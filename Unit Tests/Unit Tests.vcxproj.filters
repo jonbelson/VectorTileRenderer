@@ -129,6 +129,15 @@
     <ClCompile Include="..\formats\mvt\MBTilesFetcher.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\unicode\CaseMapping.cpp">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\CaseMapping.ixx">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\Convert.ixx">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -157,6 +166,9 @@
     </Filter>
     <Filter Include="Project Modules\geo">
       <UniqueIdentifier>{00855bf6-f790-4390-9c2f-865e0934d5c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\Unicode">
+      <UniqueIdentifier>{7a5748f3-a874-4359-b200-9b69992caee4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
