@@ -45,7 +45,7 @@ export namespace core::geometry
 
 		Rect() {}
 
-		Rect(const Point& centre, float width, float height) : Rect(centre.x, centre.y, width, height) {}
+		Rect(const Point& topLeft, float width, float height) : Rect(topLeft.x, topLeft.y, width, height) {}
 
 		Rect(float _x, float _y, float _width, float _height) : x(_x), y(_y), width(_width), height(_height) {}
 

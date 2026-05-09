@@ -120,7 +120,6 @@ export enum struct ExpressionType
 	Split,
 	Worldview,
 
-
 	// Decision
 	Negate,
 	NotEqual,
@@ -294,7 +293,43 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data);
 
 
 
+//
+// 'Types' Expressions
+// https://docs.mapbox.com/style-spec/reference/expressions/#types
+//
+
+export class OperatorImage : public IOperator
+{
+	struct Image
+	{
+		Value name;
+		Value options;
+	};
+	std::vector<Image> mImages;
+
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 export class OperatorLiteral : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorToBoolean : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorToNumber : public IOperator
 {
 public:
 	virtual bool ParseFromJson(const json& data) override;
@@ -311,7 +346,12 @@ public:
 };
 
 
-export class OperatorAt : public IOperator
+//
+// 'Feature data' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#feature-data
+//
+
+export class OperatorGeometryType : public IOperator
 {
 public:
 	virtual bool ParseFromJson(const json& data) override;
@@ -319,14 +359,20 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorAtInterpolated : public IOperator
+
+
+//
+// 'String' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#string
+//
+
+export class OperatorConcat : public IOperator
 {
 public:
 	virtual bool ParseFromJson(const json& data) override;
 
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
-
 
 export class OperatorDowncase : public IOperator
 {
@@ -344,6 +390,28 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+
+
+//
+// 'Lookup' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#lookup
+//
+
+export class OperatorAt : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorAtInterpolated : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
 
 export class OperatorGet : public IOperator
 {
@@ -403,6 +471,12 @@ public:
 };
 
 
+
+//
+// 'Decision' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#decision
+//
+
 export class OperatorNegate : public IOperator
 {
 public:
@@ -455,15 +529,17 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorAll : public _OperatorDecision
+export class OperatorAll : public IOperator
 {
 public:
+	virtual bool ParseFromJson(const json& data) override;
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorAny : public _OperatorDecision
+export class OperatorAny : public IOperator
 {
 public:
+	virtual bool ParseFromJson(const json& data) override;
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
@@ -490,7 +566,6 @@ public:
 
 };
 
-
 export class OperatorMatch : public IOperator
 {
 	Value mInput;
@@ -511,6 +586,11 @@ public:
 };
 
 
+
+//
+// 'Ramps, scales, curves' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#ramps-scales-curves
+//
 
 export class OperatorInterpolate : public IOperator
 {
@@ -546,62 +626,101 @@ public:
 };
 
 
+export class OperatorStep : public IOperator
+{
+	Value mInput;
+	Value mOutput0;
+
+	struct InputOutput
+	{
+		Value input;
+		Value output;
+	};
+	std::vector<InputOutput> mInputOutputs;
+
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+
+};
+
+
+
+//
+// 'Math' Expressions.
+//https://docs.mapbox.com/style-spec/reference/expressions/#math
+//
 
 // Helper base class for Math Operators (Sum, Product etc)
+enum struct Arity
+{
+	Unary, Binary, Ternary, Nary
+};
+
+template<Arity arity>
 class _OperatorMath : public IOperator
 {
+protected:
+	Arity mArity { arity };
+
 public:
 	virtual bool ParseFromJson(const json& data) override;
-
 };
 
-class OperatorSubtraction : public _OperatorMath
+class OperatorSubtraction : public _OperatorMath<Arity::Nary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-class OperatorProduct : public _OperatorMath
+class OperatorProduct : public _OperatorMath<Arity::Nary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-class OperatorDivision : public _OperatorMath
+class OperatorDivision : public _OperatorMath<Arity::Binary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-class OperatorRemainder : public _OperatorMath
+class OperatorRemainder : public _OperatorMath<Arity::Binary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-class OperatorPow: public _OperatorMath
+class OperatorPow: public _OperatorMath<Arity::Binary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-class OperatorSum : public _OperatorMath
+class OperatorSum : public _OperatorMath<Arity::Nary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-class OperatorAbs : public IOperator
+class OperatorAbs : public _OperatorMath<Arity::Unary>
 {
 public:
-	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorSqrt : public _OperatorMath<Arity::Unary>
+{
+public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
 
 
-
-
+//
+// 'Camera' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#camera
+//
 
 class OperatorZoom : public IOperator
 {
@@ -613,8 +732,11 @@ public:
 
 
 
-
+//
 // Implement the old-style Function syntax.
+// https://docs.mapbox.com/style-spec/reference/other/
+//
+
 // XXX Zoom-and-property functions are not yet supported.
 export class OperatorFunction : public IOperator
 {

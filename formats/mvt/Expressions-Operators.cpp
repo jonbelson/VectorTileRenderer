@@ -16,6 +16,7 @@ import unicode.convert;
 using namespace core::color;
 using namespace mvt::feature;
 
+using namespace std::literals;
 
 struct VariantPrint
 {
@@ -294,14 +295,33 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 		switch (exprType)
 		{
 			// Types.
+			case ExpressionType::Image:
+				{
+					return MakeExpression<OperatorImage>(data);
+				}
 			case ExpressionType::Literal:
 				{
 					return MakeExpression<OperatorLiteral>(data);
+				}
+			case ExpressionType::ToBoolean:
+				{
+					return MakeExpression<OperatorToBoolean>(data);
+				}
+			case ExpressionType::ToNumber:
+				{
+					return MakeExpression<OperatorToNumber>(data);
 				}
 			case ExpressionType::ToString:
 				{
 					return MakeExpression<OperatorToString>(data);
 				}
+
+			// Feature data.
+			case ExpressionType::GeometryType:
+				{
+					return MakeExpression<OperatorGeometryType>(data);
+				}
+
 
 			// Lookup.
 			case ExpressionType::At:
@@ -420,6 +440,10 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorAbs>(data);
 				}
+			case ExpressionType::Sqrt:
+				{
+					return MakeExpression<OperatorSqrt>(data);
+				}
 
 
 
@@ -428,8 +452,18 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorInterpolate>(data);
 				}
+			case ExpressionType::Step:
+				{
+					return MakeExpression<OperatorStep>(data);
+				}
+
+
 
 			// String
+			case ExpressionType::Concat:
+				{
+					return MakeExpression<OperatorConcat>(data);
+				}
 			case ExpressionType::Downcase:
 				{
 					return MakeExpression<OperatorDowncase>(data);
@@ -445,7 +479,25 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorZoom>(data);
 				}
+
+			default:
+				{
+					std::string expr = std::format("{}", static_cast<std::uint32_t>(exprType));
+
+					for (const auto& [ name, type ] : ExpressionNameToTypeMap)
+					{
+						if (type == exprType)
+						{
+							expr = name;
+							break;
+						}
+					}
+
+					core::logger::Error("Failed to create Operator for ExpressionType '{}'\n", expr);
+				}
+				break;
 		}
+
 	}
 
 	return nullptr;
@@ -463,33 +515,13 @@ std::shared_ptr<IOperator> CreateFunctionOperatorFromJson(const json& data)
 	return nullptr;
 }
 
-// Convert the data in the supplied JSON to a Value, either a simple type or an OperatorPtr.
-Value JsonTypeToValue(const json& data)
+
+// Convert the data in the supplied JSON to a literal Value, i.e. not an OperatorPtr.
+Value JsonTypeToLiteralValue(const json& data)
 {
 	Value result;
 
-	if (IsJsonExpression(data))
-	{
-		std::shared_ptr<IOperator> exprOp = CreateOperatorFromJson(data);
-		if (exprOp)
-		{
-			result = { exprOp };
-		}
-
-		if (!exprOp)
-		{
-			core::logger::Write(std::format("Unhandled Operation '{}'\n", data[0].get<std::string>().c_str()));
-		}
-	}
-	else if (IsJsonFunction(data))
-	{
-		std::shared_ptr<IOperator> exprOp = CreateFunctionOperatorFromJson(data);
-		if (exprOp)
-		{
-			result = exprOp;
-		}
-	}
-	else if (data.is_string())
+	if (data.is_string())
 	{
 		std::string s = data.get<std::string>();
 		Color c(s);
@@ -541,7 +573,42 @@ Value JsonTypeToValue(const json& data)
 	return result;
 }
 
-// Convert the data in the supplied JSON array to an array of Vlues, either simple types or OperatorPtrs.
+// Convert the data in the supplied JSON to a Value, either a simple type or an OperatorPtr.
+Value JsonTypeToValue(const json& data)
+{
+	Value result;
+
+	if (IsJsonExpression(data))
+	{
+		std::shared_ptr<IOperator> exprOp = CreateOperatorFromJson(data);
+		if (exprOp)
+		{
+			result = { exprOp };
+		}
+
+		if (!exprOp)
+		{
+			auto s = data[0].get<std::string>();
+			core::logger::Error("Unhandled Operation '{}'\n", s);
+		}
+	}
+	else if (IsJsonFunction(data))
+	{
+		std::shared_ptr<IOperator> exprOp = CreateFunctionOperatorFromJson(data);
+		if (exprOp)
+		{
+			result = exprOp;
+		}
+	}
+	else
+	{
+		result = JsonTypeToLiteralValue(data);
+	}
+
+	return result;
+}
+
+// Convert the data in the supplied JSON array to an array of Values, either simple types or OperatorPtrs.
 // start	Specify first item to check (defaults to zero).
 static bool JsonArrayToValueArray(const json& data, std::vector<Value>& values, int start=0)
 {
@@ -579,11 +646,58 @@ bool ArrayHasSize(const T& array, Sizes... size)
 //	return false;
 //}
 
+
+
+// [ "image", image, options, image, options, ... ]: string
+bool OperatorImage::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "image"))
+	{
+		// One or more image names, each optionally followed by a ImageOptions object.
+		size_t i { 1 };
+		while (i < data.size())
+		{
+			Image image;
+			image.name = JsonTypeToValue(data[i++]);
+
+			if (i < data.size() && data[i].is_object())
+			{
+				// XXX Need to parse ImageOptions.
+				//image.options = JsonTypeToValue(data[i++]);
+				i++;
+			}
+
+			mImages.emplace_back(std::move(image));
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+Value OperatorImage::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	// XXX This Operation needs access to the Sprite structore from the Style. For now just return the first valid string.
+	for (const auto& image : mImages)
+	{
+		Value nameValue = GetValue(image.name, feature, zoom);
+		if (nameValue.IsString())
+		{
+			return nameValue;
+		}
+	}
+
+	return {};
+}
+
+
+
 // [ "literal", [ .... ]]: value
 // [ "literal", { .... }]: value
 bool OperatorLiteral::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() == 2)
+	if (IsOperatorOfType(data, "literal") && data.size() == 2)
 	{
 		// Second parameter can be an array or an object.
 		if (data[1].is_array())
@@ -629,10 +743,103 @@ Value OperatorLiteral::Evaluate(const mvt::feature::Feature& feature, float zoom
 	return Value{};
 }
 
+
+bool OperatorToBoolean::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "to-boolean"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() ==1;
+		}
+	}
+
+	return false;
+}
+
+
+struct ToBooleanCallable
+{
+	bool operator()(bool b) const { return b ? "true" : "false"; }
+	bool operator()(float f) const { return f != 0.0f && !std::isnan(f); }
+	bool operator()(const std::string& s) const { return s != ""; }
+
+	bool operator()(const std::monostate& m) const { return false; }
+
+	bool operator()(auto) const { return true; }
+};
+
+Value OperatorToBoolean::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		bool result = std::visit(ToBooleanCallable(), value);
+
+		return result;
+	}
+
+	return {};
+}
+
+
+// [ "to-number", value, fallback, fallback, ... ]: number
+bool OperatorToNumber::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "to-number") && data.size() >= 2)
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() >=1;
+		}
+	}
+
+	return false;
+}
+
+static std::optional<float> ParseStringToFloat(std::string_view sv)
+{
+	float result{};
+	auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result);
+	if (ec == std::errc{})
+	{
+		return result;
+	}
+	return false;
+}
+
+Value OperatorToNumber::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() >= 1)
+	{
+		for (const auto& value : mValues)
+		{
+			Value result = GetValue(value, feature, zoom);
+
+			if (value.IsNull() || (value.IsBool() && value.GetBool() == false))
+			{
+				return { 0.0f };
+			}
+			if (auto s = value.TryGetString(); s.has_value())
+			{
+				auto result = ParseStringToFloat(s.value());
+				if (result.has_value())
+				{
+					return { *result };
+				}
+			}
+		}
+	}
+
+	return {};
+}
+
+
 // [ "to-string", value ]: string
 bool OperatorToString::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() == 2)
+	if (IsOperatorOfType(data, "to-string") && data.size() == 2)
 	{
 		auto value = JsonTypeToValue(data[1]);
 
@@ -665,11 +872,35 @@ Value OperatorToString::Evaluate(const mvt::feature::Feature& feature, float zoo
 		Value result = GetValue(mValues[0], feature, zoom);
 		Value value = std::visit(ToStringCallable(), result);
 
-		if (std::holds_alternative<std::string>(value)) return value;
+//		if (std::holds_alternative<std::string>(value)) return value;
+		if (value.IsString()) return value;
 	}
 
 	return {};
 }
+
+
+
+bool OperatorGeometryType::ParseFromJson(const json& data)
+{
+	return IsOperatorOfType(data, "geometry-type");
+}
+
+Value OperatorGeometryType::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	using namespace core::geometry;
+
+	switch (feature.mGeometryType)
+	{
+		case GeometryType::MultiPoint:		return "Point";
+		case GeometryType::LineString:		return "LineString";
+		case GeometryType::MultiPolygon:	return "Polygon";
+	}
+
+	return {};
+}
+
+
 
 
 // ["at", number, array]: value
@@ -777,6 +1008,38 @@ Value OperatorAtInterpolated::Evaluate(const mvt::feature::Feature& feature, flo
 	}
 
 	return {};
+}
+
+
+// [ "concat", value, value, ... ]: string
+bool OperatorConcat::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "concat"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+Value OperatorConcat::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	std::string concat;
+
+	for (const auto& value : mValues)
+	{
+		Value result = GetValue(value, feature, zoom);
+		Value string = std::visit(ToStringCallable(), result);
+
+		if (!string.IsString()) return {};
+
+		concat += string.GetString();
+	}
+
+	return concat;
 }
 
 
@@ -907,9 +1170,11 @@ Value OperatorGet::Evaluate(const Feature& feature, float zoom)
 	if (mValues.size() > 0)
 	{
 		Value op = GetValue(mValues[0], feature, zoom);
-		if (std::holds_alternative<std::string>(op))
+		//if (std::holds_alternative<std::string>(op))
+		if (op.IsString())
 		{
-			std::string key = std::get<std::string>(op);
+//			std::string key = std::get<std::string>(op);
+			std::string key = op.GetString();
 			if (feature.mValues.contains(key))
 			{
 				ValueField value = feature.mValues.at(key);
@@ -1557,6 +1822,18 @@ Value OperatorGreaterThanEqual::Evaluate(const Feature& feature, float zoom)
 	return Value{ result };
 }
 
+bool OperatorAll::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "all"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() >= 2;
+		}
+	}
+	return false;
+}
+
 Value OperatorAll::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
 	if (mValues.size() > 0 )
@@ -1564,7 +1841,8 @@ Value OperatorAll::Evaluate(const mvt::feature::Feature& feature, float zoom)
 		for (const auto& arg : mValues)
 		{
 			Value value = GetValue(arg, feature, zoom);
-			if (!std::holds_alternative<bool>(value) || std::get<bool>(value) == false)
+			//if (!std::holds_alternative<bool>(value) || std::get<bool>(value) == false)
+			if (!value.IsBool() || value.GetBool() == false)
 			{
 				return false;
 			}
@@ -1572,6 +1850,18 @@ Value OperatorAll::Evaluate(const mvt::feature::Feature& feature, float zoom)
 	}
 
 	return true;
+}
+
+bool OperatorAny::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "any"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() >= 2;
+		}
+	}
+	return false;
 }
 
 Value OperatorAny::Evaluate(const mvt::feature::Feature& feature, float zoom)
@@ -1594,7 +1884,7 @@ Value OperatorAny::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 bool OperatorCase::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() >= 4 && data.size()%2 == 0)
+	if (IsOperatorOfType(data, "case") && data.size() >= 4 && data.size()%2 == 0)
 	{
 		for (size_t i = 2; i<data.size(); i+=2)
 		{
@@ -1705,12 +1995,10 @@ bool OperatorInterpolate::ParseInterpolation(const json& array)
 
 bool OperatorInterpolate::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() >= 5 )
+	if (IsOperatorOfType(data, "interpolate") && data.size() >= 5 )
 	{
 		if (IsStringOfValue(data[0], "interpolate"))
 		{
-			//json interpolation = data[1];
-
 			if (ParseInterpolation(data[1]))
 			{
 				mInput = JsonTypeToValue(data[2]);
@@ -1789,9 +2077,11 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 
 	Value input = GetValue(mInput, feature, zoom);
 
-	if (std::holds_alternative<float>(input))
+	//if (std::holds_alternative<float>(input))
+	if (input.IsFloat())
 	{
-		float inputValue = std::get<float>(input);
+//		float inputValue = std::get<float>(input);
+		float inputValue = input.GetFloat();
 
 		// Figure out which 'stop' pair the input falls into.
 		size_t numStops = mStops.size();
@@ -1862,10 +2152,80 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 }
 
 
+// ["step", number, output, input1, output1, input2, output2, ...]: value
+bool OperatorStep::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "step") && data.size() >= 3 )
+	{
+		mInput = JsonTypeToValue(data[1]);
+		mOutput0 = JsonTypeToValue(data[2]);
+
+		size_t numStops = data.size() - 3;
+
+		// Should be an even number of stops since they're in pairs.
+		if (numStops%2 == 1) return false;
+
+		size_t numPairs = numStops/2;
+
+		for (int i=3; i<2 + 2*numPairs; i+=2)
+		{
+			InputOutput inputOutput;
+
+			// Each input can be a single item or an array of inputs.
+			inputOutput.input = std::move(JsonTypeToValue(data[i]));
+			inputOutput.output = JsonTypeToValue(data[i + 1]);
+
+			mInputOutputs.push_back(std::move(inputOutput));
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+Value OperatorStep::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	Value result{};
+
+	if (mInputOutputs.empty())
+	{
+		return GetValue(mOutput0, feature, zoom);
+	}
+
+	Value input = GetValue(mInput, feature, zoom);
+
+	if (input.IsFloat())
+	{
+		float inputValue = input.GetFloat();
+
+		for (const auto& inputOutput : mInputOutputs)
+		{
+			Value stopInput = GetValue(inputOutput.input, feature, zoom);
+
+			if (!stopInput.IsFloat()) return {};
+
+			float stopInputValue = stopInput.GetFloat();
+
+			if (stopInputValue < inputValue)
+			{
+				return GetValue(inputOutput.output, feature, zoom);
+			}
+		}
+
+		// No stopInputs less that the input value, so return the default output.
+		return GetValue(mOutput0, feature, zoom);
+	}
+
+	return {};
+}
+
+
+
 // [ "match", input, label*, output, label*, output, ..., fallback]: OutputType
 bool OperatorMatch::ParseFromJson(const json& data)
 {
-	if (data.is_array() && data.size() >= 5)
+	if (IsOperatorOfType(data, "match") && data.size() >= 5)
 	{
 		mInput = JsonTypeToValue(data[1]);
 
@@ -1876,7 +2236,8 @@ bool OperatorMatch::ParseFromJson(const json& data)
 			InputOutput inputOutput;
 
 			// Each input can be a single item or an array of inputs.
-			inputOutput.labelList = std::move(JsonTypeToValue(data[i]));
+			//Value label = JsonTypeToLiteralValue(data[i]);
+			inputOutput.labelList = std::move(JsonTypeToLiteralValue(data[i]));
 			inputOutput.output = JsonTypeToValue(data[i + 1]);
 
 			mInputOutputs.push_back(std::move(inputOutput));
@@ -1885,7 +2246,6 @@ bool OperatorMatch::ParseFromJson(const json& data)
 		mFallback = JsonTypeToValue(data.back());
 	}
 
-//	if (mInput.IsNull() || mFallback.IsNull()) return false;
 	if (AnyHoldType<NullValue>(mInput, mFallback)) return false;
 
 	return true;
@@ -1920,22 +2280,34 @@ Value OperatorMatch::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 	return GetValue(mFallback, feature, zoom);
 }
+	
 
 
 
-// E.g. ["+", number, number, ...]: number
-bool _OperatorMath::ParseFromJson(const json& data)
+template<Arity arity>
+bool _OperatorMath<arity>::ParseFromJson(const json& data)
 {
 	if (data.is_array())
 	{
 		if (JsonArrayToValueArray(data, mValues, 1))
 		{
-			return mValues.size() >= 2;
+			switch (mArity)
+			{
+				case Arity::Unary:
+					return mValues.size() == 1;
+				case Arity::Binary:
+					return mValues.size() == 2;
+				case Arity::Ternary:
+					return mValues.size() == 3;
+				case Arity::Nary:
+					return mValues.size() >= 2;
+			}
 		}
 	}
 
 	return false;
 }
+
 
 Value OperatorSubtraction::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
@@ -2055,18 +2427,6 @@ Value OperatorSum::Evaluate(const mvt::feature::Feature& feature, float zoom)
 	return {};
 }
 
-bool OperatorAbs::ParseFromJson(const json& data)
-{
-	if (data.is_array())
-	{
-		if (JsonArrayToValueArray(data, mValues, 1))
-		{
-			return mValues.size() == 1;
-		}
-	}
-
-	return false;
-}
 
 Value OperatorAbs::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
@@ -2082,6 +2442,26 @@ Value OperatorAbs::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 	return {};
 }
+
+
+
+Value OperatorSqrt::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		Value number = GetValue(mValues[0], feature, zoom);
+
+		if (number.IsFloat())
+		{
+			return { std::sqrt(number.GetFloat()) };
+		}
+	}
+
+	return {};
+
+}
+
+
 
 
 
@@ -2176,15 +2556,17 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 			// A function that generates an output by interpolating between stops just less than and just greater than the function input.
 		case Type::Exponential:
 			{
-				if (std::find_if(mStops.begin(), mStops.end(), [](const auto& pair) { return !std::holds_alternative<float>(pair.input); }) != mStops.end())
+				if (std::find_if(mStops.begin(), mStops.end(), [](const auto& pair) { return !pair.input.IsFloat(); }) != mStops.end())
 				{
 					break;
 				}
 
-				if (!std::holds_alternative<float>(functionInput))
+				//if (!std::holds_alternative<float>(functionInput))
+				if (!functionInput.IsFloat())
 					break;
 
-				float inputValue = std::get<float>(functionInput);
+//				float inputValue = std::get<float>(functionInput);
+				float inputValue = functionInput.GetFloat();
 
 				size_t numStops = mStops.size();
 				if (numStops > 0)
@@ -2222,7 +2604,7 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 		// A function that returns the output value of the stop just less than the function input. 
 		case Type::Interval:
 			{
-				if (!std::holds_alternative<float>(functionInput))
+				if (!functionInput.IsFloat())
 					break;
 
 				size_t numStops = mStops.size();
@@ -2400,7 +2782,7 @@ Value FilterOperatorCombining::Evaluate(const mvt::feature::Feature& feature, fl
 				for (const auto& filter : mFilters)
 				{
 					auto result = filter->Evaluate(feature, zoom);
-					if (!std::holds_alternative<bool>(result) || std::get<bool>(result) == false)
+					if (!result.IsBool() || result.GetBool() == false)
 					{
 						return false;
 					}
@@ -2412,7 +2794,8 @@ Value FilterOperatorCombining::Evaluate(const mvt::feature::Feature& feature, fl
 				for (const auto& filter : mFilters)
 				{
 					auto result = filter->Evaluate(feature, zoom);
-					if (std::holds_alternative<bool>(result) && std::get<bool>(result) == true)
+					//if (std::holds_alternative<bool>(result) && std::get<bool>(result) == true)
+					if (result.IsBool() && result.GetBool() == true)
 					{
 						return true;
 					}
@@ -2424,7 +2807,7 @@ Value FilterOperatorCombining::Evaluate(const mvt::feature::Feature& feature, fl
 				for (const auto& filter : mFilters)
 				{
 					auto result = filter->Evaluate(feature, zoom);
-					if (std::holds_alternative<bool>(result) &&  std::get<bool>(result))
+					if (result.IsBool() && result.GetBool())
 					{
 						return false;
 					}

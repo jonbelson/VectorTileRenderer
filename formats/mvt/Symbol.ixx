@@ -54,6 +54,7 @@ export namespace mvt::symbol
 		std::vector<float> iconOffset { 0.0f, 0.0f };
 		float iconOpacity { 1.0f };
 		bool iconOptional { false };
+		float iconPadding { 2.0f };
 		IconRotationAlignment iconRotationAlignment;
 		float iconSize{ 1.0f };
 		float iconRotate{ 0.0f };
@@ -77,6 +78,7 @@ export namespace mvt::symbol
 		std::vector<float> textOffset { 0.0f, 0.0f };
 		float textOpacity { 1.0f };
 		bool textOptional { false };
+		float textPadding { 2.0f };
 		float textRotate { 0.0f };
 		TextRotationAlignment textRotationAlignment;
 		float textSize { 16.0f };
@@ -132,9 +134,10 @@ export namespace mvt::symbol
 			iconOffset = layer->mIconOffset.GetValue(feature, zoom);
 			iconOpacity = layer->mIconOpacity.GetValue(feature, zoom);
 			iconOptional = layer->mIconOptional.GetValue(feature, zoom);
-			iconSize = layer->mIconSize.GetValue(feature, zoom);
+			iconPadding = layer->mIconPadding.GetValue(feature, zoom);
 			iconRotate = layer->mIconRotate.GetValue(feature, zoom);
 			iconRotationAlignment = IconRotationAlignmentToEnum(layer->mIconRotationAlignment.GetValue(feature, zoom));
+			iconSize = layer->mIconSize.GetValue(feature, zoom);
 
 			symbolPlacement = SymbolPlacementToEnum(layer->mSymbolPlacement.GetValue(feature, zoom));
 			symbolSpacing = layer->mSymbolSpacing.GetValue(feature, zoom);
@@ -146,12 +149,14 @@ export namespace mvt::symbol
 			textFont = layer->mTextFont.GetValue(feature, zoom);
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
+			textLineHeight = layer->mTextLineHeight.GetValue(feature, zoom);
 			textJustify = TextJustifyToEnum(layer->mTextJustify.GetValue(feature, zoom));
 			textMaxAngle = layer->mTextMaxAngle.GetValue(feature, zoom);
 			textMaxWidth = layer->mTextMaxWidth.GetValue(feature, zoom);
 			textOffset = layer->mTextOffset.GetValue(feature, zoom);
 			textOpacity = layer->mTextOpacity.GetValue(feature, zoom);
 			textOptional = layer->mTextOptional.GetValue(feature, zoom);
+			textPadding = layer->mTextPadding.GetValue(feature, zoom);
 			textRotate = layer->mTextRotate.GetValue(feature, zoom);
 			textRotationAlignment = TextRotationAlignmentToEnum(layer->mTextRotationAlignment.GetValue(feature, zoom));
 			textSize = layer->mTextSize.GetValue(feature, zoom);
@@ -164,7 +169,7 @@ export namespace mvt::symbol
 			textScale = textSize/style::GlyphSize;
 			////textScale *= 2.0f;	// XXX debugging purposes.
 
-			// Determine values of properies set to 'auto'.
+			// Determine values of properies for 'auto'.
 			if (iconRotationAlignment == IconRotationAlignment::Auto)
 			{
 				switch (symbolPlacement)

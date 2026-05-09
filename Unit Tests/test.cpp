@@ -461,7 +461,8 @@ TEST(Operators, Decision)
 
 
 		{ R"([ "coalesce", "arg1", "arg2" ])", { "arg1"}},
-		{ R"([ "coalesce", [ "image", "sprite_name" ], "arg2" ])", { "arg2"}},
+//		{ R"([ "coalesce", [ "image", "sprite_name" ], "arg2" ])", { "arg2"}},
+		{ R"([ "coalesce", [ "get", "sprite_name" ], "arg2" ])", { "arg2"}},
 
 		{ R"([ "match", "bbb", "aaa", 10, "bbb", 30.0, "fallback" ])", { 30.0f }},
 		{ R"([ "match", "zzz", "aaa", 10, "bbb", 30.0, 999.0 ])", { 999.0f }},
@@ -687,6 +688,11 @@ TEST(Operators, Math)
 		{ R"([ "abs", [ "get", "float1" ] ])", { 10.0f } },
 		{ R"([ "abs", [ "get", "float2" ] ])", { 10.0f } },
 
+
+		{ R"([ "sqrt", 3.0 ])", { std::sqrt(3.0f) } },
+		{ R"([ "sqrt", 9.0 ])", { std::sqrt(9.0f) } },
+		//{ R"([ "sqrt", -1.0 ])", { std::sqrt(-1.0f) } },	returns '-nan(ind)', which isn't equal to itself!
+		{ R"([ "sqrt", [ "get", "float1" ] ])", { std::sqrt(10.0f) } }
 
 	};
 
