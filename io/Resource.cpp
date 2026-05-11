@@ -10,7 +10,7 @@ namespace io::resource
 {
 	std::expected<Data, Status> LoadFromFile(std::string_view sv)
 	{
-		core::logger::Info("Loading from file: {}", sv);
+		core::logger::Info("Loading from file: {}\n", sv);
 
 		std::ifstream f(std::string(sv).c_str(), std::ios::binary);
 		if (f.is_open())
@@ -67,7 +67,7 @@ namespace io::resource
 
 	std::expected<Data, Status> LoadFromHttp(std::string_view url)
 	{
-		core::logger::Info("Loading from HTTP: {}", url);
+		core::logger::Info("Loading from HTTP: {}\n", url);
 
 		CURL* curlHandle{};
 

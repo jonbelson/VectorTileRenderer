@@ -292,6 +292,12 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data);
 /*static*/ export bool IsStringOfValue(const json& data, const std::string& s);
 
 
+// 'Arity' of Operators, used to validate the number of arguments.
+enum struct Arity
+{
+	Nullary, Unary, Binary, UnaryOrBinary, Ternary, BinaryOrTernary, Nary
+};
+
 
 //
 // 'Types' Expressions
@@ -472,74 +478,80 @@ public:
 
 
 
+
 //
 // 'Decision' Expressions.
 // https://docs.mapbox.com/style-spec/reference/expressions/#decision
 //
 
-export class OperatorNegate : public IOperator
-{
-public:
-	virtual bool ParseFromJson(const json& data) override;
-
-	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
-};
-
 // Helper base class for Decision Operators (==, !=, <, <=, >, >=)
+template<Arity arity>
 class _OperatorDecision : public IOperator
 {
+protected:
+	Arity mArity { arity };
+
 public:
 	virtual bool ParseFromJson(const json& data) override;
 
 };
 
-export class OperatorNotEqual : public _OperatorDecision
+
+export class OperatorNegate : public _OperatorDecision<Arity::Unary>
+{
+public:
+	//virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorNotEqual : public _OperatorDecision<Arity::BinaryOrTernary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorLessThan : public _OperatorDecision
+export class OperatorLessThan : public _OperatorDecision<Arity::BinaryOrTernary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorLessThanEqual : public _OperatorDecision
+export class OperatorLessThanEqual : public _OperatorDecision<Arity::BinaryOrTernary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorEqual : public _OperatorDecision
+export class OperatorEqual : public _OperatorDecision<Arity::BinaryOrTernary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorGreaterThan : public _OperatorDecision
+export class OperatorGreaterThan : public _OperatorDecision<Arity::BinaryOrTernary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorGreaterThanEqual : public _OperatorDecision
+export class OperatorGreaterThanEqual : public _OperatorDecision<Arity::BinaryOrTernary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorAll : public IOperator
+export class OperatorAll : public _OperatorDecision<Arity::Nary>
 {
 public:
-	virtual bool ParseFromJson(const json& data) override;
+	//virtual bool ParseFromJson(const json& data) override;
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
-export class OperatorAny : public IOperator
+export class OperatorAny : public _OperatorDecision<Arity::Nary>
 {
 public:
-	virtual bool ParseFromJson(const json& data) override;
+	//virtual bool ParseFromJson(const json& data) override;
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
@@ -651,11 +663,8 @@ public:
 //https://docs.mapbox.com/style-spec/reference/expressions/#math
 //
 
-// Helper base class for Math Operators (Sum, Product etc)
-enum struct Arity
-{
-	Unary, Binary, Ternary, Nary
-};
+// Helper base class for Operators (Sum, Product etc)
+
 
 template<Arity arity>
 class _OperatorMath : public IOperator
@@ -667,7 +676,7 @@ public:
 	virtual bool ParseFromJson(const json& data) override;
 };
 
-class OperatorSubtraction : public _OperatorMath<Arity::Nary>
+class OperatorSubtraction : public _OperatorMath<Arity::UnaryOrBinary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
@@ -704,6 +713,140 @@ public:
 };
 
 class OperatorAbs : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+// acos
+// asin
+// atan
+// ceil
+// cos
+// distance
+// e
+// floor
+// ln
+// ln2
+// log10
+// log2
+// max
+// min
+// pi
+// random
+// round
+// sin
+// tan
+
+class OperatorAcos : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorAsin : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorAtan : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorCeil : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorCos : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorDistance : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorE : public _OperatorMath<Arity::Nullary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorFloor : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorLn : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorLn2 : public _OperatorMath<Arity::Nullary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorLog10 : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorLog2 : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorMax : public _OperatorMath<Arity::Nary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorMin : public _OperatorMath<Arity::Nary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorPi : public _OperatorMath<Arity::Nullary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorRandom : public _OperatorMath<Arity::Ternary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorRound : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorSin : public _OperatorMath<Arity::Unary>
+{
+public:
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+class OperatorTan : public _OperatorMath<Arity::Unary>
 {
 public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;

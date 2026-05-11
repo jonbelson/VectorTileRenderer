@@ -782,7 +782,9 @@ namespace core::rendertarget
 		void DrawLine(const geometry::LineString* lineString)
 		{
 			assert(mLineColor.r != -1.0f);
-			assert(mStrokeWidth != 0.0f);
+			//assert(mStrokeWidth != 0.0f);
+
+			if (mStrokeWidth == 0.0f) return;	// Assume 0 means 'don't draw'.
 
 			for (const auto& line : lineString->lines)
 			{
@@ -839,7 +841,9 @@ namespace core::rendertarget
 		void DrawPolygon(const geometry::Polygon* polygon)
 		{
 			assert(mLineColor.r != -1.0f);
-			assert(mStrokeWidth != 0.0f);
+			//assert(mStrokeWidth != 0.0f);
+
+			if (mStrokeWidth == 0.0f) return;	// Assume 0 means 'don't draw'.
 
 			ComPtr<ID2D1PathGeometry> pathGeometry = CreatePathGeometry(polygon);
 
@@ -879,6 +883,8 @@ namespace core::rendertarget
 		// Draw circle outline.
 		void DrawCircle(const geometry::Point* point)
 		{
+			if (mStrokeWidth == 0.0f) return;	// Assume 0 means 'don't draw'.
+
 			if (IsValid())
 			{
 				auto strokeStyle = CreateStrokeStyle();
@@ -975,7 +981,7 @@ namespace core::rendertarget
 					0, 0, 0, 0,
 					0, 0, 0, 0,
 					0, 0, 0, 0,
-					colour.Red, colour.Green, colour.Blue, 1,
+					colour.Red, colour.Green, colour.Blue, colour.Alpha /*1*/,
 					0, 0, 0, 0
 				};
 

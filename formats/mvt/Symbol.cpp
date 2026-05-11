@@ -326,25 +326,68 @@ namespace mvt::symbol
 
 		size_t start{} , end{};
 
+		size_t lastBreak { std::string::npos };
+
+		constexpr std::string_view BreakChars = " -\n/" ;
+
 		for (size_t i=0; i<utf32.size(); i++)
 		{
 			uint32_t cp = utf32.at(i);
 
-			float advance{};
+			if (BreakChars.find(cp) != std::string::npos)
+			{
+				lastBreak = i;
+			}
 
 			int blockStart = GetGlyphBlockStart(cp);
 
 			auto glyphAtlas = glyphs.Lookup(font, blockStart);
-			if (glyphAtlas)
+
+			if (!glyphAtlas) continue;
+
+			float advance{};
+			if (glyphAtlas->glyphs.contains(cp))
 			{
-				if (glyphAtlas->glyphs.contains(cp))
-				{
-					advance = static_cast<float>(glyphAtlas->glyphs.at(cp).advance);
-				}
+				advance = static_cast<float>(glyphAtlas->glyphs.at(cp).advance);
 			}
 
-			if (width + advance > maxTextWidthPx)
+			if (cp == '\n')
 			{
+				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + end);
+				line = { text, GetWordLength(glyphs, font, text) };
+				ft.lines.push_back(line);
+
+				line = {};
+				width = 0.0f;
+				start = i  + 1;
+
+				lastBreak = std::string::npos;
+
+				continue;
+			}
+
+			// Have we overflowed text-max-width and have found a break point on this line?
+			if (width + advance > maxTextWidthPx && lastBreak != std::string::npos)
+			{
+				uint32_t breakChar = utf32.at(lastBreak);
+
+				size_t bp = lastBreak;
+
+				if (breakChar == '/' || breakChar == '-') bp++;	// We want to keep the break character.
+
+				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + bp);
+				line = { text, GetWordLength(glyphs, font, text) };
+				ft.lines.push_back(line);
+
+				line = {};
+				width = 0.0f;
+				start = bp;
+				
+				if (breakChar == ' ') start++;
+
+				lastBreak = std::string::npos;
+
+#if 0
 				// Search backwards for the last point we can split at (either a space or hyphen).
 				for (size_t j=end; j>=start; j--)
 				{
@@ -384,18 +427,21 @@ namespace mvt::symbol
 
 					if (j == start) break;
 				}
-
+#endif
 				continue;
 			}
 			else
 			{
+				if (cp == '\n')
+				{
+				}
+
 				width += advance;
 				end++;
 			}
 		}
 
-		//line = { textField.substr(start, end - start), width };
-		std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + end);
+		std::vector<uint32_t> text(utf32.begin() + start, utf32.end() /*utf32.begin() + end*/);
 		line = { text, GetWordLength(glyphs, font, text) };
 
 		ft.lines.push_back(line);
@@ -557,7 +603,7 @@ namespace mvt::symbol
 	void Symbol::RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 	{
 		//if (attribs.textField.find("Bracknell &") != std::string::npos)
-		if (attribs.textField.find("Eastcourt Avenue") != std::string::npos)
+		if (attribs.textField.find("Islamic") != std::string::npos)
 		{
 			int i{};
 		}
@@ -654,6 +700,13 @@ namespace mvt::symbol
 		{
 			// XXX text-rotate.
 			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+
+			//float offX = attribs.textOffset[0]*style::GlyphSize;
+			//float offY = attribs.textOffset[1]*style::GlyphSize;
+			//cursor.x += offX;
+			//cursor.y += offY;
+
+			cursor = AdjustForTextOffset(attribs, cursor);
 
 			// Calculate bounding box of text and check if it overlaps.
 			Rect bbox (cursor, formattedText.widthPx*attribs.textScale, formattedText.heightPx*attribs.textScale);
@@ -930,6 +983,11 @@ namespace mvt::symbol
 	// point	Position to draw text.
 	void Symbol::RenderTextAtPoint(RenderTarget* renderTarget, renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point)
 	{
+		Color textColor = attribs.textColor;
+		textColor.Alpha *= attribs.textOpacity;
+
+		if (textColor.Alpha == 0.0f) return;
+
 		const std::string& font = formattedText.font;
 
 		auto& glyphs = context.glyphs;
@@ -945,6 +1003,7 @@ namespace mvt::symbol
 		for (size_t i=0; i<formattedText.lines.size(); i++)
 		{
 			cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
+			cursor = AdjustForTextOffset(attribs, cursor);
 
 			if (i != 0)
 			{
@@ -975,9 +1034,6 @@ namespace mvt::symbol
 					Point topLeft{ x, ypos };
 
 					Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
-
-					Color textColor = attribs.textColor;
-					textColor.Alpha = attribs.textOpacity;
 
 					// Get the appropriate BitmapHandles.
 					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 0);

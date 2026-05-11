@@ -17,6 +17,7 @@ namespace core::color
 	std::optional<Color> ParseHashRrggbb(std::string_view s);
 	std::optional<Color> ParseHashRgb(std::string_view s);
 	std::optional<Color> ParseRgba(std::string_view s);
+	std::optional<Color> ParseRgb(std::string_view s);
 	std::optional<Color> ParseHsla(std::string_view s);
 	std::optional<Color> ParseHsl(std::string_view s);
 	std::optional<Color> ParseCss(std::string_view s);
@@ -46,6 +47,7 @@ namespace core::color
 			if (auto c = ParseHashRrggbb(s); c.has_value()) return c.value();
 			if (auto c = ParseHashRgb(s); c.has_value()) return c.value();
 			if (auto c = ParseRgba(s); c.has_value()) return c.value();
+			if (auto c = ParseRgb(s); c.has_value()) return c.value();
 			if (auto c = ParseHsla(s); c.has_value()) return c.value();
 			if (auto c = ParseHsl(s); c.has_value()) return c.value();
 			if (auto c = ParseCss(s); c.has_value()) return c.value();
@@ -89,7 +91,7 @@ namespace core::color
 	static std::optional<int> ParseComponent(std::string_view sv)
 	{
 		int result{};
-		auto [ptr, ec] = std::from_chars(&sv[0], &sv[0] + 2, result, 16);
+		auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result, 16);
 		if (ec == std::errc{})
 		{
 			return result;
@@ -125,9 +127,9 @@ namespace core::color
 	{
 		if (s.length() == 4 && s[0] == '#')
 		{
-			auto r = ParseComponent(std::string_view(&s[1], 2));
-			auto g = ParseComponent(std::string_view(&s[3], 2));
-			auto b = ParseComponent(std::string_view(&s[5], 2));
+			auto r = ParseComponent(std::string_view(&s[1], 1));
+			auto g = ParseComponent(std::string_view(&s[2], 1));
+			auto b = ParseComponent(std::string_view(&s[3], 1));
 
 			if (r.has_value() && g.has_value() && b.has_value())
 			{
@@ -156,6 +158,25 @@ namespace core::color
 				c.Green = g / 255.0f;
 				c.Blue = b / 255.0f;
 				c.Alpha = a;
+
+				return c;
+			}
+		}
+
+		return {};
+	}
+
+	std::optional<Color> ParseRgb(std::string_view s)
+	{
+		if (s.size() > 3 && s.find("rgb(") != std::string::npos)
+		{
+			int r{}, g{}, b{};
+			if (sscanf_s(s.data(), "rgb(%d,%d,%d)", &r, &g, &b) == 3)
+			{
+				Color c;
+				c.Red = r / 255.0f;
+				c.Green = g / 255.0f;
+				c.Blue = b / 255.0f;
 
 				return c;
 			}

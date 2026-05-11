@@ -1,6 +1,7 @@
 module;
 
 #include <cassert>
+#include <numbers>
 
 module formats.mvt.expressions:operators;
 
@@ -440,9 +441,85 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorAbs>(data);
 				}
+			case ExpressionType::Acos:
+				{
+					return MakeExpression<OperatorAcos>(data);
+				}
+			case ExpressionType::Asin:
+				{
+					return MakeExpression<OperatorAsin>(data);
+				}
+			case ExpressionType::Atan:
+				{
+					return MakeExpression<OperatorAtan>(data);
+				}
+			case ExpressionType::Ceil:
+				{
+					return MakeExpression<OperatorCeil>(data);
+				}
+			case ExpressionType::Cos:
+				{
+					return MakeExpression<OperatorCos>(data);
+				}
+			case ExpressionType::Distance:
+				{
+					return MakeExpression<OperatorDistance>(data);
+				}
+			case ExpressionType::E:
+				{
+					return MakeExpression<OperatorE>(data);
+				}
+			case ExpressionType::Floor:
+				{
+					return MakeExpression<OperatorFloor>(data);
+				}
+			case ExpressionType::Ln:
+				{
+					return MakeExpression<OperatorLn>(data);
+				}
+			case ExpressionType::Ln2:
+				{
+					return MakeExpression<OperatorLn2>(data);
+				}
+			case ExpressionType::Log10:
+				{
+					return MakeExpression<OperatorLog10>(data);
+				}
+			case ExpressionType::Log2:
+				{
+					return MakeExpression<OperatorLog2>(data);
+				}
+			case ExpressionType::Max:
+				{
+					return MakeExpression<OperatorMax>(data);
+				}
+			case ExpressionType::Min:
+				{
+					return MakeExpression<OperatorMin>(data);
+				}
+			case ExpressionType::Pi:
+				{
+					return MakeExpression<OperatorPi>(data);
+				}
+			case ExpressionType::Random:
+				{
+					return MakeExpression<OperatorRandom>(data);
+				}
+			case ExpressionType::Round:
+				{
+					return MakeExpression<OperatorRound>(data);
+				}
+			case ExpressionType::Sin:
+				{
+					return MakeExpression<OperatorSin>(data);
+				}
 			case ExpressionType::Sqrt:
 				{
 					return MakeExpression<OperatorSqrt>(data);
+				}
+			case ExpressionType::Tan:
+				{
+					return MakeExpression<OperatorTan>(data);
 				}
 
 
@@ -1669,19 +1746,55 @@ Value OperatorSplit::Evaluate(const Feature& feature, float zoom)
 }
 
 
-// [ "!", boolean]: condition
-bool OperatorNegate::ParseFromJson(const json& data)
+
+
+
+
+// ["==", value, value]: boolean
+// ["==", value, value, collator]: boolean
+template<Arity arity>
+bool _OperatorDecision<arity>::ParseFromJson(const json& data)
 {
-	if (IsOperatorOfType(data, "!"))
+	if (data.is_array())
 	{
 		if (JsonArrayToValueArray(data, mValues, 1))
 		{
-			return ArrayHasSize(mValues, 1);
+			switch (mArity)
+			{
+				case Arity::Nullary:
+					return mValues.size() == 0;
+				case Arity::Unary:
+					return mValues.size() == 1;
+				case Arity::Binary:
+					return mValues.size() == 2;
+				case Arity::UnaryOrBinary:
+					return mValues.size() == 1 || mValues.size() == 2;
+				case Arity::Ternary:
+					return mValues.size() == 3;
+				case Arity::BinaryOrTernary:
+					return mValues.size() == 2 || mValues.size() == 3;
+				case Arity::Nary:
+					return mValues.size() >= 2;
+			}
 		}
 	}
 
 	return false;
 }
+
+// [ "!", boolean]: condition
+//bool OperatorNegate::ParseFromJson(const json& data)
+//{
+//	if (IsOperatorOfType(data, "!"))
+//	{
+//		if (JsonArrayToValueArray(data, mValues, 1))
+//		{
+//			return ArrayHasSize(mValues, 1);
+//		}
+//	}
+//
+//	return false;
+//}
 
 Value OperatorNegate::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
@@ -1699,17 +1812,7 @@ Value OperatorNegate::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 
 
-// ["==", value, value]: boolean
-// ["==", value, value, collator]: boolean
-bool _OperatorDecision::ParseFromJson(const json& data)
-{
-	if (JsonArrayToValueArray(data, mValues, 1))
-	{
-		return ArrayHasSize(mValues, 2, 3);
-	}
 
-	return false;
-}
 
 
 struct EqualCompare
@@ -1822,18 +1925,6 @@ Value OperatorGreaterThanEqual::Evaluate(const Feature& feature, float zoom)
 	return Value{ result };
 }
 
-bool OperatorAll::ParseFromJson(const json& data)
-{
-	if (IsOperatorOfType(data, "all"))
-	{
-		if (JsonArrayToValueArray(data, mValues, 1))
-		{
-			return mValues.size() >= 2;
-		}
-	}
-	return false;
-}
-
 Value OperatorAll::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
 	if (mValues.size() > 0 )
@@ -1850,18 +1941,6 @@ Value OperatorAll::Evaluate(const mvt::feature::Feature& feature, float zoom)
 	}
 
 	return true;
-}
-
-bool OperatorAny::ParseFromJson(const json& data)
-{
-	if (IsOperatorOfType(data, "any"))
-	{
-		if (JsonArrayToValueArray(data, mValues, 1))
-		{
-			return mValues.size() >= 2;
-		}
-	}
-	return false;
 }
 
 Value OperatorAny::Evaluate(const mvt::feature::Feature& feature, float zoom)
@@ -1945,7 +2024,11 @@ Value OperatorCoalesce::Evaluate(const mvt::feature::Feature& feature, float zoo
 		if (not result.IsNull()) return result;
 	}
 
-	if (not mValues.empty()) return mValues.front();
+	if (not mValues.empty())
+	{
+		Value first = GetValue(mValues.front(), feature, zoom);
+		return first;
+	}
 
 	return {};
 }
@@ -2293,12 +2376,18 @@ bool _OperatorMath<arity>::ParseFromJson(const json& data)
 		{
 			switch (mArity)
 			{
+				case Arity::Nullary:
+					return mValues.size() == 0;
 				case Arity::Unary:
 					return mValues.size() == 1;
 				case Arity::Binary:
 					return mValues.size() == 2;
+				case Arity::UnaryOrBinary:
+					return mValues.size() == 1 || mValues.size() == 2;
 				case Arity::Ternary:
 					return mValues.size() == 3;
+				case Arity::BinaryOrTernary:
+					return mValues.size() == 2 || mValues.size() == 3;
 				case Arity::Nary:
 					return mValues.size() >= 2;
 			}
@@ -2308,63 +2397,103 @@ bool _OperatorMath<arity>::ParseFromJson(const json& data)
 	return false;
 }
 
-
-Value OperatorSubtraction::Evaluate(const mvt::feature::Feature& feature, float zoom)
+template<typename Op>
+Value _EvaluateUnary(std::vector<Value>& values, const mvt::feature::Feature& feature, float zoom, Op op)
 {
-	if (mValues.size() == 2)
+	if (values.size() == 1)
 	{
-		Value number1 = GetValue(mValues[0], feature, zoom);
-		Value number2 = GetValue(mValues[1], feature, zoom);
+		Value number = GetValue(values[0], feature, zoom);
 
-		if (number1.IsFloat() && number2.IsFloat())
+		if (number.IsFloat())
 		{
-			return { number1.GetFloat() - number2.GetFloat() };
+			return { op(number.GetFloat()) };
 		}
 	}
 
 	return {};
+}
+
+template<typename Op>
+Value _EvaluateBinary(std::vector<Value>& values, const mvt::feature::Feature& feature, float zoom, Op op)
+{
+	if (values.size() == 2)
+	{
+		Value number1 = GetValue(values[0], feature, zoom);
+		Value number2 = GetValue(values[1], feature, zoom);
+
+		if (AllHoldType<float>(number1, number2))
+		{
+			return { op(number1.GetFloat(), number2.GetFloat()) };
+		}
+	}
+
+	return {};
+}
+
+template<typename Op>
+Value _EvaluateNary(std::vector<Value>& values, const mvt::feature::Feature& feature, float zoom, Op op, float initial)
+{
+	if (values.size() >= 2)
+	{
+		float result = initial;
+
+		for (const auto& value : values)
+		{
+			Value number = GetValue(value, feature, zoom);
+
+			if (number.IsFloat())
+			{
+				result = op(result, number.GetFloat());
+			}
+			else
+			{
+				return {};
+			}
+		}
+
+		return result;
+	}
+
+	return {};
+}	
+
+Value OperatorSubtraction::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	Value value;
+
+	if (mValues.size() == 1)
+	{
+		value = _EvaluateUnary(mValues, feature, zoom, [](float x){ return -x; });
+	}
+	else if (mValues.size() == 2)
+	{
+		value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y){ return x - y; });
+	}
+
+	return value;
 }
 
 Value OperatorProduct::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	if (mValues.size() >= 2)
-	{
-		float product{ 1.0f };
+	auto value = _EvaluateNary(mValues, feature, zoom, [](float x, float y) { return x*y; }, 1.0f);
 
-		for (size_t i=0; i<mValues.size(); i++)
-		{
-			Value number = GetValue(mValues[i], feature, zoom);
-			if (!number.IsFloat())
-			{
-				return {};
-			}
-			product *= number.GetFloat();
-		}
-
-		return { product };
-	}
-
-	return {};
+	return value;
 }
 
 Value OperatorDivision::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	if (mValues.size() == 2)
-	{
-		Value number1 = GetValue(mValues[0], feature, zoom);
-		Value number2 = GetValue(mValues[1], feature, zoom);
+	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return x/y; });
 
-		if (number1.IsFloat() && number2.IsFloat())
-		{
-			return { number1.GetFloat() / number2.GetFloat() };
-		}
-	}
-
-	return {};
+	return value;
 }
 
 Value OperatorRemainder::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
+	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return fmod(x, y); });
+
+	return value;
+
+/*
 	if (mValues.size() == 2)
 	{
 		Value number1 = GetValue(mValues[0], feature, zoom);
@@ -2383,82 +2512,183 @@ Value OperatorRemainder::Evaluate(const mvt::feature::Feature& feature, float zo
 	}
 
 	return {};
+	*/
 }
 
 Value OperatorPow::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	if (mValues.size() == 2)
-	{
-		Value number1 = GetValue(mValues[0], feature, zoom);
-		Value number2 = GetValue(mValues[1], feature, zoom);
+	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return pow(x, y); });
 
-		if (number1.IsFloat() && number2.IsFloat())
-		{
-			float f1 = number1.GetFloat();
-			float f2 = number2.GetFloat();
-
-			return { std::pow(f1, f2) };
-		}
-	}
-
-	return {};
+	return value;
 }
-
 
 Value OperatorSum::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	if (mValues.size() >= 2)
-	{
-		float sum{ 0.0f };
+	auto value = _EvaluateNary(mValues, feature, zoom, [](float x, float y) { return x + y; }, 0.0f);
 
-		for (size_t i=0; i<mValues.size(); i++)
-		{
-			Value number = GetValue(mValues[i], feature, zoom);
-			if (!number.IsFloat())
-			{
-				return {};
-			}
-			sum += number.GetFloat();
-		}
-
-		return { sum };
-	}
-
-	return {};
+	return value;
 }
-
 
 Value OperatorAbs::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	if (mValues.size() == 1)
-	{
-		Value number = GetValue(mValues[0], feature, zoom);
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::abs(x); });
 
-		if (number.IsFloat())
+	return value;
+}
+
+Value OperatorAcos::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::acos(x); });
+
+	return value;
+}
+
+Value OperatorAsin::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::asin(x); });
+
+	return value;
+}
+
+Value OperatorAtan::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::atan(x); });
+
+	return value;
+}
+
+Value OperatorCeil::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::ceil(x); });
+
+	return value;
+}
+
+Value OperatorCos::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::cos(x); });
+
+	return value;
+}
+
+Value OperatorDistance::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	// XXX 'object' type not curently supported.
+
+	return { 0.0f };
+}
+
+Value OperatorE::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	return { std::numbers::e_v<float> };
+}
+
+Value OperatorFloor::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::floor(x); });
+
+	return value;
+}
+
+Value OperatorLn::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::log(x); });
+
+	return value;
+}
+
+Value OperatorLn2::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	return { std::log(2.0f) };
+}
+
+Value OperatorLog10::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::log10(x); });
+
+	return value;
+}
+
+Value OperatorLog2::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::log2(x); });
+
+	return value;
+}
+
+Value OperatorMax::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateNary(mValues, feature, zoom, [](float x, float y) { return std::max(x, y); }, std::numeric_limits<float>::lowest());
+
+	return value;
+}
+
+Value OperatorMin::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateNary(mValues, feature, zoom, [](float x, float y) { return std::min(x, y); }, std::numeric_limits<float>::max());
+
+	return value;
+}
+
+Value OperatorPi::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	float value = std::numbers::pi_v<float>;
+
+	return value;
+}
+
+Value OperatorRandom::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 3)
+	{
+		Value minValue = GetValue(mValues[0], feature, zoom);
+		Value maxValue = GetValue(mValues[1], feature, zoom);
+		Value seedValue = GetValue(mValues[2], feature, zoom);
+
+		if (AllHoldType<float>(minValue, maxValue, seedValue))
 		{
-			return { std::abs(number.GetFloat()) };
+			float min = minValue.GetFloat();
+			float max = maxValue.GetFloat();
+			float seed = seedValue.GetFloat();
+
+			if (min > max) return {};
+
+			std::mt19937 rng(static_cast<unsigned int>(seed));
+			std::uniform_real_distribution<float> dist(min, max);
+
+			return { dist(rng) };
 		}
 	}
 
 	return {};
 }
 
+Value OperatorRound::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::round(x); });
 
+	return value;
+}
+
+Value OperatorSin::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::sin(x); });
+
+	return value;
+}
+
+Value OperatorTan::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::tan(x); });
+
+	return value;
+}
 
 Value OperatorSqrt::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	if (mValues.size() == 1)
-	{
-		Value number = GetValue(mValues[0], feature, zoom);
+	auto value = _EvaluateUnary(mValues, feature, zoom, [](float x) { return std::sqrt(x); });
 
-		if (number.IsFloat())
-		{
-			return { std::sqrt(number.GetFloat()) };
-		}
-	}
-
-	return {};
-
+	return value;
 }
 
 

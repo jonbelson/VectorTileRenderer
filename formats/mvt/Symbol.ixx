@@ -413,6 +413,15 @@ export namespace mvt::symbol
 			return point;
 		}
 
+		// Calculate rendering position based on TextOffset.
+		Point AdjustForTextOffset(/*const FormattedText& formattedText,*/ const SymbolAttribs& attribs, const Point& p)
+		{
+			float offX = attribs.textOffset[0]*attribs.textSize;
+			float offY = attribs.textOffset[1]*attribs.textSize;
+
+			return Point(p.x + offX, p.y + offY);
+		}
+
 		// Draw text along a PointArray.
 		// Caller should check for symbol overlap (if required).
 		// pointArray should be long enough to contain the text.
