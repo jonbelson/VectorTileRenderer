@@ -93,11 +93,6 @@ public:
 	Status RenderTile(const CString& sFileName)
 	{
 		CStringA utf8 { CW2A(m_sServerAddress, CP_UTF8) };
-		//auto data = io::resource::LoadFromHttp((LPCSTR) utf8);
-		//if (!data)
-		//{
-		//	return Status::CouldNotAccessServer;
-		//}
 
 		if (m_bServerChanged)
 		{
@@ -116,33 +111,6 @@ public:
 		{
 			return Status::CouldNotLoadStyle;
 		}
-
-		/*
-		for (const auto& source : mStyle->mSources)
-		{
-		if (source.second.mTiles.empty())
-		{
-		core::logger::Write(std::format("Source '{}' has no defined tile urls\n", mStyle->mName));
-		continue;
-		}
-
-		const std::string& tileSource = source.second.mTiles[0];	// XXX Just use first entry for now.
-		auto tileFetcher = HttpTileFetcher::Create(tileSource);
-
-		if (!tileFetcher)
-		{
-		switch (tileFetcher.error())
-		{
-		case HttpTileFetcher::Error::InvalidUrl:
-		return Status::ServerAddressInvalid;
-		//case HttpTileFetcher::Error::CouldNotAccessServer:
-		//	return Status::CouldNotAccessServer;
-		}
-		return Status::CouldNotAccessServer;
-		}
-
-		mvt::tilecache::TileCache tileCache(tileFetcher.value());
-		*/
 
 		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
 

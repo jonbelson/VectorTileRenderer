@@ -112,10 +112,10 @@ namespace mvt::style
 
 	// OS Data Hub
 	// Styles:
-	// https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=bCj3UGjYGGyJzX9bQY9TssviLhFpuAtS
+	// https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=<key>
 	//
 	// Tiles:
-	// https://api.os.uk/maps/vector/v1/vts/tile/{z}/{y}/{x}.pbf?key=bCj3UGjYGGyJzX9bQY9TssviLhFpuAtS&srs=3857
+	// https://api.os.uk/maps/vector/v1/vts/tile/{z}/{y}/{x}.pbf?key=<key>
 	//
 	export class Style
 	{

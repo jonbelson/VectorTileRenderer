@@ -57,11 +57,13 @@ namespace mvt::style
 		uint32_t x{};
 		uint32_t y{};
 
+		int left{};
+		int top{};
+
 		uint32_t height{};
 		uint32_t width{};
 
 		uint32_t advance{};
-		int top{};
 	};
 
 	// Represent a decoded glyph PBF.
@@ -208,8 +210,9 @@ namespace mvt::style
 
 			GlyphSpec spec {
 				.id = glyph.id, .x = currX, .y = currY,
+				.left = glyph.left, .top = glyph.top,
 				.height = glyphHeight, .width = glyphWidth,
-				.advance = glyph.advance, .top = glyph.top };
+				.advance = glyph.advance };
 
 			glyphAtlas.glyphs[glyph.id] = spec;
 

@@ -72,6 +72,7 @@ export namespace mvt::symbol
 		Color textHaloColor { "rgba(0, 0, 0, 0)" };
 		float textHaloWidth { 0.0f };
 		TextJustify textJustify { TextJustify::Center };
+		float textLetterSpacing { 0.0f };
 		float textLineHeight { 1.2f };
 		float textMaxAngle { 45.0f };
 		float textMaxWidth { 10.0f };
@@ -149,6 +150,7 @@ export namespace mvt::symbol
 			textFont = layer->mTextFont.GetValue(feature, zoom);
 			textHaloColor = layer->mTextHaloColor.GetValue(feature, zoom);
 			textHaloWidth = layer->mTextHaloWidth.GetValue(feature, zoom);
+			textLetterSpacing = layer->mTextLetterSpacing.GetValue(feature, zoom);
 			textLineHeight = layer->mTextLineHeight.GetValue(feature, zoom);
 			textJustify = TextJustifyToEnum(layer->mTextJustify.GetValue(feature, zoom));
 			textMaxAngle = layer->mTextMaxAngle.GetValue(feature, zoom);
@@ -231,15 +233,8 @@ export namespace mvt::symbol
 			return angleRadians*Factor;
 		}
 
-		//struct Word
-		//{
-		//	std::string_view text;
-		//	float lengthPx { 0.0f };
-		//};
-
 		struct Line
 		{
-			//std::string_view text;
 			std::vector<uint32_t> text;	// utf32
 			float widthPx { 0.0f };
 		};
@@ -257,9 +252,11 @@ export namespace mvt::symbol
 		// Get word length in pixels when drawn using glyphs from specified Glyphs instance.
 		// Result calculated for glyphs of GlyphSize pixels.
 		// text		Array of utf32 codepoints.
-		float GetWordLength(const mvt::style::Glyphs& glyphs, const std::string& textFont, const Utf32Text& text)
+		float GetWordLength(const mvt::style::Glyphs& glyphs, const std::string& textFont, float textLetterSpacing, const Utf32Text& text)
 		{
 			float lengthPx { 0.0f };
+
+			float padding = textLetterSpacing*style::GlyphSize;
 
 			for (const auto& cp : text)
 			{
@@ -270,7 +267,7 @@ export namespace mvt::symbol
 				{
 					if (glyphAtlas->glyphs.contains(cp))
 					{
-						lengthPx += glyphAtlas->glyphs.at(cp).advance;
+						lengthPx += glyphAtlas->glyphs.at(cp).advance + padding;
 					}
 				}
 			}
@@ -286,14 +283,14 @@ export namespace mvt::symbol
 			}
 		}
 
-		// Decide if text rendered along a line coudl be considered 'upside-down'.
-		bool IsUpsideDown(const mvt::style::GlyphAtlas* glyphAtlas, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const PointArray& pointArray);
+		// Decide if text rendered along a line could be considered 'upside-down'.
+		bool IsUpsideDown(const mvt::style::Glyphs& glyphs, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const PointArray& pointArray, const Utf32Text& utf32);
 
 		// Check if the angle between the line segments at any point along the line geometry between offsets 'start' and 'end' exceeds 'maxAngle'.
-		bool ExceedsMaxAngle(const mvt::style::GlyphAtlas* glyphAtlas, const SymbolAttribs& attribs, const LineWalker& lineWalker, float start);
+		bool ExceedsMaxAngle(const mvt::style::Glyphs& glyphs, const std::string& font, const SymbolAttribs& attribs, const LineWalker& lineWalker, float start, const Utf32Text& utf32);
 
 		// Add charcters to a line until it exceeds max-text-length, then search backwards for somewhere to split onto a new line.
-		FormattedText FormatText(const mvt::style::Glyphs& glyphs, const SymbolAttribs& attribs, const std::string& font, const Utf32Text& utf32);
+		FormattedText FormatText(const mvt::style::Glyphs& glyphs, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32);
 
 		/*
 		// Split a string into an array of Words using a delimiter of ' '.

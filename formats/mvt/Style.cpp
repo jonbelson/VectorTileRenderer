@@ -103,6 +103,8 @@ namespace mvt::style
 
 						mScaler = suffix.scaler;
 
+						core::logger::Info("Loaded sprites from {} and {}\n", jsonUrl, pngUrl);
+
 						return true;
 					}
 

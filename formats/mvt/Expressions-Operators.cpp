@@ -271,10 +271,10 @@ Value ValueFieldToValue(ValueField valueField)
 	return Value{};
 }
 
+
 template<typename T>
 auto MakeExpression(const json& data) -> std::shared_ptr<IOperator>
 	requires std::derived_from<T, IOperator>
-	//std::shared_ptr<IOperator> MakeExpression(const json& data)
 {
 	std::unique_ptr<T> op = std::make_unique<T>();
 	if (op->ParseFromJson(data))
@@ -2397,7 +2397,30 @@ bool _OperatorMath<arity>::ParseFromJson(const json& data)
 	return false;
 }
 
+
 template<typename Op>
+concept UnaryFloatOp = requires (Op op)
+{
+	{ op(std::declval<float>()) } -> std::same_as<float>;
+};
+
+
+template<typename Op>
+concept BinaryFloatOp =	requires (Op op)
+{
+	{ op(std::declval<float>(), std::declval<float>()) } -> std::same_as<float>;
+};
+
+
+template<typename Op>
+concept NaryFloatOp = requires (Op op)
+{
+	{ op(std::declval<float>(), std::declval<float>()) } -> std::same_as<float>;
+};
+
+
+
+template<UnaryFloatOp Op>
 Value _EvaluateUnary(std::vector<Value>& values, const mvt::feature::Feature& feature, float zoom, Op op)
 {
 	if (values.size() == 1)
@@ -2413,7 +2436,7 @@ Value _EvaluateUnary(std::vector<Value>& values, const mvt::feature::Feature& fe
 	return {};
 }
 
-template<typename Op>
+template<BinaryFloatOp Op>
 Value _EvaluateBinary(std::vector<Value>& values, const mvt::feature::Feature& feature, float zoom, Op op)
 {
 	if (values.size() == 2)
@@ -2430,7 +2453,7 @@ Value _EvaluateBinary(std::vector<Value>& values, const mvt::feature::Feature& f
 	return {};
 }
 
-template<typename Op>
+template<NaryFloatOp Op>
 Value _EvaluateNary(std::vector<Value>& values, const mvt::feature::Feature& feature, float zoom, Op op, float initial)
 {
 	if (values.size() >= 2)
@@ -2455,7 +2478,8 @@ Value _EvaluateNary(std::vector<Value>& values, const mvt::feature::Feature& fea
 	}
 
 	return {};
-}	
+}
+
 
 Value OperatorSubtraction::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
