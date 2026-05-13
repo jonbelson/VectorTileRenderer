@@ -246,13 +246,13 @@
     <None Include="res\VectorTileRenderer.rc2">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="formats\mvt\vector_tile.proto">
-      <Filter>Source Files\Formats\Mvt</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\VectorTileRenderer.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LICENCE.txt" />
   </ItemGroup>
 </Project>

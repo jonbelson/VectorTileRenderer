@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Jonathan Belson
+// Licensed under the MIT License — use freely, keep this notice.
+// SPDX-License-Identifier: MIT
+// Full terms: see LICENSE in the project root.
+
 export module formats.mvt.debug;
 
 // Flags to enable various visual debugging aids. Setting 'true' means 'don't do the normal thing'.

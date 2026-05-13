@@ -1,0 +1,9 @@
+
+stb_image.h for loading bitmap images (https://github.com/nothings/stb)
+
+curl for downloading files from http servers
+zlib for decompressing downloaded files
+protobuf for decoding PBF-encoded data
+
+
+

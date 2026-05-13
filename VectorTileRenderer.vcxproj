@@ -277,11 +277,13 @@
     <ResourceCompile Include="VectorTileRenderer.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="formats\mvt\vector_tile.proto" />
     <None Include="res\VectorTileRenderer.rc2" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\VectorTileRenderer.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LICENCE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
