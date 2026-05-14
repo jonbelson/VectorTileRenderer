@@ -897,9 +897,7 @@ namespace mvt::symbol
 							textLine = lineWalker.GetPointList(start, start + textLength);
 
 							// 'text-offset'
-							float offX = attribs.textOffset[0]*attribs.textSize;
-							float offY = attribs.textOffset[1]*attribs.textSize;
-							OffsetPointList(textLine, offX, offY);
+							AdjustForTextOffset(attribs, textLine);
 
 							float lineThickness = style::GlyphSize*textScale + attribs.textPadding*2;
 							bool textOverlaps = placedSymbols.HasOverlap(textLine, lineThickness);

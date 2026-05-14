@@ -341,7 +341,7 @@ namespace mvt::renderer
 
 		for (const auto& layer : mStyle->mLayers)
 		{
-			if (layer->mSourceLayer == "building")
+			if (layer->mId == "land line/ridge")
 			{
 				//continue;
 				int jj{};

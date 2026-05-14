@@ -1,4 +1,5 @@
 
+JSON for Modern C++ for JSON parsing (https://github.com/nlohmann/json)
 stb_image.h for loading bitmap images (https://github.com/nothings/stb)
 
 curl for downloading files from http servers

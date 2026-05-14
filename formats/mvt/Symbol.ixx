@@ -424,6 +424,40 @@ export namespace mvt::symbol
 			return Point(p.x + offX, p.y + offY);
 		}
 
+		void AdjustForTextOffset(const SymbolAttribs& attribs, PointArray& pointList)
+		{
+			float offX = attribs.textOffset[0]*attribs.textSize;
+			float offY = attribs.textOffset[1]*attribs.textSize;
+
+			if (attribs.textRotationAlignment == TextRotationAlignment::Map)
+			{
+				// Offsets are applied tangentally to the line. Here the points are offset relative to
+				//  the first line segment, but not sure if that is completely correct.
+				if (pointList.size() > 1)
+				{
+					Vector offset = pointList[1] - pointList[0];
+					offset.Normalise();
+
+					Vector tangent(-offset.j, offset.i);
+
+					for (auto& point : pointList)
+					{
+						point = point + offset*offX;
+						point = point + tangent*offY;
+					}
+				}
+			}
+			else
+			{
+				for (auto& point : pointList)
+				{
+					point.x += offX;
+					point.y += offY;
+				}
+			}
+		}
+
+
 		// Draw text along a PointArray.
 		// Caller should check for symbol overlap (if required).
 		// pointArray should be long enough to contain the text.

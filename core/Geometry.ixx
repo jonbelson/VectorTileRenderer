@@ -18,6 +18,18 @@ export namespace core::geometry
 		{
 			return Vector{ i * f,  j * f };
 		}
+
+		void Normalise(void)
+		{
+			float magnitude = Magnitude();
+			if (magnitude != 0.0f)
+			{
+				i /= magnitude;
+				j /= magnitude;
+			}
+		}
+
+		float Magnitude(void) const { return std::sqrt(i*i + j*j); }
 	};
 
 	export struct Point

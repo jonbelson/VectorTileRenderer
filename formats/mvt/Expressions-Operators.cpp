@@ -2776,6 +2776,20 @@ bool OperatorFunction::ParseFromJson(const json& data)
 					mStops.push_back(Stop{ JsonTypeToValue(stop[0]), JsonTypeToValue(stop[1]) });
 				}
 			}
+
+			// Bit of a fudge here - if the function is 'exponential' but the output type is a string that's not a valid color, change the Type to 'Interval'
+			if (mType == Type::Exponential && !mStops.empty())
+			{
+				const Value& output = mStops.front().output;
+				if (output.IsString())
+				{
+					Color c(output.GetString());
+					if (!c.IsValid())
+					{
+						mType = Type::Interval;
+					}
+				}
+			}
 		}
 	}
 
