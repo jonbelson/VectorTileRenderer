@@ -15,6 +15,7 @@
 #include "CFromPbfDlg.h"
 #include "CFromMBTilesDlg.h"
 #include "CFromServerDlg.h"
+#include "CMapViewerDlg.h"
 #include "CRenderAreaDlg.h"
 
 #include <format>
@@ -110,6 +111,7 @@ BEGIN_MESSAGE_MAP(CVectorTileRendererDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_FROM_MBTILES, &CVectorTileRendererDlg::OnBnClickedButtonFromMbtiles)
 	ON_BN_CLICKED(IDC_BUTTON_FROM_pBF, &CVectorTileRendererDlg::OnBnClickedButtonFrompbf)
 	ON_BN_CLICKED(IDC_BUTTON_RENDER_AREA, &CVectorTileRendererDlg::OnBnClickedButtonRenderArea)
+	ON_BN_CLICKED(IDC_BUTTON_MAP_VIEWER, &CVectorTileRendererDlg::OnBnClickedButtonMapViewer)
 END_MESSAGE_MAP()
 
 
@@ -474,5 +476,11 @@ void CVectorTileRendererDlg::OnBnClickedButtonFrompbf()
 void CVectorTileRendererDlg::OnBnClickedButtonRenderArea()
 {
 	CRenderAreaDlg dlg;
+	dlg.DoModal();
+}
+
+void CVectorTileRendererDlg::OnBnClickedButtonMapViewer()
+{
+	CMapViewerDlg dlg;
 	dlg.DoModal();
 }

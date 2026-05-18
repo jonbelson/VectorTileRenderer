@@ -323,7 +323,7 @@ export namespace mvt::symbol
 		*/
 
 		// Get the BitmapHandle for specified glyph block. Bitmap is registered if not already done.
-		BitmapHandle GetGlyphBitmapHandle(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
+		BitmapHandle GetGlyphBitmapHandle(renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
 		{
 			BitmapHandle glyphHandle = context.GetBitmapHandle(font, start, haloWidth);
 
@@ -332,7 +332,7 @@ export namespace mvt::symbol
 				auto atlas = context.glyphs.Lookup(font, start, haloWidth);
 				if (atlas)
 				{
-					glyphHandle = renderTarget->RegisterBitmap(atlas->bitmap);
+					glyphHandle = context.renderTarget.RegisterBitmap(atlas->bitmap);
 				}
 				if (glyphHandle != InvalidHandle)
 				{
@@ -461,33 +461,33 @@ export namespace mvt::symbol
 		// Draw text along a PointArray.
 		// Caller should check for symbol overlap (if required).
 		// pointArray should be long enough to contain the text.
-		void RenderTextAlongLine(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32, const PointArray& pointArray);
+		void RenderTextAlongLine(renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32, const PointArray& pointArray);
 
 		// Draw formatted text at specified point.
 		// point	
-		void RenderTextAtPoint(RenderTarget* renderTarget, renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point /*, PlacedSymbols& placedSymbols*/);
+		void RenderTextAtPoint(renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point /*, PlacedSymbols& placedSymbols*/);
 
-		void RenderMultiPoint(RenderTarget* renderTarget, mvt::renderer::RenderContext& context, const SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
+		void RenderMultiPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
 			for (const auto& point : multiPoint.points)
 			{
-				RenderPoint(renderTarget, context, attribs, point, placedSymbols);
+				RenderPoint(context, attribs, point, placedSymbols);
 			}
 		}
 
 		// Render a point symbol at the specified point.
-		void RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols);
+		void RenderPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols);
 
 		// Render a symbool along a PointArray.
-		void RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols, float& startPos);
+		void RenderAlongPointArray(renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols, float& startPos);
 
-		void RenderAlongLineString(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
+		void RenderAlongLineString(renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
 		{
 			float startPos { 0.0f };
 
 			for (const auto& line : lineString.lines)
 			{
-				RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols, startPos);
+				RenderAlongPointArray(context, attribs, line, placedSymbols, startPos);
 			}
 		}
 
@@ -512,41 +512,41 @@ export namespace mvt::symbol
 	public:
 		Symbol() {}
 
-		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
+		bool Render(renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{
 			if (attribs.symbolPlacement == SymbolPlacement::Point)
 			{
-				RenderMultiPoint(renderTarget, context, attribs, multiPoint, placedSymbols);
+				RenderMultiPoint(context, attribs, multiPoint, placedSymbols);
 			}
 
 			return true;
 		}
 
-		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
+		bool Render(renderer::RenderContext& context, SymbolAttribs& attribs, const LineString& lineString, PlacedSymbols& placedSymbols)
 		{
 			if (attribs.symbolPlacement == SymbolPlacement::Line)
 			{
-				RenderAlongLineString(renderTarget, context, attribs, lineString, placedSymbols);
+				RenderAlongLineString(context, attribs, lineString, placedSymbols);
 			}
 			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)
 			{
 				for (const auto& line : lineString.lines)
 				{
-					RenderPoint(renderTarget, context, attribs, GetCentroid(line), placedSymbols);
+					RenderPoint(context, attribs, GetCentroid(line), placedSymbols);
 				}
 			}
 
 			return true;
 		}
 
-		bool Render(core::rendertarget::RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPolygon& multiPolygon, PlacedSymbols& placedSymbols)
+		bool Render(renderer::RenderContext& context, SymbolAttribs& attribs, const MultiPolygon& multiPolygon, PlacedSymbols& placedSymbols)
 		{
 			if (attribs.symbolPlacement == SymbolPlacement::Point)
 			{
 				for (const auto& polygon : multiPolygon.polygons)
 				{
 					// XXX Centroid not best since it might be outside of the polygon (e.g. if concave).
-					RenderPoint(renderTarget, context, attribs, GetCentroid(polygon.exteriorRing), placedSymbols);
+					RenderPoint(context, attribs, GetCentroid(polygon.exteriorRing), placedSymbols);
 				}
 			}
 			else if (attribs.symbolPlacement == SymbolPlacement::Line)
@@ -558,14 +558,14 @@ export namespace mvt::symbol
 					line.emplace_back(polygon.exteriorRing.front());
 
 					float startPos { 0.0f };
-					RenderAlongPointArray(renderTarget, context, attribs, line, placedSymbols, startPos);
+					RenderAlongPointArray(context, attribs, line, placedSymbols, startPos);
 				}
 			}
 			else if (attribs.symbolPlacement == SymbolPlacement::LineCenter)
 			{
 				for (const auto& polygon : multiPolygon.polygons)
 				{
-					RenderPoint(renderTarget, context, attribs, GetCentroid(polygon.exteriorRing), placedSymbols);
+					RenderPoint(context, attribs, GetCentroid(polygon.exteriorRing), placedSymbols);
 				}
 			}
 

@@ -27,13 +27,14 @@ protected:
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
+
+	DECLARE_MESSAGE_MAP()
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
-	DECLARE_MESSAGE_MAP()
-public:
 	afx_msg void OnBnClickedButtonFromServer();
 	afx_msg void OnBnClickedButtonFromMbtiles();
 	afx_msg void OnBnClickedButtonFrompbf();
 	afx_msg void OnBnClickedButtonRenderArea();
+	afx_msg void OnBnClickedButtonMapViewer();
 };

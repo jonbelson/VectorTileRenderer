@@ -65,5 +65,7 @@ namespace core::rendertarget
 		virtual void ClearClipRect(void) override;
 
 		virtual void Save(const std::string& outputName) override;
+
+		core::bitmap::Bitmap* GetBitmap(void);
 	};
 }

@@ -13,35 +13,37 @@ import core.rendertarget;
 
 namespace mvt::renderer
 {
+	using namespace core;
 
 	export struct RenderContext
 	{
 		int TileSize{ 512 };
 
+		rendertarget::RenderTarget& renderTarget;
+
 		const mvt::style::Sprites& sprites;
 		const mvt::style::Glyphs& glyphs;
 
-		core::rendertarget::BitmapHandle spritesHandle{};
+		rendertarget::BitmapHandle spritesHandle{};
 
 		// Map font names to BitmapHandles.
-		//std::unordered_map<std::string, core::rendertarget::BitmapHandle> glyphHandles;
 
-		using StartMap = std::unordered_map<int /*start*/, core::rendertarget::BitmapHandle>;
+		using StartMap = std::unordered_map<int /*start*/, rendertarget::BitmapHandle>;
 		using SizeMap = std::unordered_map<float /*size*/, StartMap>;
 		using FontMap = std::unordered_map<std::string /*font*/, SizeMap>;
 
 		// Map of font BitmapHandles.
 		FontMap glyphHandles;
 
-		core::rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, int start, float size) const
+		rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, int start, float size) const
 		{
 			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(size) && glyphHandles.at(font).at(size).contains(start))
 				return glyphHandles.at(font).at(size).at(start);
 
-			return core::rendertarget::InvalidHandle;
+			return rendertarget::InvalidHandle;
 		}
 
-		RenderContext(const mvt::style::Style& style) : sprites(style.mSprites), glyphs(style.mGlyphs) {}
+		RenderContext(rendertarget::RenderTarget& renderTarget,const mvt::style::Style& style) : renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs) {}
 	};
 
 }

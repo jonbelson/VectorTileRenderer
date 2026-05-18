@@ -198,6 +198,8 @@
     <ClInclude Include="CFromMBTilesDlg.h" />
     <ClInclude Include="CFromPbfDlg.h" />
     <ClInclude Include="CFromServerDlg.h" />
+    <ClInclude Include="CMapViewerDlg.h" />
+    <ClInclude Include="CMapViewerWnd.h" />
     <ClInclude Include="CRenderAreaDlg.h" />
     <ClInclude Include="formats\mvt\glyphs.pb.h" />
     <ClInclude Include="formats\mvt\vector_tile.pb.h" />
@@ -212,6 +214,8 @@
     <ClCompile Include="CFromMBTilesDlg.cpp" />
     <ClCompile Include="CFromPbfDlg.cpp" />
     <ClCompile Include="CFromServerDlg.cpp" />
+    <ClCompile Include="CMapViewerDlg.cpp" />
+    <ClCompile Include="CMapViewerWnd.cpp" />
     <ClCompile Include="core\Bitmap.cpp" />
     <ClCompile Include="core\Bitmap.ixx" />
     <ClCompile Include="Core\Color.ixx" />

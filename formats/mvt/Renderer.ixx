@@ -33,7 +33,7 @@ namespace mvt::renderer
 		int mTileSize { DefaultTileSize };
 //		int mTileSize { 1024 };
 
-		float mDpiScale { 1.0f };
+		///float mDpiScale { 1.0f };
 
 		struct WorldContext
 		{
@@ -42,7 +42,7 @@ namespace mvt::renderer
 			int tileSize { DefaultTileSize };
 		};
 
-		rendertarget::RenderTarget* mRenderTarget = nullptr;
+		//rendertarget::RenderTarget* mRenderTarget = nullptr;
 		tilecache::TileCache mTileCache;
 		style::Style* mStyle = nullptr;
 
@@ -52,8 +52,8 @@ namespace mvt::renderer
 		geometry::MultiPoint TileToWorld(const geometry::MultiPoint& multiPoint, const WorldContext& wc) const;
 		geometry::PointArray TileToWorld(const geometry::PointArray& pointArray, const WorldContext& wc) const;
 
-		bool RenderBackground(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
-		bool RenderCircle(const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
+		bool RenderBackground(RenderContext& context, const Renderer::WorldContext& wc, const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
+		bool RenderCircle(RenderContext& context, const Renderer::WorldContext& wc, const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 		bool RenderFill(RenderContext& context, const WorldContext& wc, const layer::Layer* layer , const feature::Feature& feature, float zoom) const;
 		bool RenderLine(RenderContext& context, const WorldContext& wc, const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 
@@ -65,17 +65,17 @@ namespace mvt::renderer
 		bool RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y);
 
 	public:
-		Renderer(core::rendertarget::RenderTarget* renderTarget, style::Style* style, int tileSize = 512)
-			: mRenderTarget(renderTarget), mStyle(style), mTileSize(tileSize) {}
+		Renderer(/*core::rendertarget::RenderTarget* renderTarget,*/ style::Style* style, int tileSize = 512)
+			: /*mRenderTarget(renderTarget),*/ mStyle(style), mTileSize(tileSize) {}
 
 		void SetTileSize(int size) { mTileSize = size; }
-		void SetDpiScale(float dpiScale) { mDpiScale = dpiScale; }
+		///void SetDpiScale(float dpiScale) { mDpiScale = dpiScale; }
 
-		bool RenderTile(const tile::TileSpec& tileSpec);
-		bool RenderTile(int x, int y, float zoom);
-		bool RenderTile(const tile::Tile* tile, float zoom);
+		bool RenderTile(rendertarget::RenderTarget& renderTarget, const tile::TileSpec& tileSpec);
+		bool RenderTile(rendertarget::RenderTarget& renderTarget, int x, int y, float zoom);
+		bool RenderTile(rendertarget::RenderTarget& renderTarget, const tile::Tile* tile, float zoom);
 
-		bool RenderTiles(const tile::TileSpecArray& tileArray, float zoom);
+		bool RenderTiles(rendertarget::RenderTarget& renderTarget, const tile::TileSpecArray& tileArray, float zoom);
 	};
 
 };

@@ -125,9 +125,8 @@ public:
 		renderTarget->PushScale(dpiScale);
 
 
-		mvt::renderer::Renderer tileRenderer(renderTarget, mStyle.get());
+		mvt::renderer::Renderer tileRenderer(mStyle.get());
 		tileRenderer.SetTileSize(TileSize);
-		tileRenderer.SetDpiScale(dpiScale);
 
 		std::vector<mvt::tile::TileSpec> tiles;
 
@@ -143,7 +142,7 @@ public:
 			}
 		}
 
-		tileRenderer.RenderTiles(tiles, static_cast<float>(m_iZoom));
+		tileRenderer.RenderTiles(*renderTarget, tiles, static_cast<float>(m_iZoom));
 
 		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };
 		renderTarget->Save((LPCSTR)utf8Filename);

@@ -148,12 +148,11 @@ public:
 			mvt::tilecache::TileCache tileCache(tileFetcher.value());
 */
 
-			mvt::renderer::Renderer tileRenderer(renderTarget, mStyle.get());
+			mvt::renderer::Renderer tileRenderer(mStyle.get());
 			tileRenderer.SetTileSize(TileSize);
-			tileRenderer.SetDpiScale(dpiScale);
 
 			mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
-			tileRenderer.RenderTile(tileSpec);
+			tileRenderer.RenderTile(*renderTarget, tileSpec);
 //		}
 
 		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };

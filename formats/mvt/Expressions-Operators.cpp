@@ -2893,6 +2893,8 @@ Value OperatorFunction::Evaluate(const mvt::feature::Feature& feature, float zoo
 							result = mStops[i].output;
 							break;
 						}
+
+						if (i == 0) break;
 					}
 					if (result.IsNull())
 					{

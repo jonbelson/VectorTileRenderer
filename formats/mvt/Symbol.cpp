@@ -488,10 +488,11 @@ namespace mvt::symbol
 	// Draw text along a PointArray.
 	// Caller should check for symbol overlap (if required).
 	// pointArray should be long enough to contain the text.
-	void Symbol::RenderTextAlongLine(RenderTarget* renderTarget, renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32, const PointArray& pointArray)
+	void Symbol::RenderTextAlongLine(renderer::RenderContext& context, const std::string& font, const SymbolAttribs& attribs, const Utf32Text& utf32, const PointArray& pointArray)
 	{
-		if (!renderTarget) return;
 		if (pointArray.empty()) return;
+
+		auto& renderTarget = context.renderTarget;
 
 		Color textColor = attribs.textColor;
 		textColor.Alpha = attribs.textOpacity;
@@ -512,7 +513,7 @@ namespace mvt::symbol
 		//BitmapHandle haloHandle{};
 
 		{
-			auto glyphs = context.glyphs;
+			auto& glyphs = context.glyphs;
 
 			bool isUpsideDown = IsUpsideDown(glyphs, context, font, attribs, pointArray, utf32);
 
@@ -573,29 +574,29 @@ namespace mvt::symbol
 
 						if constexpr (!debug::visual::NoGlyphRotation)
 						{
-							renderTarget->PushTranslation(rotCentre.x, rotCentre.y);
-							renderTarget->PushRotation(-angleDeg);
-							renderTarget->PushTranslation(-rotCentre.x, -rotCentre.y);
+							renderTarget.PushTranslation(rotCentre.x, rotCentre.y);
+							renderTarget.PushRotation(-angleDeg);
+							renderTarget.PushTranslation(-rotCentre.x, -rotCentre.y);
 						}
 
 						if constexpr (debug::visual::DrawGlyphOutline)
 						{
-							DrawRect(renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
+							DrawRect(&renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
 						}
 
-						BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 0);
-						BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 2*attribs.textHaloWidth);
+						BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
+						BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
 
-						renderTarget->SetActiveBitmap(haloHandle);
-						renderTarget->DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-						renderTarget->SetActiveBitmap(glyphHandle);
-						renderTarget->DrawSymbolWithRGB(srcRect, destRect, textColor);
+						renderTarget.SetActiveBitmap(haloHandle);
+						renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+						renderTarget.SetActiveBitmap(glyphHandle);
+						renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
 
 						if constexpr (!debug::visual::NoGlyphRotation)
 						{
-							renderTarget->PopTransform();
-							renderTarget->PopTransform();
-							renderTarget->PopTransform();
+							renderTarget.PopTransform();
+							renderTarget.PopTransform();
+							renderTarget.PopTransform();
 						}
 
 						offset += (glyphSpec.advance + padding)*textScale;
@@ -605,7 +606,7 @@ namespace mvt::symbol
 				if constexpr (mvt::debug::visual::DrawLineLabelPath)
 				{
 					//auto line = lineWalker.GetPointList(start, start + wordLength);
-					DrawLine(renderTarget, pointArray);
+					DrawLine(&renderTarget, pointArray);
 				}
 
 			}
@@ -613,15 +614,15 @@ namespace mvt::symbol
 	}
 
 
-	void Symbol::RenderPoint(RenderTarget* renderTarget, renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
+	void Symbol::RenderPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 	{
-		if (!renderTarget) return;
-
 		//if (attribs.textField.find("Bracknell &") != std::string::npos)
 		if (attribs.textField.find("Islamic") != std::string::npos)
 		{
 			int i{};
 		}
+
+		auto& renderTarget = context.renderTarget;
 
 		bool hasIcon = !attribs.iconImage.empty();
 		bool hasText = !attribs.textField.empty();
@@ -732,24 +733,24 @@ namespace mvt::symbol
 				if (attribs.iconRotationAlignment == IconRotationAlignment::Map)
 				{
 					// Align x axis with line.
-					rap.emplace(renderTarget, point, iconRotationDeg /*attribs.iconRotate*/);
+					rap.emplace(&renderTarget, point, iconRotationDeg /*attribs.iconRotate*/);
 				}
 
 				const auto& spec = spriteSpec.value();
-				renderTarget->SetActiveBitmap(context.spritesHandle);
-				renderTarget->DrawBitmap(spec->rect, iconBbox);
+				renderTarget.SetActiveBitmap(context.spritesHandle);
+				renderTarget.DrawBitmap(spec->rect, iconBbox);
 
 				placedSymbols.Place(iconBbox);
 
 				if constexpr (debug::visual::DrawPointLabelOutline)
 				{
-					DrawRect(renderTarget, iconBbox, Color("hotpink"));
+					DrawRect(&renderTarget, iconBbox, Color("hotpink"));
 				}
 			}
 
 			if (willDrawText)
 			{
-				RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
+				RenderTextAtPoint(context, formattedText, attribs, point);
 
 				placedSymbols.Place(textBbox);
 			}
@@ -757,8 +758,10 @@ namespace mvt::symbol
 	}
 
 
-	void Symbol::RenderAlongPointArray(RenderTarget* renderTarget, renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols, float& startPos)
+	void Symbol::RenderAlongPointArray(renderer::RenderContext& context, SymbolAttribs& attribs, const PointArray& pointArray, PlacedSymbols& placedSymbols, float& startPos)
 	{
+		RenderTarget& renderTarget = context.renderTarget;
+
 		bool iconFollowsLine = attribs.iconRotationAlignment == IconRotationAlignment::Map;
 		bool textFollowsLine = attribs.textRotationAlignment == TextRotationAlignment::Map;
 
@@ -939,12 +942,12 @@ namespace mvt::symbol
 					if (attribs.iconRotationAlignment == IconRotationAlignment::Map)
 					{
 						// Align x axis with line.
-						rap.emplace(renderTarget, point, iconRotationDeg /*attribs.iconRotate*/);
+						rap.emplace(&renderTarget, point, iconRotationDeg /*attribs.iconRotate*/);
 					}
 
 					const auto& spec = spriteSpec.value();
-					renderTarget->SetActiveBitmap(context.spritesHandle);
-					renderTarget->DrawBitmap(spec->rect, iconBbox);
+					renderTarget.SetActiveBitmap(context.spritesHandle);
+					renderTarget.DrawBitmap(spec->rect, iconBbox);
 
 					placedSymbols.Place(iconBbox);
 				}
@@ -953,13 +956,13 @@ namespace mvt::symbol
 				{
 					if (textFollowsLine)
 					{
-						RenderTextAlongLine(renderTarget, context, textFont, attribs, utf32, textLine);
+						RenderTextAlongLine(context, textFont, attribs, utf32, textLine);
 
 						placedSymbols.Place(textLine, style::GlyphSize*textScale);
 					}
 					else
 					{
-						RenderTextAtPoint(renderTarget, context, formattedText, attribs, point);
+						RenderTextAtPoint(context, formattedText, attribs, point);
 
 						placedSymbols.Place(textBbox);
 					}
@@ -977,9 +980,9 @@ namespace mvt::symbol
 	// Draw formatted text at a specified position.
 	// Note there is no checking for overlapping, this should be done by the caller if required.
 	// point	Position to draw text.
-	void Symbol::RenderTextAtPoint(RenderTarget* renderTarget, renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point)
+	void Symbol::RenderTextAtPoint(renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point)
 	{
-		if (!renderTarget) return;
+		auto& renderTarget = context.renderTarget;
 
 		Color textColor = attribs.textColor;
 		textColor.Alpha *= attribs.textOpacity;
@@ -1041,13 +1044,13 @@ namespace mvt::symbol
 					Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
 					// Get the appropriate BitmapHandles.
-					BitmapHandle glyphHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 0);
-					BitmapHandle haloHandle = GetGlyphBitmapHandle(renderTarget, context, font, blockStart, 2*attribs.textHaloWidth);
+					BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
+					BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
 
-					renderTarget->SetActiveBitmap(haloHandle);
-					renderTarget->DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-					renderTarget->SetActiveBitmap(glyphHandle);
-					renderTarget->DrawSymbolWithRGB(srcRect, destRect, textColor);
+					renderTarget.SetActiveBitmap(haloHandle);
+					renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+					renderTarget.SetActiveBitmap(glyphHandle);
+					renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
 
 					cursor.x += glyphSpec.advance*textScale + padding;
 				}
@@ -1056,7 +1059,7 @@ namespace mvt::symbol
 
 		if constexpr (debug::visual::DrawPointLabelOrigin)
 		{
-			DrawDot(renderTarget, point, Color("#00ff00"));
+			DrawDot(&renderTarget, point, Color("#00ff00"));
 		}
 		if constexpr (debug::visual::DrawPointLabelOutline)
 		{
@@ -1074,7 +1077,7 @@ namespace mvt::symbol
 			Rect bbox(cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 			bbox.Inflate(attribs.textPadding, attribs.textPadding);
 
-			DrawRect(renderTarget, bbox, Color("hotpink"));
+			DrawRect(&renderTarget, bbox, Color("hotpink"));
 		}
 	}
 

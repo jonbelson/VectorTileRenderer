@@ -87,12 +87,37 @@ namespace core::logger
 
 
 	template<typename... Args>
+	void _Write(Level level, std::string_view sv)
+	{
+		if (level >= Logger::Get().GetLevel())
+		{
+			std::string message;
+
+			switch (level)
+			{
+				case Level::Debug:		message = "DEBUG: ";	break;
+				case Level::Info:		message = "INFO: ";		break;
+				case Level::Warning:	message = "WARNING: ";	break;
+				case Level::Error:		message = "ERROR: ";	break;
+			}
+
+			message += sv;
+
+			Logger::Get().Write(message);
+		}
+	}
+
+
+	template<typename... Args>
 	void _Write(Level level, std::string_view format, Args&&... args)
 	{
 		if (level >= Logger::Get().GetLevel())
 		{
 			std::string s = std::vformat(format, std::make_format_args(std::forward<Args>(args)...));
+			
+			_Write(level, s);
 
+			/*
 			switch (level)
 			{
 				case Level::Debug:		s = "DEBUG: " + s;	 break;
@@ -102,6 +127,7 @@ namespace core::logger
 			}
 
 			Logger::Get().Write(s);
+			*/
 		}
 	}
 
@@ -129,6 +155,10 @@ namespace core::logger
 		_Write(Level::Error, format, std::forward<Args>(args)...);
 	}
 
+	export void Error(const std::string_view sv)
+	{
+		_Write(Level::Error, sv);
+	}
 
 
 }

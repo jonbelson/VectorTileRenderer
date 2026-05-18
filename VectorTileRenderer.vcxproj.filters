@@ -72,6 +72,12 @@
     <ClInclude Include="CRenderAreaDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CMapViewerDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CMapViewerWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorTileRenderer.cpp">
@@ -235,6 +241,12 @@
     </ClCompile>
     <ClCompile Include="unicode\Convert.ixx">
       <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="CMapViewerDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CMapViewerWnd.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -122,7 +122,7 @@ namespace core::rendertarget
 		ComPtr<ID2D1Device> mD2dDevice;
 		ComPtr<ID2D1Bitmap1> mTargetBitmap;
 
-		ComPtr<IWICBitmap> mWicBitmap;
+		//ComPtr<IWICBitmap> mWicBitmap;
 
 		ComPtr<IWICImagingFactory> mImagingFactory;
 		ComPtr<ID2D1Factory1> mFactory;
@@ -236,65 +236,6 @@ namespace core::rendertarget
 				}
 			}
 
-			return false;
-
-
-#if 0
-			hr = D2D1CreateDevice(dxgiDevice.Get(), nullptr, &mD2dDevice);
-
-			// Create device context
-			hr = mD2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, mD2dDeviceContext.GetAddressOf());
-
-
-
-			hr = mD2dDeviceContext->CreateBitmapFromWicBitmap(mWicBitmap.Get(), bitmapProps, mTargetBitmap.GetAddressOf());
-
-			hr = mD2dDeviceContext->SetTarget(mTargetBitmap.Get());
-
-
-
-			// Create D2D factory.
-			hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, /*fo,*/ mFactory.GetAddressOf());
-			if (SUCCEEDED(hr))
-			{
-
-				mFactory->CreateDevice(dxgiDevice.Get(), mD2dDevice.GetAddressOf());
-
-				mD2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, mRenderTarget.GetAddressOf());
-
-			}
-#endif
-
-#if 0
-			//ComPtr<IWICImagingFactory> wicFactory;
-			HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), reinterpret_cast<void**>(mImagingFactory.GetAddressOf()));
-			if (SUCCEEDED(hr))
-			{
-				//ComPtr<IWICBitmap> wicBitmap;
-				hr = mImagingFactory->CreateBitmap(mWidth, mHeight, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnDemand, &mTargetBitmap);
-
-				if (SUCCEEDED(hr))
-				{
-					// Create D2D factory.
-					hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, /*fo,*/ mFactory.GetAddressOf());
-					if (SUCCEEDED(hr))
-					{
-						hr = mFactory->CreateWicBitmapRenderTarget(mTargetBitmap.Get(), D2D1::RenderTargetProperties(), &mRenderTarget);
-
-						if (SUCCEEDED(hr))
-						{
-							mRenderTarget->CreateSolidColorBrush(D2D1::ColorF(ColorF::Yellow), mSolidBrush.GetAddressOf());
-
-							BeginDraw();
-
-							//mRenderTarget->DrawLine(D2D1::Point2F(500, 500), Point2F(600, 800), mSolidBrush.Get(), 10.0f);
-
-							return true;
-						}
-					}
-				}
-			}
-#endif
 			return false;
 		}
 
@@ -460,7 +401,9 @@ namespace core::rendertarget
 
 						if (SUCCEEDED(hr))
 						{
-							mWicBitmap = nullptr;
+							ComPtr<IWICBitmap> mWicBitmap;
+
+							//mWicBitmap = nullptr;
 							hr = mImagingFactory->CreateBitmap(mWidth, mHeight, GUID_WICPixelFormat32bppBGRA, WICBitmapCacheOnLoad, &mWicBitmap);
 
 							if (SUCCEEDED(hr))
@@ -1080,12 +1023,121 @@ namespace core::rendertarget
 			}
 		}
 
+		core::bitmap::Bitmap* GetBitmap(void)
+		{
+			core::bitmap::Bitmap* bitmap {};
+
+			if (mTargetBitmap)
+			{
+				HRESULT hr {};
+
+				EndDraw();
+
+				D2D1_BITMAP_PROPERTIES1 stagingProps = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_CPU_READ|D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+																			   D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
+
+				ComPtr<ID2D1Bitmap1> stagingBitmap;
+
+				hr = mRenderTarget->CreateBitmap(D2D1::SizeU(mWidth, mHeight), nullptr, 0, stagingProps, &stagingBitmap);
+
+				if (SUCCEEDED(hr))
+				{
+					hr = stagingBitmap->CopyFromBitmap(nullptr, mTargetBitmap.Get(), nullptr);
+
+					if (SUCCEEDED(hr))
+					{
+						D2D1_MAPPED_RECT mappedRect{};
+						hr = stagingBitmap->Map(D2D1_MAP_OPTIONS_READ, &mappedRect);
+
+						if (SUCCEEDED(hr))
+						{
+							bitmap = new core::bitmap::Bitmap(mWidth, mHeight, core::bitmap::Format::RGBA);
+							auto& bitmapData = bitmap->GetBitmapData();
+
+							BYTE* data = mappedRect.bits;
+
+							for (INT y = 0; y<mHeight; y++)
+							{
+								for (INT x = 0; x<mWidth; x++)
+								{
+									BYTE* pixel = data + y* mappedRect.pitch + x*4;
+									BYTE b = pixel[0];
+									BYTE g = pixel[1];
+									BYTE r = pixel[2];
+									BYTE a = pixel[3];
+
+									// Do something with the pixel data...
+
+									if (a != 0)
+									{
+										r = static_cast<BYTE>(r*255.0f/a);
+										g = static_cast<BYTE>(g*255.0f/a);
+										b = static_cast<BYTE>(b*255.0f/a);
+									}
+
+//									uint32_t argb = (r << 24) | (g << 16) | (b << 8) | a;
+									uint32_t argb = (a << 24) | (b << 16) | (g << 8) | r;
+
+									bitmapData[y* mWidth + x] = argb;
+								}
+							}
+
+							hr = stagingBitmap->Unmap();
+
+
+
+							BeginDraw();
+
+						}
+					}
+				}
+
+
+/*
+				ComPtr<IWICImagingFactory> wicFactory;
+				//wicFactory->CreateInstance(CLSID_WICImagingFactory, &wicFactory);
+				hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), reinterpret_cast<void**>(mImagingFactory.GetAddressOf()));
+
+				auto size = mTargetBitmap->GetPixelSize();
+
+				ComPtr<IWICBitmap> wicBitmap;
+				hr = wicFactory->CreateBitmap(size.width, size.height, GUID_WICPixelFormat32bppBGRA, WICBitmapCacheOnLoad, &wicBitmap);
+
+				if (SUCCEEDED(hr))
+				{
+					ComPtr<IWICBitmapLock> lock;
+					wicBitmap->Lock(nullptr, WICBitmapLockRead, &lock);
+
+					UINT BufferSize {};
+					BYTE* pWicData {};
+					UINT stride {};
+
+					lock->GetStride(&stride);
+					lock->GetDataPointer(&BufferSize, &pWicData);
+
+					UINT d2dStride = size.width*4;
+
+					mTargetBitmap->CopyPixels(nullptr, d2dStride, BufferSize, pWicData);
+
+					std::vector<BYTE> d2dData(BufferSize);
+
+					core::bitmap::Bitmap* bitmap = new core::bitmap::Bitmap(size.width, size.height);
+
+				}
+*/
+
+			}
+
+			return bitmap;
+
+		}
+
 	};
 
 
 
 	// Implementation of D2D RenderTarget.
-	// A thin wrapper for D2DImpl which performas most of the work.
+	// A thin wrapper for D2DImpl which performs most of the work.
 	D2DRenderTarget::D2DRenderTarget(int width, int height) : mImpl(std::make_unique<D2DImpl>(width, height))
 	{
 		mWidth = width;
@@ -1250,13 +1302,6 @@ namespace core::rendertarget
 		{
 			mImpl->DrawSymbolWithRGB(src, dest, colour);
 		}
-
-		//DrawCircle(multiPoint);
-
-		//for (const auto& point : multiPoint->points)
-		//{
-		//	mImpl->DrawCircle(point);
-		//}
 	}
 
 	void D2DRenderTarget::PushScale(float scale)
@@ -1334,6 +1379,18 @@ namespace core::rendertarget
 
 			int i{};
 		}
+	}
+
+	core::bitmap::Bitmap* D2DRenderTarget::GetBitmap(void)
+	{
+		core::bitmap::Bitmap* bitmap = nullptr;
+
+		if (mImpl)
+		{
+			bitmap = mImpl->GetBitmap();
+		}
+
+		return bitmap;
 	}
 
 

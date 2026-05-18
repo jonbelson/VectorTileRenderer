@@ -60,8 +60,13 @@ namespace mvt::tile
 //	export std::pair<double, double> TileToLatLong(int zoom, int x, int y);
 	export geo::latlong::LatLong TileToLatLong(int zoom, int x, int y);
 
+	export geo::latlong::LatLong TileToLatLong(int zoom, float x, float y);
+
 	export std::pair<int, int> LatLongToTile(int zoom, double latitude, double longitude);
 	export std::pair<int, int> LatLongToTile(int zoom, const geo::latlong::LatLong& latLong);
+
+	export std::pair<float, float> LatLongToTileF(int zoom, double latitude, double longitude);
+	export std::pair<float, float> LatLongToTileF(int zoom, const geo::latlong::LatLong& latLong);
 
 	export using TileSpecArray = std::vector<mvt::tile::TileSpec>;
 

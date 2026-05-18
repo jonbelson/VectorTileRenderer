@@ -113,16 +113,18 @@ namespace mvt::renderer
 		return transformed;
 	}
 
-	bool Renderer::RenderBackground(const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
+	bool Renderer::RenderBackground(RenderContext& context, const Renderer::WorldContext& wc, const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
+
+		auto& renderTarget = context.renderTarget;
 
 		std::string pattern = layer->mBackgroundPattern.GetValue(feature, zoom);
 
 		if (!pattern.empty())
 		{
 
-			//mRenderTarget.SetFillPattern(pattern);
+			//renderTarget.SetFillPattern(pattern);
 		}
 		else
 		{
@@ -132,17 +134,19 @@ namespace mvt::renderer
 
 			c.Alpha = opacity;
 
-			mRenderTarget->SetFillColor(c);
+			renderTarget.SetFillColor(c);
 		}
 
-		mRenderTarget->FillBackground();
+		renderTarget.FillBackground();
 
 		return true;
 	}
 
-	bool Renderer::RenderCircle(const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
+	bool Renderer::RenderCircle(RenderContext& context, const Renderer::WorldContext& wc, const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
+
+		auto& renderTarget = context.renderTarget;
 
 		Visibility visibility = VisibilityToEnum(layer->mCircleVisibility.GetValue(feature, zoom));
 		bool visible = visibility == Visibility::Visible;
@@ -159,12 +163,12 @@ namespace mvt::renderer
 
 			float lineWidth = layer->mCircleStrokeWidth.GetValue(feature, zoom);
 
-			mRenderTarget->SetFillColor(fillColor);
-			mRenderTarget->SetLineColor(lineColor);
-			mRenderTarget->SetLineWidth(lineWidth);
+			renderTarget.SetFillColor(fillColor);
+			renderTarget.SetLineColor(lineColor);
+			renderTarget.SetLineWidth(lineWidth);
 
-			mRenderTarget->FillCircle(&feature.mMultiPoint);
-			mRenderTarget->DrawCircle(&feature.mMultiPoint);
+			renderTarget.FillCircle(&feature.mMultiPoint);
+			renderTarget.DrawCircle(&feature.mMultiPoint);
 		}
 
 		return true;
@@ -173,6 +177,8 @@ namespace mvt::renderer
 	bool Renderer::RenderFill(RenderContext& context, const Renderer::WorldContext& wc, const mvt::layer::Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
+
+		auto& renderTarget = context.renderTarget;
 
 		Visibility visibility = VisibilityToEnum(layer->mFillVisibility.GetValue(feature, zoom));
 		bool visible = visibility == Visibility::Visible;
@@ -189,13 +195,13 @@ namespace mvt::renderer
 				{
 					const auto& spec = spriteSpec.value();
 
-					mRenderTarget->SetActiveBitmap(context.spritesHandle);
-					mRenderTarget->SetFillPattern(spec->rect);
+					renderTarget.SetActiveBitmap(context.spritesHandle);
+					renderTarget.SetFillPattern(spec->rect);
 					float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
-					mRenderTarget->SetFillOpacity(fillOpacity);
+					renderTarget.SetFillOpacity(fillOpacity);
 
 					auto transformed = TileToWorld(feature.mMultiPolygon, wc);
-					mRenderTarget->FillPolygon(&transformed);
+					renderTarget.FillPolygon(&transformed);
 				}
 					
 			}
@@ -204,20 +210,20 @@ namespace mvt::renderer
 				Color fillColor = layer->mFillColor.GetValue(feature, zoom);
 				float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
 				fillColor.Alpha *= fillOpacity;
-				mRenderTarget->SetFillOpacity(fillOpacity);
+				renderTarget.SetFillOpacity(fillOpacity);
 
 				Color outlineColor = layer->mFillOutlineColor.GetValue(feature, zoom);
 				if (!outlineColor.IsValid()) outlineColor = fillColor;
 
 				outlineColor.Alpha *= fillOpacity;
 
-				mRenderTarget->SetFillColor(fillColor);
-				mRenderTarget->SetLineColor(outlineColor);
-				mRenderTarget->SetLineWidth(1.0f);		// https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-color
+				renderTarget.SetFillColor(fillColor);
+				renderTarget.SetLineColor(outlineColor);
+				renderTarget.SetLineWidth(1.0f);		// https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-color
 
 				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
-				mRenderTarget->FillPolygon(&transformed);
-				mRenderTarget->DrawPolygon(&transformed);
+				renderTarget.FillPolygon(&transformed);
+				renderTarget.DrawPolygon(&transformed);
 			}
 		}
 
@@ -227,6 +233,8 @@ namespace mvt::renderer
 	bool Renderer::RenderLine(RenderContext& context, const WorldContext& wc, const Layer* layer, const mvt::feature::Feature& feature, float zoom) const
 	{
 		if (!layer) return false;
+
+		auto& renderTarget = context.renderTarget;
 
 		Visibility visibility = VisibilityToEnum(layer->mLineVisibility.GetValue(feature, zoom));
 		bool visible = visibility == Visibility::Visible;
@@ -262,31 +270,31 @@ namespace mvt::renderer
 				{
 					const auto& spec = spriteSpec.value();
 
-					mRenderTarget->SetActiveBitmap(context.spritesHandle);
-					mRenderTarget->SetDashArray(FloatArray{});
-					mRenderTarget->SetLinePattern(spec->rect);
-					mRenderTarget->SetLineOpacity(lineOpacity);
+					renderTarget.SetActiveBitmap(context.spritesHandle);
+					renderTarget.SetDashArray(FloatArray{});
+					renderTarget.SetLinePattern(spec->rect);
+					renderTarget.SetLineOpacity(lineOpacity);
 				}
 			}
 			else
 			{
-				mRenderTarget->SetDashArray(dashArray);
-				mRenderTarget->SetLineColor(lineColor);
+				renderTarget.SetDashArray(dashArray);
+				renderTarget.SetLineColor(lineColor);
 			}
 
-			mRenderTarget->SetLineCap(lineCap);
-			mRenderTarget->SetLineJoin(lineJoin);
-			mRenderTarget->SetLineWidth(lineWidth);
+			renderTarget.SetLineCap(lineCap);
+			renderTarget.SetLineJoin(lineJoin);
+			renderTarget.SetLineWidth(lineWidth);
 
 			if (feature.mGeometryType == core::geometry::GeometryType::LineString)
 			{
 				auto transformed = TileToWorld(feature.mLineString, wc);
-				mRenderTarget->DrawLine(&transformed);
+				renderTarget.DrawLine(&transformed);
 			}
 			else if (feature.mGeometryType == core::geometry::GeometryType::MultiPolygon)
 			{
 				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
-				mRenderTarget->DrawPolygon(&transformed);
+				renderTarget.DrawPolygon(&transformed);
 			}
 		}
 		
@@ -315,20 +323,20 @@ namespace mvt::renderer
 			switch (feature->mGeometryType)
 			{
 				case geometry::GeometryType::MultiPoint:
-					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPoint, wc), placedSymbols);
+					symbol.Render(context, attribs, TileToWorld(feature->mMultiPoint, wc), placedSymbols);
 					break;
 				case geometry::GeometryType::LineString:
-					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mLineString, wc), placedSymbols);
+					symbol.Render(context, attribs, TileToWorld(feature->mLineString, wc), placedSymbols);
 					break;
 				case geometry::GeometryType::MultiPolygon:
-					symbol.Render(mRenderTarget, context, attribs, TileToWorld(feature->mMultiPolygon, wc), placedSymbols);
+					symbol.Render(context, attribs, TileToWorld(feature->mMultiPolygon, wc), placedSymbols);
 					break;
 			}
 		}
 
 		if constexpr (mvt::debug::visual::DrawPlacedSymbols)
 		{
-			placedSymbols.DrawSymbolPositions(mRenderTarget);
+			placedSymbols.DrawSymbolPositions(&context.renderTarget);
 		}
 
 		return true;
@@ -338,6 +346,8 @@ namespace mvt::renderer
 	{
 		if (!tile) return false;
 		if (!mStyle) return false;
+
+		auto& renderTarget = context.renderTarget;
 
 		for (const auto& layer : mStyle->mLayers)
 		{
@@ -366,10 +376,10 @@ namespace mvt::renderer
 				switch (layer->mType)
 				{
 					case LayerType::Background:
-						RenderBackground(layer.get(), feature, zoom);
+						RenderBackground(context, wc, layer.get(), feature, zoom);
 						break;
 					case LayerType::Circle:
-						RenderCircle(layer.get(), feature, zoom);
+						RenderCircle(context, wc, layer.get(), feature, zoom);
 						break;
 					case LayerType::Fill:
 						if (feature.mGeometryType == geometry::GeometryType::MultiPolygon)
@@ -406,6 +416,8 @@ namespace mvt::renderer
 			return false;
 		}
 
+		auto& renderTarget = context.renderTarget;
+
 		auto result = HttpTileFetcher::Create(source.mTiles.front());
 
 		if (result)
@@ -421,19 +433,19 @@ namespace mvt::renderer
 				{
 					auto bitmap = std::make_shared<core::bitmap::Bitmap>(std::move(result.value()));
 
-					auto bitmapHandle = mRenderTarget->RegisterBitmap(bitmap);
+					auto bitmapHandle = renderTarget.RegisterBitmap(bitmap);
 					if (bitmapHandle != rendertarget::InvalidHandle)
 					{
-						mRenderTarget->SetActiveBitmap(bitmapHandle);
+						renderTarget.SetActiveBitmap(bitmapHandle);
 
 						float destX = static_cast<float>(wc.x*wc.tileSize);
 						float destY = static_cast<float>(wc.y*wc.tileSize);
 
 						geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
 						geometry::Rect dest(destX, destY, static_cast<float>(mTileSize), static_cast<float>(mTileSize));
-						mRenderTarget->DrawBitmap(src, dest);
+						renderTarget.DrawBitmap(src, dest);
 
-						mRenderTarget->UnregisterBitmap(bitmapHandle);
+						renderTarget.UnregisterBitmap(bitmapHandle);
 					}
 
 					return true;
@@ -475,16 +487,16 @@ namespace mvt::renderer
 		return {};//tileFetcher;
 	}
 
-	bool Renderer::RenderTile(const tile::TileSpec& tileSpec)
+	bool Renderer::RenderTile(rendertarget::RenderTarget& renderTarget, const tile::TileSpec& tileSpec)
 	{
-		return RenderTile(tileSpec.x, tileSpec.y, static_cast<float>(tileSpec.zoom));
+		return RenderTile(renderTarget, tileSpec.x, tileSpec.y, static_cast<float>(tileSpec.zoom));
 	}
 
-	bool Renderer::RenderTile(int x, int y, float zoom)
+	bool Renderer::RenderTile(rendertarget::RenderTarget& renderTarget, int x, int y, float zoom)
 	{
 		if (!mStyle) return false;
 
-		RenderContext renderContext(*mStyle);
+		RenderContext renderContext(renderTarget, *mStyle);
 		WorldContext wc;
 
 		for (const auto& [ name, source ] : mStyle->mSources)
@@ -504,12 +516,12 @@ namespace mvt::renderer
 					const auto tile = mTileCache.GetTile(x, y, static_cast<int>(zoom));
 					if (tile)
 					{
-						rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+						rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
 						renderContext.spritesHandle = spriteHandle;
 
 						for (const auto& background : mStyle->mBackground)
 						{
-							RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+							RenderBackground(renderContext, wc, background.get(), mvt::feature::Feature{}, zoom);
 						}
 
 						FeatureSymbols symbols;
@@ -533,15 +545,15 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderTile(const mvt::tile::Tile* tile, float zoom)
+	bool Renderer::RenderTile(rendertarget::RenderTarget& renderTarget, const mvt::tile::Tile* tile, float zoom)
 	{
 		if (!mStyle) return false;
 		if (!tile) return false;
 
-		RenderContext renderContext(*mStyle);
+		RenderContext renderContext(renderTarget, *mStyle);
 		WorldContext wc;
 
-		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+		rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
 		renderContext.spritesHandle = spriteHandle;
 
 //		mTileSize = 1024;
@@ -549,7 +561,7 @@ namespace mvt::renderer
 
 		for (const auto& background : mStyle->mBackground)
 		{
-			RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+			RenderBackground(renderContext, wc, background.get(), mvt::feature::Feature{}, zoom);
 		}
 
 		FeatureSymbols symbols;
@@ -566,18 +578,20 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderTiles(const tile::TileSpecArray& tileSpecArray, float zoom)
+	bool Renderer::RenderTiles(rendertarget::RenderTarget& renderTarget, const tile::TileSpecArray& tileSpecArray, float zoom)
 	{
 		if (!mStyle) return false;
 
-		RenderContext renderContext(*mStyle);
+		RenderContext renderContext(renderTarget, *mStyle);
 
-		rendertarget::BitmapHandle spriteHandle = mRenderTarget->RegisterBitmap(mStyle->mSprites.GetBitmap());
+		rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
 		renderContext.spritesHandle = spriteHandle;
 
 		for (const auto& background : mStyle->mBackground)
 		{
-			RenderBackground(background.get(), mvt::feature::Feature{}, zoom);
+			WorldContext wc;
+
+			RenderBackground(renderContext, wc, background.get(), mvt::feature::Feature{}, zoom);
 		}
 
 		//FeatureSymbols symbols;
@@ -607,7 +621,7 @@ namespace mvt::renderer
 
 			WorldContext wc { .x = offx, .y = offy };
 
-			mRenderTarget->SetClipRect(geometry::Rect(static_cast<float>(offx*mTileSize), static_cast<float>(offy*mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
+			renderTarget.SetClipRect(geometry::Rect(static_cast<float>(offx*mTileSize), static_cast<float>(offy*mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
 
 			for (const auto& [ name, source ] : mStyle->mSources)
 			{
@@ -632,7 +646,7 @@ namespace mvt::renderer
 				}
 			}
 
-			mRenderTarget->ClearClipRect();
+			renderTarget.ClearClipRect();
 		}
 
 		///////std::reverse(symbols.begin(), symbols.end());
@@ -662,7 +676,7 @@ namespace mvt::renderer
 
 		if constexpr (mvt::debug::visual::DrawPlacedSymbols)
 		{
-			placedSymbols.DrawSymbolPositions(mRenderTarget);
+			placedSymbols.DrawSymbolPositions(&renderTarget);
 		}
 
 		//mRenderTarget->SetBitmap(mStyle->mSprites.GetBitmap());

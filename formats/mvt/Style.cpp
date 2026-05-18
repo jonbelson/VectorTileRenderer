@@ -286,7 +286,8 @@ namespace mvt::style
 
 			if (parsedJson.size() == 1 && parsedJson.contains("error"))
 			{
-				core::logger::Error(parsedJson.dump() + "\n");
+				std::string msg = parsedJson.dump() + "\n";
+				core::logger::Error(msg);
 
 				return nullptr;
 			}

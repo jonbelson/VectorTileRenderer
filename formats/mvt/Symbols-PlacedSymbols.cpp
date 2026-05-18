@@ -29,6 +29,7 @@ namespace mvt::symbol
 		renderTarget->SetLineColor(c);
 		renderTarget->SetDashArray({});
 		renderTarget->SetLineColor(c);
+		renderTarget->SetLineWidth(2.0f);
 		renderTarget->DrawLine(&lineString);
 	}
 
