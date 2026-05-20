@@ -121,7 +121,7 @@ export namespace mvt::symbol
 						}
 						else
 						{
-							core::logger::Write(std::format("Could not substitute '{{}}' \n", key.c_str()));
+							core::logger::Debug(std::format("Could not substitute '{{}}' \n", key.c_str()));
 							value = "";
 							break;
 						}

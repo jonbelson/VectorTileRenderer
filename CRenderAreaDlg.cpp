@@ -142,7 +142,9 @@ public:
 			}
 		}
 
-		tileRenderer.RenderTiles(*renderTarget, tiles, static_cast<float>(m_iZoom));
+		mvt::renderer::RenderContext context(*renderTarget, *mStyle.get());
+
+		tileRenderer.RenderTiles(context, tiles, static_cast<float>(m_iZoom));
 
 		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };
 		renderTarget->Save((LPCSTR)utf8Filename);

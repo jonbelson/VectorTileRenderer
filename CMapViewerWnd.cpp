@@ -14,6 +14,7 @@ import formats.mvt.style;
 import formats.mvt.tile;
 import formats.mvt.tilecache;
 import formats.mvt.tilefetcher;
+import formats.mvt.rendercontext;
 import formats.mvt.renderer;
 import io.resource;
 
@@ -23,29 +24,27 @@ class CMapViewerWndViewModel
 	constexpr static double InitialLatitude { 51.51525477169754 };
 	constexpr static double InitialLongitude { -0.14226616509484685 };
 
+	constexpr static int MinZoom { 0 };
+	constexpr static int MaxZoom { 22 };
+
 	CString m_sServerAddress;
 
 	int m_iViewWidth {};
 	int m_iViewHeight {};
 
-	//uint64_t m_iX {};
-	//uint64_t m_iY {};
 	int m_iZoom { 14 };
 
 	float m_fDpiScale { 1.0f };
 	int m_iTileSize { 512 };	// TileSize adjusted for dpi.
-
-	// Top-left view position in pixels from slippy origin.
-	//uint64_t m_iVisibleTLX {};
-	//uint64_t m_iVisibleTLY {};
 
 	// Centre of view position in pixels from slippy origin.
 	uint64_t m_iVisibleCentreX {};
 	uint64_t m_iVisibleCentreY {};
 
 	std::shared_ptr<mvt::style::Style> m_pStyle;
-	std::unique_ptr<mvt::renderer::Renderer> m_pRenderer;
 	std::unique_ptr<core::rendertarget::D2DRenderTarget> m_pRenderTarget;
+	std::unique_ptr<mvt::renderer::RenderContext> m_pRenderContext;
+	std::unique_ptr<mvt::renderer::Renderer> m_pRenderer;
 
 	CComPtr<IWICImagingFactory> mWicFactory;
 
@@ -101,17 +100,10 @@ public:
 //		hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), reinterpret_cast<void**>(mImagingFactory.GetAddressOf()));
 		hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&mWicFactory));
 
-		//auto [x, y] = mvt::tile::LatLongToTile(m_iZoom, InitialLatitude, InitialLongitude);
 		auto [x, y] = mvt::tile::LatLongToTileF(m_iZoom, InitialLatitude, InitialLongitude);
 
-		//m_iX = static_cast<int>(x);
-		//m_iY = static_cast<int>(y);
-
-		//m_iVisibleTLX = x*m_iTileSize;
-		//m_iVisibleTLY = y*m_iTileSize;
 		m_iVisibleCentreX = lround(x*m_iTileSize);
 		m_iVisibleCentreY = lround(y*m_iTileSize);
-
 
 
 		{
@@ -133,16 +125,8 @@ public:
 		m_iViewWidth = iWidth;
 		m_iViewHeight = iHeight;
 
-		//mNumTilesWide = m_iViewWidth/m_iTileSize + 1;
-		//mNumTilesTall = m_iViewHeight/m_iTileSize + 1;
-
-		//int mNumTilesWide = m_iViewWidth/m_iTileSize + 1;
-		//int mNumTilesTall = m_iViewHeight/m_iTileSize + 1;
-
 		m_pRenderTarget = nullptr;
 		m_pRenderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(iWidth, iHeight);
-//		m_pRenderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(iWidth, iHeight);
-
 	}
 
 	bool SetServerAddress(const CString& s)
@@ -164,6 +148,9 @@ public:
 
 		m_sServerAddress = s;
 
+		m_pRenderContext = nullptr;
+		m_pRenderContext = std::make_unique<mvt::renderer::RenderContext>(*m_pRenderTarget, *m_pStyle);
+
 		m_pRenderer = nullptr;
 		m_pRenderer = std::make_unique<mvt::renderer::Renderer>(m_pStyle.get());
 
@@ -180,8 +167,7 @@ public:
 
 	void ZoomIn(void)
 	{
-		//uint64_t TLx = m_iVisibleCentreX - m_iViewWidth/2;
-		//uint64_t TLy = m_iVisibleCentreY - m_iViewHeight/2;
+		if (m_iZoom >= MaxZoom) return;
 
 		// Get lat/long of View centre.
 		auto latLong = mvt::tile::TileToLatLong(m_iZoom, float(m_iVisibleCentreX)/m_iTileSize, float(m_iVisibleCentreY)/m_iTileSize);
@@ -192,10 +178,14 @@ public:
 
 		m_iVisibleCentreX = lround(x*m_iTileSize);
 		m_iVisibleCentreY = lround(y*m_iTileSize);
+
+		core::logger::Info(std::format("Zoom = {}\n", m_iZoom));
 	}
 
 	void ZoomOut(void)
 	{
+		if (m_iZoom <= MinZoom) return;
+
 		// Get lat/long of View centre.
 		auto latLong = mvt::tile::TileToLatLong(m_iZoom, float(m_iVisibleCentreX)/m_iTileSize, float(m_iVisibleCentreY)/m_iTileSize);
 
@@ -206,21 +196,7 @@ public:
 		m_iVisibleCentreX = lround(x*m_iTileSize);
 		m_iVisibleCentreY = lround(y*m_iTileSize);
 
-		/*
-		uint64_t centreX = m_iVisibleTLX + m_iViewWidth/2;
-		uint64_t centreY = m_iVisibleTLY + m_iViewHeight/2;
-
-		m_iVisibleTLX += m_iViewWidth/2;
-		m_iVisibleTLY += m_iViewHeight/2;
-
-		m_iVisibleTLX /= 2;
-		m_iVisibleTLY /= 2;
-
-		m_iVisibleTLX -= m_iViewWidth/2;
-		m_iVisibleTLY -= m_iViewHeight/2;
-
-		m_iZoom--;
-		*/
+		core::logger::Info(std::format("Zoom = {}\n", m_iZoom));
 	}
 
 	void Render(ID2D1HwndRenderTarget* pRenderTarget)
@@ -239,7 +215,7 @@ public:
 			int x2 = (TLx + m_iViewWidth)/m_iTileSize;
 			int y2 = (TLy + m_iViewHeight)/m_iTileSize;
 
-			TRACE("TL Tile %d, %d  Offset %d, %d\n", x, y, offsetX, offsetY);
+			//TRACE("TL Tile %d, %d  Offset %d, %d\n", x, y, offsetX, offsetY);
 
 			mvt::tile::TileSpecArray tileSpecArray;
 
@@ -253,7 +229,7 @@ public:
 				}
 			}
 
-			m_pRenderTarget->PushTranslation(-offsetX, -offsetY);
+			m_pRenderTarget->PushTranslation(static_cast<float>(-offsetX), static_cast<float>(-offsetY));
 			m_pRenderTarget->PushScale(m_fDpiScale);
 
 			m_pRenderTarget->SetFillColor(core::rendertarget::Color("black"));
@@ -261,7 +237,7 @@ public:
 
 			//mvt::tile::TileSpec spec { .zoom = m_iZoom, .y = y, .x = x };
 			//if (m_pRenderer->RenderTile(*(m_pRenderTarget.get()), spec))
-			if (m_pRenderer->RenderTiles(*(m_pRenderTarget.get()), tileSpecArray, m_iZoom))
+			if (m_pRenderer->RenderTiles(*m_pRenderContext.get(), tileSpecArray, static_cast<float>(m_iZoom)))
 			{
 				core::bitmap::Bitmap* pBitmap = m_pRenderTarget->GetBitmap();
 				if (pBitmap)
@@ -447,9 +423,13 @@ void CMapViewerWnd::OnLButtonDown(UINT nFlags, CPoint point)
 	{
 		int offX = point.x - m_MousePos.x;
 		int offY = point.y - m_MousePos.y;
-		m_pViewModel->Pan(offX, offY);
 
-		Invalidate();
+		if (offX || offY)
+		{
+			m_pViewModel->Pan(offX, offY);
+
+			Invalidate();
+		}
 	}
 
 	m_MousePos = point;
@@ -463,9 +443,13 @@ void CMapViewerWnd::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		int offX = point.x - m_MousePos.x;
 		int offY = point.y - m_MousePos.y;
-		m_pViewModel->Pan(offX, offY);
 
-		Invalidate();
+		if (offX || offY)
+		{
+			m_pViewModel->Pan(offX, offY);
+
+			Invalidate();
+		}
 	}
 
 	m_MousePos = point;

@@ -152,7 +152,8 @@ public:
 			tileRenderer.SetTileSize(TileSize);
 
 			mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
-			tileRenderer.RenderTile(*renderTarget, tileSpec);
+			mvt::renderer::RenderContext context(*renderTarget, *mStyle.get());
+			tileRenderer.RenderTile(context, tileSpec);
 //		}
 
 		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };

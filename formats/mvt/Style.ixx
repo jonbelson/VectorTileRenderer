@@ -115,12 +115,9 @@ namespace mvt::style
 	};
 
 
-	// OS Data Hub
-	// Styles:
-	// https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=<key>
 	//
-	// Tiles:
-	// https://api.os.uk/maps/vector/v1/vts/tile/{z}/{y}/{x}.pbf?key=<key>
+	// Parsed JSON style file.
+	// https://docs.mapbox.com/style-spec/guides/
 	//
 	export class Style
 	{

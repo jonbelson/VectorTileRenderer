@@ -24,7 +24,7 @@ namespace mvt::renderer
 		const mvt::style::Sprites& sprites;
 		const mvt::style::Glyphs& glyphs;
 
-		rendertarget::BitmapHandle spritesHandle{};
+		rendertarget::BitmapHandle spritesHandle { rendertarget::InvalidHandle };
 
 		// Map font names to BitmapHandles.
 
@@ -43,7 +43,27 @@ namespace mvt::renderer
 			return rendertarget::InvalidHandle;
 		}
 
-		RenderContext(rendertarget::RenderTarget& renderTarget,const mvt::style::Style& style) : renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs) {}
+		RenderContext(rendertarget::RenderTarget& renderTarget, const mvt::style::Style& style) : renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs)
+		{
+			rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(sprites.GetBitmap());
+			spritesHandle = spriteHandle;
+		}
+
+		virtual ~RenderContext()
+		{
+			renderTarget.UnregisterBitmap(spritesHandle);
+
+			for (const auto& font : glyphHandles)
+			{
+				for (const auto& size : font.second)
+				{
+					for (const auto& start : size.second)
+					{
+						renderTarget.UnregisterBitmap(start.second);
+					}
+				}
+			}
+		}
 	};
 
 }

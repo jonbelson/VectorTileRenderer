@@ -406,6 +406,8 @@ namespace mvt::renderer
 			}
 		}
 
+		std::reverse(std::begin(symbols), std::end(symbols));
+
 		return true;
 	}
 
@@ -487,17 +489,19 @@ namespace mvt::renderer
 		return {};//tileFetcher;
 	}
 
-	bool Renderer::RenderTile(rendertarget::RenderTarget& renderTarget, const tile::TileSpec& tileSpec)
+	bool Renderer::RenderTile(renderer::RenderContext& context, const tile::TileSpec& tileSpec)
 	{
-		return RenderTile(renderTarget, tileSpec.x, tileSpec.y, static_cast<float>(tileSpec.zoom));
+		return RenderTile(context, tileSpec.x, tileSpec.y, static_cast<float>(tileSpec.zoom));
 	}
 
-	bool Renderer::RenderTile(rendertarget::RenderTarget& renderTarget, int x, int y, float zoom)
+	bool Renderer::RenderTile(renderer::RenderContext& renderContext, int x, int y, float zoom)
 	{
 		if (!mStyle) return false;
 
-		RenderContext renderContext(renderTarget, *mStyle);
+		//RenderContext renderContext(renderTarget, *mStyle);
 		WorldContext wc;
+
+		RenderTarget& renderTarget = renderContext.renderTarget;
 
 		for (const auto& [ name, source ] : mStyle->mSources)
 		{
@@ -516,8 +520,8 @@ namespace mvt::renderer
 					const auto tile = mTileCache.GetTile(x, y, static_cast<int>(zoom));
 					if (tile)
 					{
-						rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
-						renderContext.spritesHandle = spriteHandle;
+						//rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
+						//renderContext.spritesHandle = spriteHandle;
 
 						for (const auto& background : mStyle->mBackground)
 						{
@@ -545,16 +549,18 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderTile(rendertarget::RenderTarget& renderTarget, const mvt::tile::Tile* tile, float zoom)
+	bool Renderer::RenderTile(renderer::RenderContext& renderContext, const mvt::tile::Tile* tile, float zoom)
 	{
 		if (!mStyle) return false;
 		if (!tile) return false;
 
-		RenderContext renderContext(renderTarget, *mStyle);
+		//RenderContext renderContext(renderTarget, *mStyle);
 		WorldContext wc;
 
-		rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
-		renderContext.spritesHandle = spriteHandle;
+		RenderTarget& renderTarget = renderContext.renderTarget;
+
+		//rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
+		//renderContext.spritesHandle = spriteHandle;
 
 //		mTileSize = 1024;
 		//mRenderTarget->PushScale(2 /*1024*/ /*renderContext.TileSize*/);
@@ -578,14 +584,11 @@ namespace mvt::renderer
 		return true;
 	}
 
-	bool Renderer::RenderTiles(rendertarget::RenderTarget& renderTarget, const tile::TileSpecArray& tileSpecArray, float zoom)
+	bool Renderer::RenderTiles(renderer::RenderContext& renderContext, const tile::TileSpecArray& tileSpecArray, float zoom)
 	{
 		if (!mStyle) return false;
 
-		RenderContext renderContext(renderTarget, *mStyle);
-
-		rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(mStyle->mSprites.GetBitmap());
-		renderContext.spritesHandle = spriteHandle;
+		RenderTarget& renderTarget = renderContext.renderTarget;
 
 		for (const auto& background : mStyle->mBackground)
 		{
@@ -593,8 +596,6 @@ namespace mvt::renderer
 
 			RenderBackground(renderContext, wc, background.get(), mvt::feature::Feature{}, zoom);
 		}
-
-		//FeatureSymbols symbols;
 
 		std::unordered_map<size_t, FeatureSymbols> tileFeatureSymbols;
 
@@ -649,7 +650,7 @@ namespace mvt::renderer
 			renderTarget.ClearClipRect();
 		}
 
-		///////std::reverse(symbols.begin(), symbols.end());
+		///std::reverse(symbols.begin(), symbols.end());
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
@@ -661,17 +662,10 @@ namespace mvt::renderer
 		{
 			const auto& tileSpec = tileSpecArray[i];
 
-			//float offx = static_cast<float>(mTileSize*(tileSpec.x - startx));
-			//float offy = static_cast<float>(mTileSize*(tileSpec.y - starty));
-
-			//mRenderTarget->PushTranslation(offx, offy);
-
 			int offx = tileSpec.x - startx;
 			int offy = tileSpec.y - starty;
 
 			RenderVectorTileSymbols(tileFeatureSymbols[i], renderContext, WorldContext { .x = offx, .y = offy }, placedSymbols, zoom);
-
-			//mRenderTarget->PopTransform();
 		}
 
 		if constexpr (mvt::debug::visual::DrawPlacedSymbols)

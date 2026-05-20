@@ -1002,13 +1002,14 @@ namespace mvt::symbol
 		float padding = textScale*attribs.textLetterSpacing*style::GlyphSize;
 
 		Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+		cursor = AdjustForTextOffset(attribs, cursor);
 
 		const Point start = cursor;
 
 		for (size_t i=0; i<formattedText.lines.size(); i++)
 		{
 			cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
-			cursor = AdjustForTextOffset(attribs, cursor);
+			//cursor = AdjustForTextOffset(attribs, cursor);
 
 			if (i != 0)
 			{

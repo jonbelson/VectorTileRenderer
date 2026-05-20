@@ -31,9 +31,6 @@ namespace mvt::renderer
 		static const int DefaultTileSize{512};
 
 		int mTileSize { DefaultTileSize };
-//		int mTileSize { 1024 };
-
-		///float mDpiScale { 1.0f };
 
 		struct WorldContext
 		{
@@ -42,7 +39,6 @@ namespace mvt::renderer
 			int tileSize { DefaultTileSize };
 		};
 
-		//rendertarget::RenderTarget* mRenderTarget = nullptr;
 		tilecache::TileCache mTileCache;
 		style::Style* mStyle = nullptr;
 
@@ -65,17 +61,17 @@ namespace mvt::renderer
 		bool RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y);
 
 	public:
-		Renderer(/*core::rendertarget::RenderTarget* renderTarget,*/ style::Style* style, int tileSize = 512)
-			: /*mRenderTarget(renderTarget),*/ mStyle(style), mTileSize(tileSize) {}
+		Renderer(style::Style* style, int tileSize = 512)
+			: mStyle(style), mTileSize(tileSize) {}
 
 		void SetTileSize(int size) { mTileSize = size; }
 		///void SetDpiScale(float dpiScale) { mDpiScale = dpiScale; }
 
-		bool RenderTile(rendertarget::RenderTarget& renderTarget, const tile::TileSpec& tileSpec);
-		bool RenderTile(rendertarget::RenderTarget& renderTarget, int x, int y, float zoom);
-		bool RenderTile(rendertarget::RenderTarget& renderTarget, const tile::Tile* tile, float zoom);
+		bool RenderTile(renderer::RenderContext& context, const tile::TileSpec& tileSpec);
+		bool RenderTile(renderer::RenderContext& context, int x, int y, float zoom);
+		bool RenderTile(renderer::RenderContext& context, const tile::Tile* tile, float zoom);
 
-		bool RenderTiles(rendertarget::RenderTarget& renderTarget, const tile::TileSpecArray& tileArray, float zoom);
+		bool RenderTiles(renderer::RenderContext& context, const tile::TileSpecArray& tileArray, float zoom);
 	};
 
 };
