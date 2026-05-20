@@ -432,6 +432,8 @@ void CMapViewerWnd::OnLButtonDown(UINT nFlags, CPoint point)
 		}
 	}
 
+	SetCapture();
+
 	m_MousePos = point;
 }
 
@@ -451,6 +453,8 @@ void CMapViewerWnd::OnLButtonUp(UINT nFlags, CPoint point)
 			Invalidate();
 		}
 	}
+
+	ReleaseCapture();
 
 	m_MousePos = point;
 }

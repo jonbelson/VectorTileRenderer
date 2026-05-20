@@ -597,7 +597,8 @@ namespace mvt::renderer
 			RenderBackground(renderContext, wc, background.get(), mvt::feature::Feature{}, zoom);
 		}
 
-		std::unordered_map<size_t, FeatureSymbols> tileFeatureSymbols;
+		//std::unordered_map<size_t, FeatureSymbols> tileFeatureSymbols;
+		std::vector<FeatureSymbols> tileFeatureSymbols(tileSpecArray.size());
 
 		int startx { std::numeric_limits<int>::max() };
 		int starty { std::numeric_limits<int>::max() };
@@ -658,14 +659,14 @@ namespace mvt::renderer
 		float height = mTileSize*(endy - starty + 1.0f);
 		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, width, height));
 
-		for (size_t i=0; i<tileSpecArray.size(); i++)
+		for (size_t j=0; j<tileSpecArray.size(); j++)
 		{
-			const auto& tileSpec = tileSpecArray[i];
+			const auto& tileSpec = tileSpecArray[j];
 
 			int offx = tileSpec.x - startx;
 			int offy = tileSpec.y - starty;
 
-			RenderVectorTileSymbols(tileFeatureSymbols[i], renderContext, WorldContext { .x = offx, .y = offy }, placedSymbols, zoom);
+			RenderVectorTileSymbols(tileFeatureSymbols[j], renderContext, WorldContext { .x = offx, .y = offy }, placedSymbols, zoom);
 		}
 
 		if constexpr (mvt::debug::visual::DrawPlacedSymbols)
