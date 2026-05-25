@@ -203,8 +203,11 @@ public:
 	{
 		if (pRenderTarget && m_pStyle)
 		{
-			uint64_t TLx = m_iVisibleCentreX - m_iViewWidth/2;
-			uint64_t TLy = m_iVisibleCentreY - m_iViewHeight/2;
+			int iViewCentreX = m_iViewWidth/2;
+			int iViewCentreY = m_iViewHeight/2;
+
+			uint64_t TLx = (iViewCentreX <= m_iVisibleCentreX) ? m_iVisibleCentreX - iViewCentreX : 0;
+			uint64_t TLy = (iViewCentreY <= m_iVisibleCentreY) ? m_iVisibleCentreY - iViewCentreY : 0;
 
 			int x = TLx/m_iTileSize;
 			int y = TLy/m_iTileSize;
@@ -214,8 +217,6 @@ public:
 
 			int x2 = (TLx + m_iViewWidth)/m_iTileSize;
 			int y2 = (TLy + m_iViewHeight)/m_iTileSize;
-
-			//TRACE("TL Tile %d, %d  Offset %d, %d\n", x, y, offsetX, offsetY);
 
 			mvt::tile::TileSpecArray tileSpecArray;
 

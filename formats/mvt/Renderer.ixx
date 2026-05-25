@@ -7,8 +7,10 @@ export module formats.mvt.renderer;
 
 import std;
 
+import core.bitmap;
 import core.geometry;
 import core.rendertarget;
+import formats.mvt.cache;
 import formats.mvt.feature;
 import formats.mvt.layer;
 import formats.mvt.rendercontext;
@@ -16,7 +18,7 @@ import formats.mvt.style;
 import formats.mvt.symbol;
 import formats.mvt.tile;
 import formats.mvt.tilecache;
-import formats.mvt.tilefetcher;
+//import formats.mvt.tilefetcher;
 import geo.latlong;
 
 namespace mvt::renderer
@@ -39,7 +41,11 @@ namespace mvt::renderer
 			int tileSize { DefaultTileSize };
 		};
 
+		using BitmapCache = cache::Cache<std::size_t, bitmap::Bitmap>;
+		
+		BitmapCache mBitmapCache;
 		tilecache::TileCache mTileCache;
+
 		style::Style* mStyle = nullptr;
 
 		geometry::MultiPolygon TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc) const;

@@ -24,9 +24,17 @@ namespace mvt::tilecache
 
 		const mvt::tile::Tile* GetTileFromCache(int x, int y, int zoom)
 		{
-			for (const auto& tile : mCache)
+			auto iter = std::find_if(std::begin(mCache), std::end(mCache), [x, y, zoom](const auto& tile) {
+										return tile->X() == x && tile->Y() == y && tile->Zoom() == zoom;
+									 });
+
+			if (iter != std::end(mCache))
 			{
-				if (tile->X() == x && tile->Y() == y && tile->Zoom() == zoom) return tile.get();
+				auto tile = iter->release();
+				mCache.erase(iter);
+				mCache.emplace_back(tile);
+
+				return tile;
 			}
 
 			return nullptr;

@@ -411,6 +411,33 @@ namespace mvt::renderer
 		return true;
 	}
 
+
+	// https://en.cppreference.com/cpp/utility/hash
+	struct TileHash
+	{
+		std::size_t operator()(std::string_view url, float zoom, int x, int y) const noexcept
+		{
+			std::size_t h1 = std::hash<int>{}(static_cast<int>(zoom));
+			std::size_t h2 = std::hash<int>{}(x);
+			std::size_t h3 = std::hash<int>{}(y);
+			std::size_t h4 = std::hash<std::string_view>{}(url);
+			return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3); // or use boost::hash_combine
+		}
+	};
+
+
+	//template<>
+	//struct std::hash<S>
+	//{
+	//	std::size_t operator()(const S& s) const noexcept
+	//	{
+	//		std::size_t h1 = std::hash<std::string>{}(s.first_name);
+	//		std::size_t h2 = std::hash<std::string>{}(s.last_name);
+	//		return h1 ^ (h2 << 1); // or use boost::hash_combine
+	//	}
+	//};
+
+
 	bool Renderer::RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y)
 	{
 		if (source.mTiles.empty())
@@ -420,39 +447,52 @@ namespace mvt::renderer
 
 		auto& renderTarget = context.renderTarget;
 
-		auto result = HttpTileFetcher::Create(source.mTiles.front());
+		std::string_view url = source.mTiles.front();
 
-		if (result)
+		std::shared_ptr<bitmap::Bitmap> bitmap = mBitmapCache.GetItem(TileHash{}(url, zoom, x, y));
+
+		if (!bitmap)
 		{
-			//std::unique_ptr<HttpTileFetcher> fetcher { result.value() };
-			std::unique_ptr<HttpTileFetcher> fetcher { std::move(result.value()) };
+			logger::Info(std::format("Bitmap not in cache, fetching raster tile from '{}'\n", url));
 
-			auto data = fetcher->FetchTile(static_cast<int>(zoom), x, y);
-			if (!data.empty())
+			auto result = HttpTileFetcher::Create(url);
+
+			if (result)
 			{
-				auto result = core::bitmap::LoadBitmapFromResource(data);
-				if (result)
+				std::unique_ptr<HttpTileFetcher> fetcher { std::move(result.value()) };
+
+				auto data = fetcher->FetchTile(static_cast<int>(zoom), x, y);
+				if (!data.empty())
 				{
-					auto bitmap = std::make_shared<core::bitmap::Bitmap>(std::move(result.value()));
-
-					auto bitmapHandle = renderTarget.RegisterBitmap(bitmap);
-					if (bitmapHandle != rendertarget::InvalidHandle)
+					auto result = core::bitmap::LoadBitmapFromResource(data);
+					if (result)
 					{
-						renderTarget.SetActiveBitmap(bitmapHandle);
+						bitmap = std::make_shared<core::bitmap::Bitmap>(std::move(result.value()));
 
-						float destX = static_cast<float>(wc.x*wc.tileSize);
-						float destY = static_cast<float>(wc.y*wc.tileSize);
-
-						geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
-						geometry::Rect dest(destX, destY, static_cast<float>(mTileSize), static_cast<float>(mTileSize));
-						renderTarget.DrawBitmap(src, dest);
-
-						renderTarget.UnregisterBitmap(bitmapHandle);
+						mBitmapCache.AddItem(TileHash{}(url, zoom, x, y), bitmap);
 					}
-
-					return true;
 				}
 			}
+		}
+
+		if (bitmap)
+		{
+			auto bitmapHandle = renderTarget.RegisterBitmap(bitmap);
+			if (bitmapHandle != rendertarget::InvalidHandle)
+			{
+				renderTarget.SetActiveBitmap(bitmapHandle);
+
+				float destX = static_cast<float>(wc.x*wc.tileSize);
+				float destY = static_cast<float>(wc.y*wc.tileSize);
+
+				geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
+				geometry::Rect dest(destX, destY, static_cast<float>(mTileSize), static_cast<float>(mTileSize));
+				renderTarget.DrawBitmap(src, dest);
+
+				renderTarget.UnregisterBitmap(bitmapHandle);
+			}
+
+			return true;
 		}
 
 		return false;

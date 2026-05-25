@@ -52,6 +52,7 @@ BOOL CMapViewerDlg::OnInitDialog()
 
 BEGIN_MESSAGE_MAP(CMapViewerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_GO, &CMapViewerDlg::OnBnClickedButtonGo)
+	ON_BN_CLICKED(IDOK, &CMapViewerDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -64,4 +65,9 @@ void CMapViewerDlg::OnBnClickedButtonGo()
 	m_MapView.SetServerAddress(m_sServerAddress);
 
 	m_MapView.Invalidate();
+}
+
+void CMapViewerDlg::OnBnClickedOk()
+{
+	//CDialogEx::OnOK();
 }

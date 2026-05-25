@@ -155,6 +155,11 @@ namespace core::logger
 		_Write(Level::Error, format, std::forward<Args>(args)...);
 	}
 
+	void Info(const std::string_view sv)
+	{
+		_Write(Level::Info, sv);
+	}
+
 	export void Error(const std::string_view sv)
 	{
 		_Write(Level::Error, sv);

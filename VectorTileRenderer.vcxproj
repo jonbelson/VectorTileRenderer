@@ -227,6 +227,7 @@
     <ClCompile Include="core\SVGRenderTarget.cpp" />
     <ClCompile Include="core\SVGRenderTarget.ixx" />
     <ClCompile Include="CRenderAreaDlg.cpp" />
+    <ClCompile Include="formats\mvt\Cache.ixx" />
     <ClCompile Include="formats\mvt\Debug.ixx" />
     <ClCompile Include="formats\mvt\Expressions-Operators.cpp" />
     <ClCompile Include="formats\mvt\Expressions-Operators.ixx" />
