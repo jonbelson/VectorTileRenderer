@@ -509,6 +509,55 @@ TEST(Operators, Decision)
 	}
 }
 
+TEST(Operators, Variables)
+{
+	mvt::feature::Feature feature;
+
+	feature.mValues["float1"] = {12.34f};
+	feature.mValues["string1"] = "hello";
+	feature.mValues["boolean1"] = false;
+	feature.mValues["boolean2"] = true;
+
+	struct Test
+	{
+		std::string json;
+		Value result {};
+	};
+
+	Test tests[] = {
+		{ R"([ "let", "var1", "hello", [ "upcase", [ "var", "var1" ] ] ] )", { "HELLO" } },
+		{ R"([ "let", "var1", "hello", "var2", " there", [ "concat", [ "var", "var1" ], [ "var", "var2" ]  ] ] )", { "hello there" } },
+
+		{ R"([ "let", "var1", "hello", [ "let", "var2", " there", [ "concat", [ "var", "var1" ], [ "var", "var2" ] ]  ] ] )", { "hello there" } },
+	};
+		
+	for (const auto& test : tests)
+	{
+		SCOPED_TRACE("json: " + test.json);
+
+		nlohmann::json data;
+		EXPECT_NO_THROW( data = nlohmann::json::parse(test.json) ) << "Invalid JSON was '" << test.json << "'";
+
+		auto op = CreateOperatorFromJson(data);
+
+		EXPECT_TRUE(op != nullptr) << "Failed Operator was '" << test.json << "'";
+
+		if (op)
+		{
+			auto value = op->Evaluate(feature, 10);
+
+			if (value != test.result)
+			{
+				int i{};
+			}
+
+			EXPECT_TRUE(value == test.result)  << "Wrong result was from'" << test.json << "'";
+		}
+	}
+}
+
+
+
 TEST(Operators, Lookup)
 {
 	mvt::feature::Feature feature;
@@ -538,10 +587,16 @@ TEST(Operators, Lookup)
 		{ R"([ "get", "string1" ])", { "hello" } },
 		{ R"([ "get", "boolean1" ])", { false }},
 		{ R"([ "get", "boolean2" ])", { true }},
+		{ R"([ "get", "prop1", { "prop1": 12.34 } ])", { 12.34f } },
+		{ R"([ "get", "prop1", { "prop1": "abcdef" } ])", { "abcdef" } },
+		{ R"([ "get", "prop2", { "prop1": 12.34 } ])", { } },
 
 		{ R"([ "has", "float1" ])", { true }},
 		{ R"([ "has", "string1" ])", { true }},
 		{ R"([ "has", "nothere" ])", { false }},
+		{ R"([ "has", "prop1", { "prop1": 12.34 } ])", { true } },
+		{ R"([ "has", "prop1", { "prop1": "abcdef" } ])", { true } },
+		{ R"([ "has", "prop2", { "prop1": 12.34 } ])", { false } },
 
 		// "config"
 

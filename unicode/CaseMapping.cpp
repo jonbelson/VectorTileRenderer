@@ -3018,7 +3018,7 @@ namespace unicode::casemapping
 	});
 
 
-	uint32_t ToUpper(uint32_t codePoint)
+	[[nodiscard]] uint32_t ToUpper(uint32_t codePoint)
 	{
         auto it = std::lower_bound(LowerToUpper.begin(), LowerToUpper.end(), codePoint, [](const Entry& entry, uint32_t key){ return entry.first < key; });
 
@@ -3030,7 +3030,7 @@ namespace unicode::casemapping
         return codePoint;
 	}
 
-	uint32_t ToLower(uint32_t codePoint)
+	[[nodiscard]] uint32_t ToLower(uint32_t codePoint)
 	{
         auto it = std::lower_bound(UpperToLower.begin(), UpperToLower.end(), codePoint, [](const Entry& entry, uint32_t key){ return entry.first < key; });
 
@@ -3042,7 +3042,7 @@ namespace unicode::casemapping
         return codePoint;
     }
 
-	Utf32Text ToUpper(const Utf32Text& utf32)
+	[[nodiscard]] Utf32Text ToUpper(const Utf32Text& utf32)
 	{
 		Utf32Text result(utf32.size());
 
@@ -3053,7 +3053,7 @@ namespace unicode::casemapping
 		return result;
 	}
 
-	Utf32Text ToLower(const Utf32Text& utf32)
+	[[nodiscard]] Utf32Text ToLower(const Utf32Text& utf32)
 	{
 		Utf32Text result(utf32.size());
 
@@ -3066,7 +3066,7 @@ namespace unicode::casemapping
 
 	using namespace unicode::convert;
 
-	std::string ToUpper(std::string_view sv)
+	[[nodiscard]] std::string ToUpper(std::string_view sv)
 	{
 		auto inputUtf32 = Utf8ToUtf32(sv);
 
@@ -3077,7 +3077,7 @@ namespace unicode::casemapping
 		return outputUtf8;
 	}
 
-	std::string ToLower(std::string_view sv)
+	[[nodiscard]] std::string ToLower(std::string_view sv)
 	{
 		auto inputUtf32 = Utf8ToUtf32(sv);
 

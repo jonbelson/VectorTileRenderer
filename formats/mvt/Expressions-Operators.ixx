@@ -30,7 +30,7 @@ export using NullValue = std::monostate;
 // Variant for supported Expression types.
 // XXX Should use std::vector<Value> instead of std::vector<std::string> and std::vector<float>.
 // XXX Should support std::map<std::string, Value> for objects.
-using ValueVariant = std::variant<std::monostate, float, std::string, bool, core::color::Color, FloatArray, StringArray, BoolArray, OperatorPtr>;
+using ValueVariant = std::variant<std::monostate, float, std::string, bool, core::color::Color, FloatArray, StringArray, BoolArray, ValueMap, OperatorPtr>;
 
 export class Value : public ValueVariant
 {
@@ -50,15 +50,17 @@ public:
 	bool IsFloatArray(void) const { return std::holds_alternative<FloatArray>(*this); }
 	bool IsStringArray(void) const { return std::holds_alternative<StringArray>(*this); }
 	bool IsBoolArray(void) const { return std::holds_alternative<BoolArray>(*this); }
+	bool IsObject(void) const { return std::holds_alternative<ValueMap>(*this); }
 	bool IsExpression(void) const { return std::holds_alternative<OperatorPtr>(*this); }
 
 	float GetFloat(void) const { return std::get<float>(*this); }
 	std::string GetString(void) const { return std::get<std::string>(*this); }
 	bool GetBool(void) const { return std::get<bool>(*this); }
 	core::color::Color GetColor(void) const { return std::get<core::color::Color>(*this); }
-	FloatArray GetFloatArray(void) const { return std::get<FloatArray>(*this); }
-	StringArray GetStringArray(void) const { return std::get<StringArray>(*this); }
-	BoolArray GetBoolArray(void) const { return std::get<BoolArray>(*this); }
+	const FloatArray& GetFloatArray(void) const { return std::get<FloatArray>(*this); }
+	const StringArray& GetStringArray(void) const { return std::get<StringArray>(*this); }
+	const BoolArray& GetBoolArray(void) const { return std::get<BoolArray>(*this); }
+	const ValueMap& GetObject(void) const { return std::get<ValueMap>(*this); }
 	OperatorPtr GetExpression(void) const { return std::get<OperatorPtr>(*this); }
 
 	std::optional<float> TryGetFloat(void) const { if (auto* p = std::get_if<float>(this)) return *p; return {}; }
@@ -67,8 +69,8 @@ public:
 	std::optional<core::color::Color> TryGetColor(void) const { if (auto* p = std::get_if<core::color::Color>(this)) return *p; return {}; }
 	std::optional<FloatArray> TryGetFloatArray(void) const { if (auto* p = std::get_if<FloatArray>(this)) return *p; return {}; }
 	std::optional<StringArray> TryGetStringArray(void) const { if (auto* p = std::get_if<StringArray>(this)) return *p; return {}; }
+	std::optional<ValueMap> TryGetObject(void) const { if (auto* p = std::get_if<ValueMap>(this)) return *p; return {}; }
 	std::optional<BoolArray> TryGetBoolArray(void) const { if (auto* p = std::get_if<BoolArray>(this)) return *p; return {}; }
-
 
 	template<typename... Types>
 	constexpr bool IsAnyOfTypes(void) noexcept
@@ -332,7 +334,32 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+// Helper for Type Operations that assert a type.
+template<typename T>
+class _OperatorType : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorNumber : public _OperatorType<float> {};
+
+export class OperatorObject : public _OperatorType<ValueMap> {};
+
+export class OperatorString : public _OperatorType<std::string> {};
+
+export class OperatorBoolean : public _OperatorType<bool> {};
+
 export class OperatorToBoolean : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorToColor : public IOperator
 {
 public:
 	virtual bool ParseFromJson(const json& data) override;
@@ -356,6 +383,14 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+export class OperatorTypeof : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 
 //
 // 'Feature data' Expressions.
@@ -370,7 +405,21 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+export class OperatorId : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
 
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorProperties : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
 
 //
 // 'String' Expressions.
@@ -498,15 +547,12 @@ protected:
 
 public:
 	virtual bool ParseFromJson(const json& data) override;
-
 };
 
 
 export class OperatorNegate : public _OperatorDecision<Arity::Unary>
 {
 public:
-	//virtual bool ParseFromJson(const json& data) override;
-
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
@@ -549,14 +595,12 @@ public:
 export class OperatorAll : public _OperatorDecision<Arity::Nary>
 {
 public:
-	//virtual bool ParseFromJson(const json& data) override;
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
 export class OperatorAny : public _OperatorDecision<Arity::Nary>
 {
 public:
-	//virtual bool ParseFromJson(const json& data) override;
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
@@ -662,10 +706,29 @@ public:
 };
 
 
+//
+// 'Variable binding' Expressions.
+// https://docs.mapbox.com/style-spec/reference/expressions/#variable-binding
+//
+
+export class OperatorLet : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+export class OperatorVar : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 
 //
 // 'Math' Expressions.
-//https://docs.mapbox.com/style-spec/reference/expressions/#math
+// https://docs.mapbox.com/style-spec/reference/expressions/#math
 //
 
 // Helper base class for Operators (Sum, Product etc)

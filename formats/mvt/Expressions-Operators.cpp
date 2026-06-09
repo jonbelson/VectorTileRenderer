@@ -46,6 +46,44 @@ std::string MyVariantDebugger(const Value& v)
 	}
 
 
+using VarFrame = std::unordered_map<std::string, Value>;
+
+class VarStack
+{
+	std::vector<VarFrame> mVarFrames;
+
+public:
+	VarStack() {}
+
+	void PushFrame(void) { mVarFrames.emplace_back(); }
+	void PopFrame(void) { if (!mVarFrames.empty()) { mVarFrames.pop_back(); } }
+
+	void AddVar(const std::string& name, const Value& value)
+	{
+		if (!mVarFrames.empty())
+		{
+			mVarFrames.back()[name] = value;
+		}
+	}
+	std::optional<Value> GetVar(const std::string& name) const
+	{
+		for (auto it = mVarFrames.rbegin(); it != mVarFrames.rend(); ++it)
+		{
+			const auto& frame = *it;
+			auto varIt = frame.find(name);
+			if (varIt != frame.end())
+			{
+				return varIt->second;
+			}
+		}
+
+		return std::nullopt;
+	}
+};
+
+thread_local VarStack gVarStack;
+
+
 std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 
 	// Types
@@ -64,6 +102,7 @@ std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 	{ "to-number", ExpressionType::ToNumber },
 	{ "to-string", ExpressionType::ToString },
 	{ "typeof", ExpressionType::Typeof },
+
 
 	// Feature data
 	{ "accumulated", ExpressionType::Accumulated },
@@ -116,12 +155,14 @@ std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 	{ "let", ExpressionType::Let },
 	{ "var", ExpressionType::Var },
 
+
 	// String
 	{ "concat", ExpressionType::Concat },
 	{ "downcase", ExpressionType::Downcase },
 	{ "is-supported-script", ExpressionType::IsSupportedScript },
 	{ "resolved-locale", ExpressionType::ResolvedLocale },
 	{ "upcase", ExpressionType::Upcase },
+
 
 	// Color
 	{ "hsl", ExpressionType::Hsl },
@@ -161,10 +202,12 @@ std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 	{ "sqrt", ExpressionType::Sqrt },
 	{ "tan", ExpressionType::Tan },
 
+
 	// Camera
 	{ "distance-from-center", ExpressionType::DistanceFromCenter },
 	{ "pitch", ExpressionType::Pitch },
 	{ "zoom", ExpressionType::Zoom },
+
 
 	// Heatmap
 	{ "heatmap-density", ExpressionType::HeatmapDensity }
@@ -301,6 +344,10 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 		switch (exprType)
 		{
 			// Types.
+			case ExpressionType::Boolean:
+				{
+					return MakeExpression<OperatorBoolean>(data);
+				}
 			case ExpressionType::Image:
 				{
 					return MakeExpression<OperatorImage>(data);
@@ -309,9 +356,25 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorLiteral>(data);
 				}
+			case ExpressionType::Number:
+				{
+					return MakeExpression<OperatorNumber>(data);
+				}
+			case ExpressionType::Object:
+				{
+					return MakeExpression<OperatorObject>(data);
+				}
+			case ExpressionType::String:
+				{
+					return MakeExpression<OperatorString>(data);
+				}
 			case ExpressionType::ToBoolean:
 				{
 					return MakeExpression<OperatorToBoolean>(data);
+				}
+			case ExpressionType::ToColor:
+				{
+					return MakeExpression<OperatorToColor>(data);
 				}
 			case ExpressionType::ToNumber:
 				{
@@ -321,13 +384,24 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorToString>(data);
 				}
+			case ExpressionType::Typeof:
+				{
+					return MakeExpression<OperatorTypeof>(data);
+				}
 
 			// Feature data.
 			case ExpressionType::GeometryType:
 				{
 					return MakeExpression<OperatorGeometryType>(data);
 				}
-
+			case ExpressionType::Id:
+				{
+					return MakeExpression<OperatorId>(data);
+				}
+			case ExpressionType::Properties:
+				{
+					return MakeExpression<OperatorProperties>(data);
+				}
 
 			// Lookup.
 			case ExpressionType::At:
@@ -416,6 +490,46 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorMatch>(data);
 				}
+
+
+			// Ramps, scales, curves.
+			case ExpressionType::Interpolate:
+				{
+					return MakeExpression<OperatorInterpolate>(data);
+				}
+			case ExpressionType::Step:
+				{
+					return MakeExpression<OperatorStep>(data);
+				}
+
+
+			// Variable binding.
+			case ExpressionType::Let:
+				{
+					return MakeExpression<OperatorLet>(data);
+				}
+			case ExpressionType::Var:
+				{
+					return MakeExpression<OperatorVar>(data);
+				}
+
+			// String.
+			case ExpressionType::Concat:
+				{
+					return MakeExpression<OperatorConcat>(data);
+				}
+			case ExpressionType::Downcase:
+				{
+					return MakeExpression<OperatorDowncase>(data);
+				}
+			case ExpressionType::Upcase:
+				{
+					return MakeExpression<OperatorUpcase>(data);
+				}
+
+
+			// Color.
+
 
 			// Math.
 			case ExpressionType::Subtraction:
@@ -529,32 +643,6 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 
 
 
-			// Ramps, scales, curves.
-			case ExpressionType::Interpolate:
-				{
-					return MakeExpression<OperatorInterpolate>(data);
-				}
-			case ExpressionType::Step:
-				{
-					return MakeExpression<OperatorStep>(data);
-				}
-
-
-
-			// String
-			case ExpressionType::Concat:
-				{
-					return MakeExpression<OperatorConcat>(data);
-				}
-			case ExpressionType::Downcase:
-				{
-					return MakeExpression<OperatorDowncase>(data);
-				}
-			case ExpressionType::Upcase:
-				{
-					return MakeExpression<OperatorUpcase>(data);
-				}
-
 
 			// Camera.
 			case ExpressionType::Zoom:
@@ -650,6 +738,18 @@ Value JsonTypeToLiteralValue(const json& data)
 				result = std::move(floatArray);
 			}
 		}
+	}
+	else if (data.is_object())
+	{
+		ValueMap valueMap;
+
+		//for (auto& [key, value] : data.items())
+		for (auto& item : data.items())
+		{
+//			valueMap[key] = JsonTypeToLiteralValue(value);
+			valueMap[item.key()] = JsonTypeToLiteralValue(item.value());
+		}
+		result = std::move(valueMap);
 	}
 
 	return result;
@@ -806,9 +906,9 @@ bool OperatorLiteral::ParseFromJson(const json& data)
 		}
 		else if (data[1].is_object())
 		{
-			// std::map<std::string, Value> currently unsupported.
-			assert(false);
-			return false;
+			Value object = JsonTypeToLiteralValue(data[1]);
+
+			mValues.emplace_back(std::move(object));
 		}
 	}
 
@@ -825,6 +925,35 @@ Value OperatorLiteral::Evaluate(const mvt::feature::Feature& feature, float zoom
 	return Value{};
 }
 
+template<typename T>
+bool _OperatorType<T>::ParseFromJson(const json& data)
+{
+	if (JsonArrayToValueArray(data, mValues, 1))
+	{
+		return mValues.size() >=1;
+	}
+
+	return false;
+}
+
+template<typename T>
+Value _OperatorType<T>::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	for (const auto& value : mValues)
+	{
+		Value result = GetValue(value, feature, zoom);
+
+		if (std::holds_alternative<T>(result))
+		{
+			return result;
+		}
+	}
+
+	return Value{};
+
+}
+
+
 
 bool OperatorToBoolean::ParseFromJson(const json& data)
 {
@@ -832,7 +961,7 @@ bool OperatorToBoolean::ParseFromJson(const json& data)
 	{
 		if (JsonArrayToValueArray(data, mValues, 1))
 		{
-			return mValues.size() ==1;
+			return mValues.size() == 1;
 		}
 	}
 
@@ -860,6 +989,44 @@ Value OperatorToBoolean::Evaluate(const mvt::feature::Feature& feature, float zo
 		bool result = std::visit(ToBooleanCallable(), value);
 
 		return result;
+	}
+
+	return {};
+}
+
+
+// [ "to-color", value, ... ]: color
+bool OperatorToColor::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "to-color"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() == 1;
+		}
+	}
+
+	return false;
+}
+
+Value OperatorToColor::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	for (const auto& value : mValues)
+	{
+		Value result = GetValue(value, feature, zoom);
+
+		if (result.IsColor())
+		{
+			return result;
+		}
+		else if (result.IsString())
+		{
+			Color c(result.GetString());
+			if (c.IsValid())
+			{
+				return c;
+			}
+		}
 	}
 
 	return {};
@@ -899,16 +1066,16 @@ Value OperatorToNumber::Evaluate(const mvt::feature::Feature& feature, float zoo
 		{
 			Value result = GetValue(value, feature, zoom);
 
-			if (value.IsNull() || (value.IsBool() && value.GetBool() == false))
+			if (result.IsNull() || (result.IsBool() && result.GetBool() == false))
 			{
 				return { 0.0f };
 			}
-			if (auto s = value.TryGetString(); s.has_value())
+			if (auto s = result.TryGetString(); s.has_value())
 			{
-				auto result = ParseStringToFloat(s.value());
-				if (result.has_value())
+				auto result2 = ParseStringToFloat(s.value());
+				if (result2.has_value())
 				{
-					return { *result };
+					return { *result2		 };
 				}
 			}
 		}
@@ -962,6 +1129,53 @@ Value OperatorToString::Evaluate(const mvt::feature::Feature& feature, float zoo
 }
 
 
+bool OperatorTypeof::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "typeof") && data.size() == 2)
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() == 1;
+		}
+	}
+
+	return false;
+}
+
+struct TypeofCallable
+{
+	std::string operator()(bool) const { return "boolean"; }
+	std::string operator()(float) const { return "number"; }
+	std::string operator()(const std::string& s) const {
+		Color c(s);
+		if (c.IsValid())
+			return "color";
+		else
+			return "string";
+	}
+	std::string operator()(const Color&) const { return "color"; }
+	std::string operator()(const BoolArray&) const { return "array"; }
+	std::string operator()(const FloatArray&) const { return "array"; }
+	std::string operator()(const StringArray&) const { return "array"; }
+	std::string operator()(const ValueMap&) const { return "object"; }
+	std::string operator()(const std::monostate&) const { return "null"; }
+
+	// XXX collator, formatted, resolvedImage.
+
+	std::string operator()(auto) const { return "unknown"; }	// XXX Return 
+};
+
+Value OperatorTypeof::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		Value result = GetValue(mValues[0], feature, zoom);
+		return std::visit(TypeofCallable(), result);
+	}
+	return {};
+}
+
+
 
 bool OperatorGeometryType::ParseFromJson(const json& data)
 {
@@ -982,6 +1196,37 @@ Value OperatorGeometryType::Evaluate(const mvt::feature::Feature& feature, float
 	return {};
 }
 
+
+// [ "id" ]: number
+bool OperatorId::ParseFromJson(const json& data)
+{
+	return IsOperatorOfType(data, "id") && data.size() == 1;
+}
+
+Value OperatorId::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	return static_cast<float>(feature.mId);
+}
+
+
+// [ "properties" ]: object
+bool OperatorProperties::ParseFromJson(const json& data)
+{
+	return IsOperatorOfType(data, "properties") && data.size() == 1;
+}
+
+Value OperatorProperties::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	ValueMap properties;
+
+	for (const auto& [key, valueField] : feature.mValues)
+	{
+		Value value = ValueFieldToValue(valueField);
+		properties[key] = value;
+	}
+
+	return { properties };
+}
 
 
 
@@ -1189,7 +1434,7 @@ Value OperatorUpcase::Evaluate(const mvt::feature::Feature& feature, float zoom)
 		{
 			auto utf32 = unicode::convert::Utf8ToUtf32(s.value());
 
-			unicode::casemapping::ToUpper(utf32);
+			utf32 = unicode::casemapping::ToUpper(utf32);
 
 			value = { unicode::convert::Utf32ToUtf8(utf32) };
 
@@ -1219,48 +1464,36 @@ bool OperatorGet::ParseFromJson(const json& data)
 		}
 	}
 
-	/*
-	if (data.is_array() && data.size() >= 2)
-	{
-		//if (data[0].is_string() && data[0].get<std::string>() == "get")
-		if (IsStringOfValue(data[0], "get"))
-		{
-			if (data[1].is_string())
-			{
-				mValues.push_back(data[1].get<std::string>());
-				return true;
-			}
-			else if (IsJsonExpression(data[1]))
-			{
-				std::shared_ptr<IOperator> exprOp = CreateOperatorFromJson(data[1]);
-				if (exprOp)
-				{
-					mValues.push_back(exprOp);
-					return true;
-				}
-			}
-		}
-	}
-	*/
 	return false;
 }
 
 Value OperatorGet::Evaluate(const Feature& feature, float zoom)
 {
-	assert(mValues.size() == 1);
+	assert(ArrayHasSize(mValues, 1, 2));
 
 	if (mValues.size() > 0)
 	{
-		Value op = GetValue(mValues[0], feature, zoom);
-		//if (std::holds_alternative<std::string>(op))
-		if (op.IsString())
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		if (auto property = value.TryGetString(); property.has_value())
 		{
-//			std::string key = std::get<std::string>(op);
-			std::string key = op.GetString();
-			if (feature.mValues.contains(key))
+			if (mValues.size() == 1)
 			{
-				ValueField value = feature.mValues.at(key);
-				return ValueFieldToValue(value);
+				if (feature.mValues.contains(*property))
+				{
+					ValueField value = feature.mValues.at(*property);
+					return ValueFieldToValue(value);
+				}
+			}
+			else if (mValues.size() == 2)
+			{
+				if (auto object = mValues[1].TryGetObject(); object.has_value())
+				{
+					if (object.value().contains(*property))
+					{
+						return object.value().at(*property);
+					}
+				}
 			}
 		}
 	}
@@ -1281,32 +1514,6 @@ bool OperatorHas::ParseFromJson(const json& data)
 		}
 	}
 
-/*
-	if (data.is_array() && data.size() >= 2)
-	{
-		if (IsStringOfValue(data[0], "has"))
-		{
-			Value value = JsonTypeToValue(data[1]);
-			if (!value.IsNull())
-			{
-				mValues.emplace_back(std::move(value));
-
-				if (data.size() == 3)
-				{
-					// XXX Need support for 'object' type, i.e. string-to-Value mappings.
-					//Value object = JsonTypeToValue(data[2]);
-					//if (!object.IsNull())
-					//{
-					//	mValues.emplace_back(std::move(value));
-					//}
-				}
-
-				return true;
-			}
-		}
-	}
-*/
-
 	return false;
 }
 
@@ -1314,22 +1521,21 @@ Value OperatorHas::Evaluate(const Feature& feature, float zoom)
 {
 	if (mValues.size() >= 1)
 	{
-		Value op = GetValue(mValues[0], feature, zoom);
-		if (auto key = op.TryGetString(); key.has_value())
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		if (auto property = value.TryGetString(); property.has_value())
 		{
-			bool hasValue = feature.mValues.contains(key.value());
-
-			if (!hasValue && mValues.size() == 2)
+			if (mValues.size() == 1)
 			{
-				// XXX Need support for 'object' type, i.e. string-to-Value mappings.
-				//Value object = GetValue(mValues[1], feature, zoom);
-				//if (object.IsObject())
-				//{
-				//	hasValue = object.GetObject().contains(key.value());
-				//}
+				return feature.mValues.contains(*property);
 			}
-
-			return { hasValue };
+			else if (mValues.size() == 2)
+			{
+				if (auto object = mValues[1].TryGetObject(); object.has_value())
+				{
+					return object.value().contains(*property);
+				}
+			}
 		}
 	}
 
@@ -2307,6 +2513,79 @@ Value OperatorStep::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 	return {};
 }
+
+
+// [ "let", variable_name, value, variable_name, value, ..., OutputType ]: OutputType
+bool OperatorLet::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "let") && data.size() >= 4 && data.size()%2 == 0)
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+Value OperatorLet::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() >= 3)
+	{
+		gVarStack.PushFrame();
+
+		for (size_t i=0; i<mValues.size() - 1; i+=2)
+		{
+			if (!mValues[i].IsString())
+			{
+				return {};
+			}
+			std::string name = mValues[i].GetString();
+
+			gVarStack.AddVar(name, GetValue(mValues[i + 1], feature, zoom));
+		}
+
+		Value result = GetValue(mValues.back(), feature, zoom);
+
+		gVarStack.PopFrame();
+
+		return result;
+	}
+
+	return {};
+}
+
+
+bool OperatorVar::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "var") && data.size() == 2)
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return mValues.size() == 1;
+		}
+	}
+
+	return false;
+}
+
+Value OperatorVar::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	if (mValues.size() == 1)
+	{
+		if (auto name = mValues[0].TryGetString(); name.has_value())
+		{
+			if (auto var = gVarStack.GetVar(name.value()); var.has_value())
+			{
+				return var.value();
+			}
+		}
+	}
+
+	return {};
+}
+
 
 
 
