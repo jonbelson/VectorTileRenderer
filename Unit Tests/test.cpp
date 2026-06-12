@@ -13,6 +13,7 @@ import core.color;
 import core.geometry;
 
 import formats.mvt.expressions;
+import formats.mvt.operators;
 import formats.mvt.feature;
 import formats.mvt.symbol;
 import unicode.casemapping;

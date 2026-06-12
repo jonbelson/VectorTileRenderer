@@ -131,7 +131,7 @@ static bool IsOldFilterFormat(const json& data)
 	return false;
 }
 
-
+/*
 OperatorPtr CreateOperatorFromJson(const std::string& jsonExpression)
 {
 	OperatorPtr exprOp;
@@ -148,7 +148,7 @@ OperatorPtr CreateOperatorFromJson(const std::string& jsonExpression)
 
 	return exprOp;
 }
-
+*/
 
 
 static std::map<std::string_view, FilterExistential> ExistentialOperatorMap {

@@ -13,7 +13,8 @@ import std;
 import formats.mvt.feature;
 import core.color;
 
-export import :operators;
+//export import :operators;
+import formats.mvt.operators;
 
 using json = nlohmann::json;
 

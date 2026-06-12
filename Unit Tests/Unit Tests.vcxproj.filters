@@ -39,9 +39,6 @@
     <ClCompile Include="..\formats\mvt\Expressions.cpp">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
-    <ClCompile Include="..\formats\mvt\Expressions-Operators.cpp">
-      <Filter>Project Modules\formats\mvt</Filter>
-    </ClCompile>
     <ClCompile Include="..\formats\mvt\Layer.cpp">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
@@ -52,9 +49,6 @@
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
     <ClCompile Include="..\formats\mvt\Expressions.ixx">
-      <Filter>Project Modules\formats\mvt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\formats\mvt\Expressions-Operators.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
     <ClCompile Include="..\formats\mvt\Feature.ixx">
@@ -139,6 +133,81 @@
       <Filter>Project Modules\Unicode</Filter>
     </ClCompile>
     <ClCompile Include="..\formats\mvt\Cache.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Common.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Common.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Decision.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Decision.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Feature.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Feature.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Function.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Function.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Interpolate.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Interpolate.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Lookup.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Lookup.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Math.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Math.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-String.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-String.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Types.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Types.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Variables.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Variables.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\JSON.ixx">
+      <Filter>Project Modules\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Camera.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Camera.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
   </ItemGroup>

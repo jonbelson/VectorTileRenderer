@@ -131,12 +131,6 @@
     <ClCompile Include="formats\mvt\TileCache.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
-    <ClCompile Include="formats\mvt\Expressions-Operators.ixx">
-      <Filter>Source Files\Formats\Mvt</Filter>
-    </ClCompile>
-    <ClCompile Include="formats\mvt\Expressions-Operators.cpp">
-      <Filter>Source Files\Formats\Mvt</Filter>
-    </ClCompile>
     <ClCompile Include="core\RenderTarget.ixx">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
@@ -249,6 +243,81 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="formats\mvt\Cache.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Common.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Feature.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Feature.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="core\JSON.ixx">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Decision.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Decision.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Common.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Lookup.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Lookup.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-String.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-String.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Types.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Types.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Interpolate.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Interpolate.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Math.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Math.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Variables.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Variables.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Function.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Function.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Camera.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Camera.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
   </ItemGroup>
