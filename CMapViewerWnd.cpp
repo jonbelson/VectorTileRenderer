@@ -86,7 +86,8 @@ class CMapViewerWndViewModel
 public:
 	CMapViewerWndViewModel()
 	{
-		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+		//UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+		UINT dpi = GetDpiForSystem();
 
 		constexpr int TileSize = 512;
 		m_fDpiScale = dpi/96.0f;

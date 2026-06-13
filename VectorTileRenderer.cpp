@@ -12,6 +12,8 @@
 #include "VectorTileRenderer.h"
 #include "VectorTileRendererDlg.h"
 
+#include <afxver_.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -75,6 +77,12 @@ BOOL CVectorTileRendererApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+
+	//SetProcessDpiAwarenessContext(
+	//	DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+//	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+//	AfxEnablePerMonitorDpiSupport();
 
 	CVectorTileRendererDlg dlg;
 	m_pMainWnd = &dlg;

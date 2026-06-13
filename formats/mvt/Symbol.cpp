@@ -531,9 +531,13 @@ namespace mvt::symbol
 
 			float glyphWidth = wordLength/utf32.size();
 
-			float offset = 0.0f;//{ glyphWidth };
-			//while (offset < lineWalker.GetTotalDist() - wordLength)
+			enum struct Pass { Halo, Text } ;
+
+			for (auto& pass : { Pass::Halo, Pass::Text })
 			{
+
+				float offset = 0.0f;//{ glyphWidth };
+				//while (offset < lineWalker.GetTotalDist() - wordLength)
 				float start = offset;
 
 				for (int i = 0; i<utf32.size(); i++)
@@ -584,13 +588,18 @@ namespace mvt::symbol
 							DrawRect(&renderTarget, p, glyphSpec.width*textScale, glyphSpec.height*textScale);
 						}
 
-						BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
-						BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
-
-						renderTarget.SetActiveBitmap(haloHandle);
-						renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-						renderTarget.SetActiveBitmap(glyphHandle);
-						renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+						if (pass == Pass::Halo)
+						{
+							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
+							renderTarget.SetActiveBitmap(haloHandle);
+							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+						}
+						else if (pass == Pass::Text)
+						{
+							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
+							renderTarget.SetActiveBitmap(glyphHandle);
+							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+						}
 
 						if constexpr (!debug::visual::NoGlyphRotation)
 						{
@@ -1001,59 +1010,70 @@ namespace mvt::symbol
 		float textLineHeight = textScale*attribs.textLineHeight*style::GlyphSize;
 		float padding = textScale*attribs.textLetterSpacing*style::GlyphSize;
 
-		Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
-		cursor = AdjustForTextOffset(attribs, cursor);
+		enum struct Pass { Halo, Text } ;
 
-		const Point start = cursor;
-
-		for (size_t i=0; i<formattedText.lines.size(); i++)
+		for (auto& pass : { Pass::Halo, Pass::Text })
 		{
-			cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
-			//cursor = AdjustForTextOffset(attribs, cursor);
+			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+			cursor = AdjustForTextOffset(attribs, cursor);
 
-			if (i != 0)
+			const Point start = cursor;
+
+			for (size_t i = 0; i<formattedText.lines.size(); i++)
 			{
-				cursor.y += textLineHeight;
-			}
+				cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
+				//cursor = AdjustForTextOffset(attribs, cursor);
 
-			const auto& line = formattedText.lines[i];
-
-			for (size_t j = 0; j<line.text.size(); j++)
-			{
-				uint32_t cp = line.text[j];
-
-				int blockStart = GetGlyphBlockStart(cp);
-
-				auto glyphAtlas = context.glyphs.Lookup(font, blockStart);
-
-
-				if (glyphAtlas && glyphAtlas->glyphs.contains(cp))
+				if (i != 0)
 				{
-					const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
+					cursor.y += textLineHeight;
+				}
 
-					Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
+				const auto& line = formattedText.lines[i];
 
-					float x = cursor.x;
-					float y = cursor.y;
+				for (size_t j = 0; j<line.text.size(); j++)
+				{
+					uint32_t cp = line.text[j];
 
-					x += glyphSpec.left*textScale;
-					//y += glyphSpec.top*textScale;
+					int blockStart = GetGlyphBlockStart(cp);
 
-					float ypos = y - textScale*glyphSpec.top;
-					Point topLeft{ x, ypos };
+					auto glyphAtlas = context.glyphs.Lookup(font, blockStart);
 
-					Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
 
-					// Get the appropriate BitmapHandles.
-					BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
-					BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
+					if (glyphAtlas && glyphAtlas->glyphs.contains(cp))
+					{
+						const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
 
-					renderTarget.SetActiveBitmap(haloHandle);
-					renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-					renderTarget.SetActiveBitmap(glyphHandle);
-					renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+						Rect srcRect{ static_cast<float>(glyphSpec.x), static_cast<float>(glyphSpec.y), static_cast<float>(glyphSpec.width), static_cast<float>(glyphSpec.height) };
 
-					cursor.x += glyphSpec.advance*textScale + padding;
+						float x = cursor.x;
+						float y = cursor.y;
+
+						x += glyphSpec.left*textScale;
+						//y += glyphSpec.top*textScale;
+
+						float ypos = y - textScale*glyphSpec.top;
+						Point topLeft{ x, ypos };
+
+						Rect destRect = Rect(topLeft, glyphSpec.width*textScale, glyphSpec.height*textScale);
+
+						// Get the appropriate BitmapHandles.
+						if (pass == Pass::Halo)
+						{
+							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
+							renderTarget.SetActiveBitmap(haloHandle);
+							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+						}
+						else
+						{
+							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
+
+							renderTarget.SetActiveBitmap(glyphHandle);
+							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+						}
+
+						cursor.x += glyphSpec.advance*textScale + padding;
+					}
 				}
 			}
 		}
