@@ -498,6 +498,7 @@ namespace mvt::renderer
 		return false;
 	}
 
+
 	static std::unique_ptr<ITileFetcher> CreateFetcher(const mvt::style::Source& source)
 	{
 		//ITileFetcher* tileFetcher {};
@@ -528,6 +529,37 @@ namespace mvt::renderer
 
 		return {};//tileFetcher;
 	}
+
+
+	void Renderer::PrefetchTiles(const tile::TileSpecArray& tileSpecArray, float zoom)
+	{
+		for (size_t i = 0; i<tileSpecArray.size(); i++)
+		{
+			const auto& tileSpec = tileSpecArray[i];
+
+			for (const auto& [name, source] : mStyle->mSources)
+			{
+				if (source.mType == "vector")
+				{
+					auto tileFetcher = CreateFetcher(source);
+
+					if (tileFetcher)
+					{
+						mTileCache.SetTileFetcher(tileFetcher);
+
+						//mTileCache
+
+						const auto tile = mTileCache.GetTile(tileSpec.x, tileSpec.y, static_cast<int>(zoom) /*tileSpec.zoom*/);
+
+					}
+				}
+			}
+		}
+
+
+
+	}
+
 
 	bool Renderer::RenderTile(renderer::RenderContext& context, const tile::TileSpec& tileSpec)
 	{
@@ -653,7 +685,9 @@ namespace mvt::renderer
 			endy = std::max(endy, tileSpec.y);
 		}
 
-		//for (const auto& tileSpec : tileSpecArray)
+
+
+
 		for (size_t i=0; i<tileSpecArray.size(); i++)
 		{
 			const auto& tileSpec = tileSpecArray[i];

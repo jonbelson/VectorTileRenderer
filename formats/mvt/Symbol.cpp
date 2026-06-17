@@ -185,11 +185,11 @@ namespace mvt::symbol
 		renderTarget->DrawLine(&lineString);
 	}
 
-	void DrawDot(RenderTarget* renderTarget, Point p, Color c = Color("#0000ff"))
+	void DrawDot(RenderTarget* renderTarget, Point p, Color c = Color("#0000ff"), float radius = 3.0f)
 	{
 		renderTarget->SetFillColor(c);
 		renderTarget->SetDashArray({});
-		renderTarget->SetCircleRadius(3.0f);
+		renderTarget->SetCircleRadius(radius);
 
 		MultiPoint multiPoint;
 		multiPoint.points.push_back(p);
@@ -509,9 +509,6 @@ namespace mvt::symbol
 			int i {};
 		}
 
-		//BitmapHandle glyphHandle{};
-		//BitmapHandle haloHandle{};
-
 		{
 			auto& glyphs = context.glyphs;
 
@@ -559,12 +556,13 @@ namespace mvt::symbol
 						float x = point.x;
 						float y = point.y;
 
+						x += glyphSpec.left*textScale;
+
 						float ypos = y - textScale*glyphSpec.top;
 						ypos -= textScale*style::DefaultAscender + textScale*style::DefaultDecender*0.5f;
 
 						float xpos = x;
 						xpos -= glyphWidth*0.5f;
-						x += glyphSpec.left*textScale;
 
 						Point p{ xpos, ypos };
 
@@ -608,6 +606,11 @@ namespace mvt::symbol
 							renderTarget.PopTransform();
 						}
 
+						if constexpr (debug::visual::DrawLineLabelGlyphOrigin)
+						{
+							DrawDot(&renderTarget, point, Color("blue"), 1.0f);
+						}
+
 						offset += (glyphSpec.advance + padding)*textScale;
 					}
 				}
@@ -617,6 +620,12 @@ namespace mvt::symbol
 					//auto line = lineWalker.GetPointList(start, start + wordLength);
 					DrawLine(&renderTarget, pointArray);
 				}
+
+				if constexpr (debug::visual::DrawLineLabelOrigin)
+				{
+					DrawDot(&renderTarget, pointArray[0], Color("green"), 2.0f);
+				}
+
 
 			}
 		}
@@ -1050,7 +1059,6 @@ namespace mvt::symbol
 						float y = cursor.y;
 
 						x += glyphSpec.left*textScale;
-						//y += glyphSpec.top*textScale;
 
 						float ypos = y - textScale*glyphSpec.top;
 						Point topLeft{ x, ypos };

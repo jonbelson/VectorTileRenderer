@@ -161,19 +161,32 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	//renderTarget->FillBackground();
 
 #if 0
-	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Documents\Projects\OS-Open-Zoomstack-Stylesheets\fonts\Open Sans Regular\0-255.pbf)");
+//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Documents\Projects\OS-Open-Zoomstack-Stylesheets\fonts\Open Sans Regular\0-255.pbf)");
 //	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\0-255.pbf)");
+	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Downloads\Arial Regular 0-255.pbf)");
+
 	if (data)
 	{
 		auto glyphs = mvt::style::DecodeGlyph(data.value());
 		if (glyphs.has_value())
 		{
-			auto atlas = mvt::style::CreateAtlas(glyphs->stacks[0]);
+			auto atlas = mvt::style::CreateAtlas(glyphs->stacks[0], 0.0f);
 			if (atlas)
 			{
+				auto renderTarget = new core::rendertarget::D2DRenderTarget(1000, 1000);
+
 				auto handle = renderTarget->RegisterBitmap(atlas->bitmap);
 				renderTarget->SetActiveBitmap(handle);
-				renderTarget->DrawBitmap(core::geometry::Rect(0, 0, 1000, 1000));
+				auto widthPx = atlas->bitmap->GetWidth();
+				auto heightPx = atlas->bitmap->GetHeight();
+
+				renderTarget->DrawBitmap(core::geometry::Rect(0, 0, widthPx, heightPx));
+
+				for (const auto& [ cp, spec] : atlas->glyphs)
+				{
+					//spec.
+				}
+
 				renderTarget->Save("C:\\Users\\jon\\GlyphImage.png");
 				int i{};
 

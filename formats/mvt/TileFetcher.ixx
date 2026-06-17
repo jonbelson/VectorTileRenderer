@@ -19,16 +19,28 @@ import io.resource;
 
 namespace mvt::tilefetcher
 {
+	export using TileData = std::vector<std::byte>;
+
 	// Base class for Tile fetchers.
 	export class ITileFetcher
 	{
 		public:
-			ITileFetcher() {}
-			virtual ~ITileFetcher() {}
+			virtual ~ITileFetcher() = default;
 
 			// Fetch the Tile PBF, decompressing if necessary.
-			virtual std::vector<std::byte> FetchTile(int x, int y, int zoom) = 0;
-			virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
+			virtual TileData FetchTile(int x, int y, int zoom) = 0;
+			virtual TileData FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
+
+			virtual std::vector<TileData> FetchTiles(const std::vector<mvt::tile::TileSpec>& tileSpecs)
+			{
+				std::vector<TileData> tiles;
+				tiles.reserve(tileSpecs.size());
+				for (const auto& tileSpec : tileSpecs)
+				{
+					tiles.emplace_back(FetchTile(tileSpec));
+				}
+				return tiles;
+			}
 	};
 
 
@@ -135,6 +147,18 @@ namespace mvt::tilefetcher
 		{
 			return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 		}
+
+		virtual std::vector<TileData> FetchTiles(const std::vector<mvt::tile::TileSpec>& tileSpecs)
+		{
+			std::vector<TileData> tiles;
+			tiles.reserve(tileSpecs.size());
+			for (const auto& tileSpec : tileSpecs)
+			{
+				tiles.emplace_back(FetchTile(tileSpec));
+			}
+			return tiles;
+		}
+
 
 		// url	Url of tile source, with {z}, {y}, {x} templates.
 		static std::expected<HttpTileFetcherPtr, Error> Create(std::string_view url)

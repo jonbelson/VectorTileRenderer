@@ -20,9 +20,10 @@ namespace io::resource
 
 	export std::expected<Data, Status>  LoadFromHttp(std::string_view url);
 
+	export std::expected<std::vector<Data>, Status> LoadFromHttp(const std::vector<std::string>& urls);
+
 	// Attempt to call the appropriate Load*() function based on prefix.
 	export std::expected<Data, Status>  LoadFromUri(std::string_view uri);
 
 	export bool SaveData(const Data& data, const std::string& fileName);
-
 };

@@ -70,17 +70,61 @@ namespace io::resource
 		return blockSize;
 	}
 
+	std::expected<std::vector<Data>, Status> LoadFromHttp(const std::vector<std::string>& urls)
+	{
+		std::vector<Data> results;
+		results.reserve(urls.size());
+
+		CURL* curlHandle{};
+
+		curl_global_init(CURL_GLOBAL_ALL);
+
+		curlHandle = curl_easy_init();
+
+		curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, CurlCallback);
+
+		curl_easy_setopt(curlHandle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		for (const auto& url : urls)
+		{
+			core::logger::Info("Loading from HTTP: {}\n", url);
+
+			Data chunk;
+
+			curl_easy_setopt(curlHandle, CURLOPT_URL, std::string(url).c_str());
+
+			curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, (void*) &chunk);
+
+			CURLcode result = curl_easy_perform(curlHandle);
+
+			if (result != CURLE_OK)
+			{
+				core::logger::Warning("Failed to load from HTTP: {}\n", url);
+
+				//curl_easy_cleanup(curlHandle);
+
+				//curl_global_cleanup();
+
+				//return std::unexpected(Status::HttpError);
+			}
+
+			results.push_back(std::move(chunk));
+		}
+
+		curl_easy_cleanup(curlHandle);
+
+		curl_global_cleanup();
+
+		return results;
+	}
+
 	std::expected<Data, Status> LoadFromHttp(std::string_view url)
 	{
 		core::logger::Info("Loading from HTTP: {}\n", url);
 
 		CURL* curlHandle{};
 
-		//struct MemoryStruct chunk;
 		Data chunk;
-
-		//chunk.memory = (char*) malloc(1);
-		//chunk.size = 0;
 
 		curl_global_init(CURL_GLOBAL_ALL);
 
@@ -100,8 +144,6 @@ namespace io::resource
 		{
 			curl_easy_cleanup(curlHandle);
 
-			//free(chunk.memory);
-
 			curl_global_cleanup();
 
 			return std::unexpected(Status::HttpError);
@@ -109,13 +151,9 @@ namespace io::resource
 
 		curl_easy_cleanup(curlHandle);
 
-		//free(chunk.memory);
-
 		curl_global_cleanup();
 
 		return chunk;
-
-		//return std::unexpected(Status::Unknown);
 	}
 
 	// Attempt to call the appropriate Load*() function based on prefix.
