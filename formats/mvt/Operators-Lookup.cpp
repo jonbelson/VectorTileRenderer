@@ -55,17 +55,17 @@ Value OperatorAt::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 		int index = static_cast<int>(std::round(indexValue.GetFloat()));
 
-		if (auto opt = arrayValue.TryGetStringArray(); opt.has_value())
+		if (auto* stringArray = arrayValue.TryGetStringArray())
 		{
-			return GetValueAt(opt.value(), index);
+			return GetValueAt(*stringArray, index);
 		}
-		else if (auto opt = arrayValue.TryGetFloatArray(); opt.has_value())
+		else if (auto* floatArray = arrayValue.TryGetFloatArray())
 		{
-			return GetValueAt(opt.value(), index);
+			return GetValueAt(*floatArray, index);
 		}
-		else if (auto opt = arrayValue.TryGetBoolArray(); opt.has_value())
+		else if (auto boolArray = arrayValue.TryGetBoolArray())
 		{
-			return GetValueAt(opt.value(), index);
+			return GetValueAt(*boolArray, index);
 		}
 	}
 
@@ -98,28 +98,26 @@ Value OperatorAtInterpolated::Evaluate(const mvt::feature::Feature& feature, flo
 
 		int index = static_cast<int>(std::round(indexValue.GetFloat()));
 
-		if (auto opt = arrayValue.TryGetStringArray(); opt.has_value())
+		if (auto* stringArray = arrayValue.TryGetStringArray())
 		{
-			return GetValueAt(opt.value(), index);
+			return GetValueAt(*stringArray, index);
 		}
-		else if (auto opt = arrayValue.TryGetFloatArray(); opt.has_value())
+		else if (auto floatArray = arrayValue.TryGetFloatArray())
 		{
-			FloatArray floatArray = opt.value();
-
 			// Interpolate for non-integer index.
 
 			int idx1 = static_cast<int>(std::round(indexValue.GetFloat()));
 			int idx2 = idx1 + 1;
 			float ratio = indexValue.GetFloat() - idx1;
 
-			if (idx1 < 0 || idx1 >= floatArray.size()) return {};
-			if (idx2 >= floatArray.size()) return {};
+			if (idx1 < 0 || idx1 >= floatArray->size()) return {};
+			if (idx2 >= floatArray->size()) return {};
 
-			return std::lerp(floatArray.at(idx1), floatArray.at(idx2), ratio);
+			return std::lerp(floatArray->at(idx1), floatArray->at(idx2), ratio);
 		}
-		else if (auto opt = arrayValue.TryGetBoolArray(); opt.has_value())
+		else if (auto boolArray = arrayValue.TryGetBoolArray())
 		{
-			return GetValueAt(opt.value(), index);
+			return GetValueAt(*boolArray, index);
 		}
 	}
 
@@ -151,23 +149,23 @@ Value OperatorGet::Evaluate(const Feature& feature, float zoom)
 	{
 		Value value = GetValue(mValues[0], feature, zoom);
 
-		if (auto property = value.TryGetString(); property.has_value())
+		if (auto* property = value.TryGetString())
 		{
+			const std::string& propertyRef = *property;
 			if (mValues.size() == 1)
 			{
-				if (feature.mValues.contains(*property))
+				if (auto iter = feature.mValues.find(propertyRef); iter != feature.mValues.end())
 				{
-					ValueField value = feature.mValues.at(*property);
-					return ValueFieldToValue(value);
+					return ValueFieldToValue(iter->second);
 				}
 			}
 			else if (mValues.size() == 2)
 			{
-				if (auto object = mValues[1].TryGetObject(); object.has_value())
+				if (auto* object = mValues[1].TryGetObject())
 				{
-					if (object.value().contains(*property))
+					if (auto iter = object->find(propertyRef); iter != object->end())
 					{
-						return object.value().at(*property);
+						return iter->second;
 					}
 				}
 			}
@@ -199,7 +197,7 @@ Value OperatorHas::Evaluate(const Feature& feature, float zoom)
 	{
 		Value value = GetValue(mValues[0], feature, zoom);
 
-		if (auto property = value.TryGetString(); property.has_value())
+		if (auto* property = value.TryGetString())
 		{
 			if (mValues.size() == 1)
 			{
@@ -207,9 +205,9 @@ Value OperatorHas::Evaluate(const Feature& feature, float zoom)
 			}
 			else if (mValues.size() == 2)
 			{
-				if (auto object = mValues[1].TryGetObject(); object.has_value())
+				if (auto* object = mValues[1].TryGetObject())
 				{
-					return object.value().contains(*property);
+					return object->contains(*property);
 				}
 			}
 		}
@@ -242,9 +240,9 @@ Value OperatorIn::Evaluate(const Feature& feature, float zoom)
 
 		if (keyword.IsBool())
 		{
-			if (auto boolArray = input.TryGetBoolArray(); boolArray.has_value())
+			if (auto* boolArray = input.TryGetBoolArray())
 			{
-				if (std::find(std::begin(boolArray.value()), std::end(boolArray.value()), keyword.GetBool()) != std::end(boolArray.value()))
+				if (std::find(std::begin(*boolArray), std::end(*boolArray), keyword.GetBool()) != std::end(*boolArray))
 				{
 					return { true };
 				}
@@ -253,9 +251,9 @@ Value OperatorIn::Evaluate(const Feature& feature, float zoom)
 		}
 		else if (keyword.IsString())
 		{
-			if (auto stringArray = input.TryGetStringArray(); stringArray.has_value())
+			if (auto* stringArray = input.TryGetStringArray())
 			{
-				if (std::find(std::begin(stringArray.value()), std::end(stringArray.value()), keyword.GetString()) != std::end(stringArray.value()))
+				if (std::find(std::begin(*stringArray), std::end(*stringArray), keyword.GetString()) != std::end(*stringArray))
 				{
 					return { true };
 				}
@@ -272,9 +270,9 @@ Value OperatorIn::Evaluate(const Feature& feature, float zoom)
 		}
 		else if (keyword.IsFloat())
 		{
-			if (auto floatArray = input.TryGetFloatArray(); floatArray.has_value())
+			if (auto floatArray = input.TryGetFloatArray())
 			{
-				if (std::find(std::begin(floatArray.value()), std::end(floatArray.value()), keyword.GetFloat()) != std::end(floatArray.value()))
+				if (std::find(std::begin(*floatArray), std::end(*floatArray), keyword.GetFloat()) != std::end(*floatArray))
 				{
 					return { true };
 				}
@@ -324,11 +322,11 @@ Value OperatorIndexOf::Evaluate(const Feature& feature, float zoom)
 
 		if (keyword.IsBool())
 		{
-			if (auto boolArray = input.TryGetBoolArray(); boolArray.has_value())
+			if (auto* boolArray = input.TryGetBoolArray())
 			{
-				for (size_t i=index; i<boolArray.value().size(); i++)
+				for (size_t i=index; i<boolArray->size(); i++)
 				{
-					if (boolArray.value().at(i) == keyword.GetBool())
+					if (boolArray->at(i) == keyword.GetBool())
 					{
 						return { static_cast<float>(i) };
 					}
@@ -339,11 +337,11 @@ Value OperatorIndexOf::Evaluate(const Feature& feature, float zoom)
 		}
 		else if (keyword.IsString())
 		{
-			if (auto stringArray = input.TryGetStringArray(); stringArray.has_value())
+			if (auto* stringArray = input.TryGetStringArray())
 			{
-				for (size_t i=index; i<stringArray.value().size(); i++)
+				for (size_t i=index; i<stringArray->size(); i++)
 				{
-					if (stringArray.value().at(i) == keyword.GetString())
+					if (stringArray->at(i) == keyword.GetString())
 					{
 						return { static_cast<float>(i) };
 					}
@@ -364,11 +362,11 @@ Value OperatorIndexOf::Evaluate(const Feature& feature, float zoom)
 		}
 		else if (keyword.IsString())
 		{
-			if (auto stringArray = input.TryGetStringArray(); stringArray.has_value())
+			if (auto* stringArray = input.TryGetStringArray())
 			{
-				for (size_t i=index; i<stringArray.value().size(); i++)
+				for (size_t i=index; i<stringArray->size(); i++)
 				{
-					if (stringArray.value().at(i) == keyword.GetString())
+					if (stringArray->at(i) == keyword.GetString())
 					{
 						return { static_cast<float>(i) };
 					}
@@ -512,17 +510,17 @@ Value OperatorSlice::Evaluate(const Feature& feature, float zoom)
 
 			return s.substr(startIndex, endIndex - startIndex);
 		}
-		else if (auto opt = input.TryGetBoolArray(); opt.has_value())
+		else if (auto* boolArray = input.TryGetBoolArray())
 		{
-			return SliceArray(opt.value(), startIndex, endIndex);
+			return SliceArray(*boolArray, startIndex, endIndex);
 		}
-		else if (auto opt = input.TryGetFloatArray(); opt.has_value())
+		else if (auto* floatArray = input.TryGetFloatArray())
 		{
-			return SliceArray(opt.value(), startIndex, endIndex);
+			return SliceArray(*floatArray, startIndex, endIndex);
 		}
-		else if (auto opt = input.TryGetStringArray(); opt.has_value())
+		else if (auto* stringArray = input.TryGetStringArray())
 		{
-			return SliceArray(opt.value(), startIndex, endIndex);
+			return SliceArray(*stringArray, startIndex, endIndex);
 		}
 	}
 

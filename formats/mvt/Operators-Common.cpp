@@ -261,18 +261,13 @@ bool IsStringOfValue(const json& data, const std::string& s)
 // Reduce a Value to a simple type by evaluating any Operators.
 Value GetValue(const Value& value, const Feature& feature, float zoom)
 {
-	Value op = value;
-
-	if (std::holds_alternative<OperatorPtr>(op))
+	// XXX Do we need to call in a loop? Don't think any Operators could return a OperatorPtr.
+	if (const OperatorPtr* operatorPtr = std::get_if<OperatorPtr>(&value))
 	{
-		// XXX Do we need to call in a loop? Don't think any Operators could return a OperatorPtr.
-		OperatorPtr operatorPtr = std::get<OperatorPtr>(op);
-		op = operatorPtr->Evaluate(feature, zoom);
+		return (*operatorPtr)->Evaluate(feature, zoom);
 	}
 
-	assert(!op.IsExpression());
-
-	return op;
+	return value;
 }
 
 

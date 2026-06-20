@@ -66,7 +66,7 @@ namespace mvt::renderer
 		bool RenderVectorTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, const WorldContext& wc, float zoom);
 		bool RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y);
 
-		void PrefetchTiles(const tile::TileSpecArray& tileSpecArray, float zoom);
+		void PrefetchTiles(const tile::TileSpecArray& tileSpecArray, int zoom);
 
 	public:
 		Renderer(style::Style* style, int tileSize = 512)

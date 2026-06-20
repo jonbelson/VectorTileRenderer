@@ -186,9 +186,9 @@ public:
 	bool IsExpression(void) const { return std::holds_alternative<OperatorPtr>(*this); }
 
 	float GetFloat(void) const { return std::get<float>(*this); }
-	std::string GetString(void) const { return std::get<std::string>(*this); }
+	const std::string& GetString(void) const { return std::get<std::string>(*this); }
 	bool GetBool(void) const { return std::get<bool>(*this); }
-	core::color::Color GetColor(void) const { return std::get<core::color::Color>(*this); }
+	const core::color::Color& GetColor(void) const { return std::get<core::color::Color>(*this); }
 	const FloatArray& GetFloatArray(void) const { return std::get<FloatArray>(*this); }
 	const StringArray& GetStringArray(void) const { return std::get<StringArray>(*this); }
 	const BoolArray& GetBoolArray(void) const { return std::get<BoolArray>(*this); }
@@ -196,13 +196,14 @@ public:
 	OperatorPtr GetExpression(void) const { return std::get<OperatorPtr>(*this); }
 
 	std::optional<float> TryGetFloat(void) const { if (auto* p = std::get_if<float>(this)) return *p; return {}; }
-	std::optional<std::string> TryGetString(void) const { if (auto* p = std::get_if<std::string>(this)) return *p; return {}; }
 	std::optional<bool> TryGetBool(void) const { if (auto* p = std::get_if<bool>(this)) return *p; return {}; }
 	std::optional<core::color::Color> TryGetColor(void) const { if (auto* p = std::get_if<core::color::Color>(this)) return *p; return {}; }
-	std::optional<FloatArray> TryGetFloatArray(void) const { if (auto* p = std::get_if<FloatArray>(this)) return *p; return {}; }
-	std::optional<StringArray> TryGetStringArray(void) const { if (auto* p = std::get_if<StringArray>(this)) return *p; return {}; }
-	std::optional<ValueMap> TryGetObject(void) const { if (auto* p = std::get_if<ValueMap>(this)) return *p; return {}; }
-	std::optional<BoolArray> TryGetBoolArray(void) const { if (auto* p = std::get_if<BoolArray>(this)) return *p; return {}; }
+
+	const std::string* TryGetString(void) const { return std::get_if<std::string>(this); }
+	const FloatArray* TryGetFloatArray(void) const { return std::get_if<FloatArray>(this); }
+	const StringArray* TryGetStringArray(void) const { return std::get_if<StringArray>(this); }
+	const ValueMap* TryGetObject(void) const { return std::get_if<ValueMap>(this); }
+	const BoolArray* TryGetBoolArray(void) const { return std::get_if<BoolArray>(this); }
 
 	template<typename... Types>
 	constexpr bool IsAnyOfTypes(void) noexcept
@@ -287,15 +288,27 @@ public:
 };
 
 
+struct ToValueCallable
+{
+	Value operator()(const std::string& s) { return s; }
+	Value operator()(float f) { return f; }
+	Value operator()(bool b) { return b; }
+	Value operator()(uint64_t ui64) { return static_cast<float>(ui64); }
+	Value operator()(int64_t i64) { return static_cast<float>(i64); }
+	Value operator()(auto) { return Value{}; }
+};
+
 // Convert data fields mapped into Features into a Value.
 export Value ValueFieldToValue(ValueField valueField)
 {
-	if (std::holds_alternative<std::string>(valueField)) return std::get<std::string>(valueField);
-	if (std::holds_alternative<float>(valueField)) return std::get<float>(valueField);
-	if (std::holds_alternative<bool>(valueField)) return std::get<bool>(valueField);
+	return std::visit(ToValueCallable{}, valueField);
 
-	if (std::holds_alternative<uint64_t>(valueField)) return static_cast<float>(std::get<uint64_t>(valueField));
-	if (std::holds_alternative<int64_t>(valueField)) return static_cast<float>(std::get<int64_t>(valueField));
+	//if (std::holds_alternative<std::string>(valueField)) return std::get<std::string>(valueField);
+	//if (std::holds_alternative<float>(valueField)) return std::get<float>(valueField);
+	//if (std::holds_alternative<bool>(valueField)) return std::get<bool>(valueField);
+
+	//if (std::holds_alternative<uint64_t>(valueField)) return static_cast<float>(std::get<uint64_t>(valueField));
+	//if (std::holds_alternative<int64_t>(valueField)) return static_cast<float>(std::get<int64_t>(valueField));
 
 	return Value{};
 }

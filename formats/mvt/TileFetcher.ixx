@@ -116,13 +116,26 @@ namespace mvt::tilefetcher
 			InvalidUrl, MissingTemplates
 		};
 
-		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+		std::string MakeUrl(int zoom, int x, int y) const
 		{
 			std::string url { mUrl };
-		
+
 			url.replace(url.find("{z}"), 3, std::to_string(zoom));
 			url.replace(url.find("{y}"), 3, std::to_string(y));
 			url.replace(url.find("{x}"), 3, std::to_string(x));
+
+			return url;
+		}
+
+		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
+		{
+			//std::string url { mUrl };
+		
+			//url.replace(url.find("{z}"), 3, std::to_string(zoom));
+			//url.replace(url.find("{y}"), 3, std::to_string(y));
+			//url.replace(url.find("{x}"), 3, std::to_string(x));
+
+			std::string url = MakeUrl(zoom, x, y);
 
 			auto data = io::resource::LoadFromHttp(url);
 
@@ -150,13 +163,35 @@ namespace mvt::tilefetcher
 
 		virtual std::vector<TileData> FetchTiles(const std::vector<mvt::tile::TileSpec>& tileSpecs)
 		{
-			std::vector<TileData> tiles;
-			tiles.reserve(tileSpecs.size());
+			std::vector<std::string> urls;
+			urls.reserve(tileSpecs.size());
+
 			for (const auto& tileSpec : tileSpecs)
 			{
-				tiles.emplace_back(FetchTile(tileSpec));
+				urls.emplace_back(MakeUrl(tileSpec.zoom, tileSpec.x, tileSpec.y));
 			}
-			return tiles;
+
+			auto tilesData = io::resource::LoadFromHttp(urls);
+
+			//std::vector<TileData> tiles;
+
+			if (tilesData)
+			{
+				//tiles.reserve(tileSpecs.size());
+
+				for (auto& tileData : *tilesData)
+				{
+					if (io::gzip::IsGzipped(std::span<std::byte>(tileData)))
+					{
+//						tiles.emplace_back(io::gzip::Decompress(tleData));
+						tileData = io::gzip::Decompress(tileData);
+					}
+				}
+
+				return *tilesData;
+			}
+
+			return {};
 		}
 
 

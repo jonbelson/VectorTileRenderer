@@ -125,7 +125,7 @@ namespace mvt::style
 
 	public:
 		static std::shared_ptr<Style> LoadFromFile(const std::string& fileName);
-		static std::shared_ptr<Style> LoadFromUrl(const std::string& url);
+		static std::shared_ptr<Style> LoadFromUri(const std::string& uri);
 		static std::shared_ptr<Style> LoadFromString(const std::string& s);
 
 		std::string mName;

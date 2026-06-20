@@ -445,6 +445,11 @@ namespace mvt::renderer
 			return false;
 		}
 
+		if (zoom > source.mMaxZoom)
+		{
+			return false;
+		}
+
 		auto& renderTarget = context.renderTarget;
 
 		std::string_view url = source.mTiles.front();
@@ -531,11 +536,11 @@ namespace mvt::renderer
 	}
 
 
-	void Renderer::PrefetchTiles(const tile::TileSpecArray& tileSpecArray, float zoom)
+	void Renderer::PrefetchTiles(const tile::TileSpecArray& tileSpecArray, int zoom)
 	{
-		for (size_t i = 0; i<tileSpecArray.size(); i++)
-		{
-			const auto& tileSpec = tileSpecArray[i];
+		//for (size_t i = 0; i<tileSpecArray.size(); i++)
+		//{
+		//	const auto& tileSpec = tileSpecArray[i];
 
 			for (const auto& [name, source] : mStyle->mSources)
 			{
@@ -547,17 +552,11 @@ namespace mvt::renderer
 					{
 						mTileCache.SetTileFetcher(tileFetcher);
 
-						//mTileCache
-
-						const auto tile = mTileCache.GetTile(tileSpec.x, tileSpec.y, static_cast<int>(zoom) /*tileSpec.zoom*/);
-
+						mTileCache.PrefetchTiles(tileSpecArray, zoom);
 					}
 				}
 			}
-		}
-
-
-
+		//}
 	}
 
 
@@ -686,6 +685,7 @@ namespace mvt::renderer
 		}
 
 
+		PrefetchTiles(tileSpecArray, static_cast<int>(zoom));
 
 
 		for (size_t i=0; i<tileSpecArray.size(); i++)
@@ -724,8 +724,6 @@ namespace mvt::renderer
 
 			renderTarget.ClearClipRect();
 		}
-
-		///std::reverse(symbols.begin(), symbols.end());
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 

@@ -284,7 +284,7 @@ bool OperatorMatch::ParseFromJson(const json& data)
 struct MatchCallable
 {
 	bool operator()(float input, float label) const { return input == label; }
-	bool operator()(float input, FloatArray labels) const { return std::find(labels.begin(), labels.end(), input) != labels.end(); }
+	bool operator()(float input, const FloatArray& labels) const { return std::find(labels.begin(), labels.end(), input) != labels.end(); }
 
 	bool operator()(const std::string& input, const std::string& label) const { return input == label; }
 	bool operator()(const std::string& input, const StringArray& labels) const { return std::find(labels.begin(), labels.end(), input) != labels.end(); }

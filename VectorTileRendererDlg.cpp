@@ -251,42 +251,63 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 
 
 #if 0
+	// Decode a single PBF tile.
+	std::string path = R"(C:\Users\jon\Downloads\tile.pbf)";
+
+	auto tileFetcher = mvt::tilefetcher::TestTileFetcher::Create(path);
+
+	if (tileFetcher)
+	{
+		std::unique_ptr<mvt::tilefetcher::TestTileFetcher> fetcher{ std::move(tileFetcher.value()) };
+
+		mvt::tilecache::TileCache tileCache(fetcher.get());
+
+		auto tile = tileCache.GetTile(0, 0, 0);
+
+		int i{};
+
+	}
+#endif
+
+
+#if 0
 
 	//int zoom = 15;
 	//geo::latlong::LatLong latLong(51.448839, -0.932772);
 	//auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
 
 	// Render a single OS DataHub Tile.
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS_VTS_3857.json)");
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS_VTS_3857_Outdoor.json)");
 	if (style)
 	{
-		auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-15-10904-16299.pbf)");
+		//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-15-10904-16299.pbf)");
 		//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-16-21809-32598.pbf)");
+		auto tileFetcher = mvt::tilefetcher::TestTileFetcher::Create(R"(C:\Users\jon\Downloads\tile.pbf)");
+	
 		if (tileFetcher)
 		{
-			std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
+			std::unique_ptr<mvt::tilefetcher::TestTileFetcher> fetcher { std::move(tileFetcher.value()) };
 
-			mvt::tilecache::TileCache tileCache(fetcher.get());
-
-			UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+			UINT dpi = GetDpiForSystem();
 
 			constexpr int TileSize = 512;
-			//constexpr int TileSize = 1024;
-			float dpiScale = dpi/96.0f;
+			float fDpiScale = dpi/96.0f;
 
-//			auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
-			auto renderTarget = new core::rendertarget::SvgRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+			int iTileSize = static_cast<int>(fDpiScale*TileSize);
 
-			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
+			auto renderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(iTileSize, iTileSize);
+
+			mvt::renderer::Renderer tileRenderer(style.get());
 			tileRenderer.SetTileSize(TileSize);
-			tileRenderer.SetDpiScale(dpiScale);
 
 			mvt::tile::TileSpec tileSpec{ .zoom = 15, .y = 10904, .x = 16299 };
 			//mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };
 
-			tileRenderer.RenderTile(tileSpec);
+			auto renderContext = std::make_unique<mvt::renderer::RenderContext>(*renderTarget, *style);
 
-			if (dynamic_cast<core::rendertarget::SvgRenderTarget*>(renderTarget))
+			tileRenderer.RenderTile(*renderContext, tileSpec);
+
+			if (dynamic_cast<core::rendertarget::SvgRenderTarget*>(renderTarget.get()))
 			{
 				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.svg", "ZoomStack", tileSpec.zoom, tileSpec.y, tileSpec.x);
 				renderTarget->Save(fileName);

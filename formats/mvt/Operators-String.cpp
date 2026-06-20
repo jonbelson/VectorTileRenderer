@@ -70,9 +70,9 @@ Value OperatorDowncase::Evaluate(const mvt::feature::Feature& feature, float zoo
 	{
 		Value value = GetValue(mValues[0], feature, zoom);
 
-		if (auto s = value.TryGetString(); s.has_value())
+		if (auto* str = value.TryGetString())
 		{
-			auto utf32 = unicode::convert::Utf8ToUtf32(s.value());
+			auto utf32 = unicode::convert::Utf8ToUtf32(*str);
 
 			unicode::casemapping::ToLower(utf32);
 
@@ -108,9 +108,9 @@ Value OperatorUpcase::Evaluate(const mvt::feature::Feature& feature, float zoom)
 	{
 		Value value = GetValue(mValues[0], feature, zoom);
 
-		if (auto s = value.TryGetString(); s.has_value())
+		if (auto* str = value.TryGetString())
 		{
-			auto utf32 = unicode::convert::Utf8ToUtf32(s.value());
+			auto utf32 = unicode::convert::Utf8ToUtf32(*str);
 
 			utf32 = unicode::casemapping::ToUpper(utf32);
 

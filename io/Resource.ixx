@@ -13,7 +13,7 @@ namespace io::resource
 
 	export enum struct Status
 	{
-		Unknown, FileNotFound, FileReadError, HttpError, InvalidUri
+		Unknown, FileNotFound, FileReadError, HttpError, InvalidUri, UnknownScheme
 	};
 
 	export std::expected<Data, Status> LoadFromFile(std::string_view sv);

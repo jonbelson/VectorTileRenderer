@@ -153,6 +153,8 @@ namespace mvt::style
 
 	bool Style::ParseFromJson(const nlohmann::json& data)
 	{
+		if (data.is_discarded()) return false;
+
 		TryReadInt(data, "version", mVersion);
 
 		TryReadString(data, "sprite", mSpriteUrl);
@@ -251,6 +253,12 @@ namespace mvt::style
 		{
 			const json data = json::parse(f, nullptr, false);
 
+			if (data.is_discarded())
+			{
+				core::logger::Error("Failed to parse style from '{}'\n", fileName);
+				return nullptr;
+			}
+
 			std::shared_ptr<Style> style = std::make_shared<Style>();
 
 			if (style->ParseFromJson(data))
@@ -266,6 +274,12 @@ namespace mvt::style
 	{
 		const json data = json::parse(s, nullptr, false);
 
+		if (data.is_discarded())
+		{
+			core::logger::Error("Failed to parse style from '{}'\n", s);
+			return nullptr;
+		}
+
 		std::shared_ptr<Style> style = std::make_shared<Style>();
 
 		if (style->ParseFromJson(data))
@@ -276,13 +290,19 @@ namespace mvt::style
 		return nullptr;
 	}
 
-	std::shared_ptr<Style> Style::LoadFromUrl(const std::string& url)
+	std::shared_ptr<Style> Style::LoadFromUri(const std::string& uri)
 	{
-		auto result = io::resource::LoadFromUri(url);
+		auto result = io::resource::LoadFromUri(uri);
 		if (result)
 		{
 			const auto& data = result.value();
 			json parsedJson = json::parse(data.begin(), data.end(), nullptr, false);
+
+			if (parsedJson.is_discarded())
+			{
+				core::logger::Error("Failed to parse style from '{}'\n", uri);
+				return nullptr;
+			}
 
 			if (parsedJson.size() == 1 && parsedJson.contains("error"))
 			{
@@ -298,7 +318,7 @@ namespace mvt::style
 				return style;
 		}
 
-		core::logger::Error("Failed to load style from {}\n", url);
+		core::logger::Error("Failed to load style from '{}'\n", uri);
 
 		return nullptr;
 	}

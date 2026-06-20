@@ -262,12 +262,12 @@ Value OperatorToNumber::Evaluate(const mvt::feature::Feature& feature, float zoo
 			{
 				return { 0.0f };
 			}
-			if (auto s = result.TryGetString(); s.has_value())
+			if (auto* str = result.TryGetString())
 			{
-				auto result2 = ParseStringToFloat(s.value());
+				auto result2 = ParseStringToFloat(*str);
 				if (result2.has_value())
 				{
-					return { *result2		 };
+					return { *result2 };
 				}
 			}
 		}

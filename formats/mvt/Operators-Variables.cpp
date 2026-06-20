@@ -115,9 +115,9 @@ Value OperatorVar::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
 	if (mValues.size() == 1)
 	{
-		if (auto name = mValues[0].TryGetString(); name.has_value())
+		if (auto* name = mValues[0].TryGetString())
 		{
-			if (auto var = gVarStack.GetVar(name.value()); var.has_value())
+			if (auto var = gVarStack.GetVar(*name); var.has_value())
 			{
 				return var.value();
 			}

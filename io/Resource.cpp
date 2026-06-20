@@ -168,7 +168,7 @@ namespace io::resource
 			return LoadFromHttp(uri);
 		}
 
-		return std::unexpected(Status::InvalidUri);
+		return std::unexpected(Status::UnknownScheme);
 	}
 
 

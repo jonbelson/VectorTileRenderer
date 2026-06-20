@@ -103,7 +103,7 @@ public:
 		{
 			mStyle = nullptr;
 
-			mStyle = mvt::style::Style::LoadFromUrl((LPCSTR) utf8);
+			mStyle = mvt::style::Style::LoadFromUri((LPCSTR) utf8);
 			if (!mStyle)
 			{
 				return Status::CouldNotLoadStyle;

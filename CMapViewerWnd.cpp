@@ -138,7 +138,7 @@ public:
 		}
 
 		CStringA utf8 { CW2A(s, CP_UTF8) };
-		auto style = mvt::style::Style::LoadFromUrl((LPCSTR) utf8);
+		auto style = mvt::style::Style::LoadFromUri((LPCSTR) utf8);
 		if (!style)
 		{
 			return false;

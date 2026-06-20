@@ -9,7 +9,7 @@ namespace mvt::cache
 	export template<typename Key, typename Value>
 	class Cache
 	{
-		constexpr static size_t MaxCacheSize = 20;
+		constexpr static size_t MaxCacheSize = 30;
 
 		std::vector< Key > mCache;
 
