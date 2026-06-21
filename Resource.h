@@ -36,6 +36,7 @@
 #define IDC_MFCEDITBROWSE_STYLE         1014
 #define IDC_COMBO1                      1015
 #define IDC_COMBO_AREA                  1015
+#define IDC_COMBO_FORMAT                1015
 #define IDC_MAP_STATIC                  1016
 #define IDC_BUTTON_GO                   1017
 #define IDC_CUSTOM1                     1018

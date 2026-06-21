@@ -88,8 +88,111 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CVectorTileRendererDlg dialog
+static void RenderGlyphsToBitmap()
+{
+	//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Documents\Projects\OS-Open-Zoomstack-Stylesheets\fonts\Open Sans Regular\0-255.pbf)");
+	//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\0-255.pbf)");
+	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Downloads\Arial Regular 0-255.pbf)");
 
+	if (data)
+	{
+		auto glyphs = mvt::style::DecodeGlyph(data.value());
+		if (glyphs.has_value())
+		{
+			auto atlas = mvt::style::CreateAtlas(glyphs->stacks[0], 0.0f);
+			if (atlas)
+			{
+				auto renderTarget = new core::rendertarget::D2DRenderTarget(1000, 1000);
+
+				auto handle = renderTarget->RegisterBitmap(atlas->bitmap);
+				renderTarget->SetActiveBitmap(handle);
+				auto widthPx = atlas->bitmap->GetWidth();
+				auto heightPx = atlas->bitmap->GetHeight();
+
+				renderTarget->DrawBitmap(core::geometry::Rect(0, 0, static_cast<float>(widthPx), static_cast<float>(heightPx)));
+
+				for (const auto& [ cp, spec] : atlas->glyphs)
+				{
+					//spec.
+				}
+
+				renderTarget->Save("C:\\Users\\jon\\GlyphImage.png");
+				int i{};
+
+			}
+		}
+	}
+}
+
+static void RenderTileFromMBTiles()
+{
+	// Render a Tile from an MBTiles database.
+	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
+	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
+	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
+
+	if (style)
+	{
+		auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+		mvt::renderer::Renderer tileRenderer(style.get());
+
+		auto renderContext = std::make_unique<mvt::renderer::RenderContext>(*renderTarget, *style);
+
+		int zoom = 15;
+		geo::latlong::LatLong latLong(51.448839, -0.932772);
+		auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
+		//x++;
+
+		mvt::tile::TileSpec tileSpec { .zoom = zoom, .y = y, .x = x };
+		tileRenderer.RenderTile(*renderContext.get(), tileSpec);
+	}
+}
+
+static void LoadSpritesFromResource()
+{
+	auto result = io::resource::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\sprites\sprites.png)");
+
+	if (result)
+	{
+		auto bitmap = core::bitmap::LoadBitmapFromResource(result.value());
+		if (bitmap)
+		{
+
+			int i{};
+		}
+	}
+
+	auto result2 = io::resource::LoadFromHttp(R"(http://localhost:8000/sprites.png)");
+
+	if (result2)
+	{
+		//const auto json = nlohmann::json::parse(result2.value().data());
+		int i{};
+	}
+}
+
+static void DecodePbf()
+{
+	// Decode a single PBF tile.
+	std::string path = R"(C:\Users\jon\Downloads\tile.pbf)";
+
+	auto tileFetcher = mvt::tilefetcher::TestTileFetcher::Create(path);
+
+	if (tileFetcher)
+	{
+		std::unique_ptr<mvt::tilefetcher::TestTileFetcher> fetcher{ std::move(tileFetcher.value()) };
+
+		mvt::tilecache::TileCache tileCache(fetcher.get());
+
+		auto tile = tileCache.GetTile(0, 0, 0);
+
+		int i{};
+
+	}
+}
+
+
+// CVectorTileRendererDlg dialog
 
 
 CVectorTileRendererDlg::CVectorTileRendererDlg(CWnd* pParent /*=nullptr*/)
@@ -155,284 +258,12 @@ BOOL CVectorTileRendererDlg::OnInitDialog()
 	core::logger::Logger::Get().SetImpl(new VSLoggerImpl());
 
 
-	//auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+	//RenderGlyphsToBitmap();
 
-	//renderTarget->SetFillColor(Color("#ff0000"));
-	//renderTarget->FillBackground();
+	//LoadSpritesFromResource();
 
-#if 0
-//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Documents\Projects\OS-Open-Zoomstack-Stylesheets\fonts\Open Sans Regular\0-255.pbf)");
-//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\0-255.pbf)");
-	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Downloads\Arial Regular 0-255.pbf)");
+	//DecodePbf();
 
-	if (data)
-	{
-		auto glyphs = mvt::style::DecodeGlyph(data.value());
-		if (glyphs.has_value())
-		{
-			auto atlas = mvt::style::CreateAtlas(glyphs->stacks[0], 0.0f);
-			if (atlas)
-			{
-				auto renderTarget = new core::rendertarget::D2DRenderTarget(1000, 1000);
-
-				auto handle = renderTarget->RegisterBitmap(atlas->bitmap);
-				renderTarget->SetActiveBitmap(handle);
-				auto widthPx = atlas->bitmap->GetWidth();
-				auto heightPx = atlas->bitmap->GetHeight();
-
-				renderTarget->DrawBitmap(core::geometry::Rect(0, 0, widthPx, heightPx));
-
-				for (const auto& [ cp, spec] : atlas->glyphs)
-				{
-					//spec.
-				}
-
-				renderTarget->Save("C:\\Users\\jon\\GlyphImage.png");
-				int i{};
-
-			}
-		}
-	}
-#endif
-
-
-#if 0
-	// Render a Tile from an MBTiles database.
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
-	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
-	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
-
-	if (style)
-	{
-		auto mbtilesFetcher = MbTilesFetcher::Create(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
-
-		if (mbtilesFetcher)
-		{
-			std::unique_ptr<MbTilesFetcher> mbTilesFetcher { mbtilesFetcher.value() };
-
-			mvt::tilecache::TileCache tileCache(mbTilesFetcher.get());
-
-			auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
-			mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
-
-			int zoom = 15;
-			geo::latlong::LatLong latLong(51.448839, -0.932772);
-			auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
-			//x++;
-
-			mvt::tile::TileSpec tileSpec { .zoom = zoom, .y = y, .x = x };
-			tileRenderer.RenderTile(tileSpec);
-		}
-	}
-#endif
-
-
-#if 0
-	auto result = io::resource::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\sprites\sprites.png)");
-
-	if (result)
-	{
-		auto bitmap = core::bitmap::LoadBitmapFromResource(result.value());
-		if (bitmap)
-		{
-
-			int i{};
-		}
-	}
-
-	auto result2 = io::resource::LoadFromHttp(R"(http://localhost:8000/sprites.png)");
-
-	if (result2)
-	{
-		//const auto json = nlohmann::json::parse(result2.value().data());
-		int i{};
-	}
-#endif
-
-
-#if 0
-	// Decode a single PBF tile.
-	std::string path = R"(C:\Users\jon\Downloads\tile.pbf)";
-
-	auto tileFetcher = mvt::tilefetcher::TestTileFetcher::Create(path);
-
-	if (tileFetcher)
-	{
-		std::unique_ptr<mvt::tilefetcher::TestTileFetcher> fetcher{ std::move(tileFetcher.value()) };
-
-		mvt::tilecache::TileCache tileCache(fetcher.get());
-
-		auto tile = tileCache.GetTile(0, 0, 0);
-
-		int i{};
-
-	}
-#endif
-
-
-#if 0
-
-	//int zoom = 15;
-	//geo::latlong::LatLong latLong(51.448839, -0.932772);
-	//auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
-
-	// Render a single OS DataHub Tile.
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS_VTS_3857_Outdoor.json)");
-	if (style)
-	{
-		//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-15-10904-16299.pbf)");
-		//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\OS-ZYX-16-21809-32598.pbf)");
-		auto tileFetcher = mvt::tilefetcher::TestTileFetcher::Create(R"(C:\Users\jon\Downloads\tile.pbf)");
-	
-		if (tileFetcher)
-		{
-			std::unique_ptr<mvt::tilefetcher::TestTileFetcher> fetcher { std::move(tileFetcher.value()) };
-
-			UINT dpi = GetDpiForSystem();
-
-			constexpr int TileSize = 512;
-			float fDpiScale = dpi/96.0f;
-
-			int iTileSize = static_cast<int>(fDpiScale*TileSize);
-
-			auto renderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(iTileSize, iTileSize);
-
-			mvt::renderer::Renderer tileRenderer(style.get());
-			tileRenderer.SetTileSize(TileSize);
-
-			mvt::tile::TileSpec tileSpec{ .zoom = 15, .y = 10904, .x = 16299 };
-			//mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };
-
-			auto renderContext = std::make_unique<mvt::renderer::RenderContext>(*renderTarget, *style);
-
-			tileRenderer.RenderTile(*renderContext, tileSpec);
-
-			if (dynamic_cast<core::rendertarget::SvgRenderTarget*>(renderTarget.get()))
-			{
-				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.svg", "ZoomStack", tileSpec.zoom, tileSpec.y, tileSpec.x);
-				renderTarget->Save(fileName);
-			}
-			else
-			{
-				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", "ZoomStack", tileSpec.zoom, tileSpec.y, tileSpec.x);
-				renderTarget->Save(fileName);
-			}
-
-		}
-	}
-
-#endif
-
-#if 0
-	// ESRI WorldBasemap tiles
-	 
-	for (const auto& styleName : { "colored-pencil", "community", "midcentury", "modern-antique", "newspaper", "nova" })
-	{
-		std::string styleFile = std::format(R"(C:\Users\jon\Projects\ESRI\{}.json)", styleName);
-		auto style = mvt::style::Style::LoadFromFile(styleFile);
-		if (style)
-		{
-//			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-2726-4074.pbf)");
-//			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-13-2726-4075.pbf)");
-			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\WorldBasemap-ZYX-16-21809-32598.pbf)");
-			if (tileFetcher)
-			{
-				std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
-
-				mvt::tilecache::TileCache tileCache(fetcher.get());
-
-				auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
-
-				mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
-
-				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4074 };
-				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4075 };
-				mvt::tile::TileSpec tileSpec{ .zoom = 16, .y = 21809, .x = 32598 };
-				tileRenderer.RenderTile(tileSpec);
-
-				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", styleName, tileSpec.zoom, tileSpec.y, tileSpec.x);
-				renderTarget->Save(fileName);
-
-			}
-		}
-	}
-
-
-#endif
-
-#if 0
-	// Render a single ESRI OpenBasemap Tile.
-
-	for (const auto& styleName : { "blueprint", "light-gray", "dark-gray", "navigation", "osm-style", "streets", "streets-night" })
-	{
-		std::string styleFile = std::format(R"(C:\Users\jon\Projects\ESRI\{}.json)", styleName);
-		auto style = mvt::style::Style::LoadFromFile(styleFile);
-		if (style)
-		{
-
-			//auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-2726-4074.pbf)");
-			auto tileFetcher = TestTileFetcher::Create(R"(C:\Users\jon\Projects\VectorTileRenderer\osm-13-2726-4075.pbf)");
-			if (tileFetcher)
-			{
-				std::unique_ptr<TestTileFetcher> fetcher { tileFetcher.value() };
-
-				mvt::tilecache::TileCache tileCache(fetcher.get());
-
-				auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
-
-				mvt::renderer::Renderer tileRenderer(renderTarget, &tileCache, style.get());
-
-				//mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4074 };
-				mvt::tile::TileSpec tileSpec{ .zoom = 13, .y = 2726, .x = 4075 };
-				tileRenderer.RenderTile(tileSpec);
-
-				std::string fileName = std::format("C:\\Users\\jon\\{}-{}-{}-{}.png", styleName, tileSpec.zoom, tileSpec.y, tileSpec.x);
-				renderTarget->Save(fileName);
-			}
-		}
-	}
-
-#endif
-
-#if 0
-	// Render multiple Tiles from an MBTiles database.
-	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Outdoor.json)");
-	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Road.json)");
-	//	auto style = mvt::style::Style::LoadFromFile(R"(C:\Users\jon\Projects\OS-Open-Zoomstack-Stylesheets\OS Open Zoomstack - Deuteranopia.json)");
-
-	if (style)
-	{
-		std::unique_ptr<MbTilesFetcher> mbTilesFetcher = std::make_unique<MbTilesFetcher>(R"(C:\Users\jon\Projects\OS_Open_Zoomstack.mbtiles)");
-
-		int zoom = 14;
-		geo::latlong::LatLong latLong(51.448839, -0.932772);
-		auto [ x, y ] = mvt::tile::LatLongToTile(zoom, latLong);
-		//x++;
-
-		mvt::tile::TileSpec tileSpec1 { .zoom = zoom, .y = y, .x = x };
-		mvt::tile::TileSpec tileSpec2 { .zoom = zoom, .y = y, .x = x + 1 };
-		mvt::tile::TileSpec tileSpec3 { .zoom = zoom, .y = y + 1, .x = x };
-		mvt::tile::TileSpec tileSpec4 { .zoom = zoom, .y = y + 1, .x = x + 1 };
-
-		mvt::tile::TileSpecArray tileSpecArray { tileSpec1, tileSpec2, tileSpec3, tileSpec4 };
-
-		mvt::tilecache::TileCache tileCache(mbTilesFetcher.get());
-
-		auto renderTarget2 = new core::rendertarget::D2DRenderTarget(2048, 2048);
-
-		mvt::renderer::Renderer tileRenderer(renderTarget2, &tileCache, style.get());
-		tileRenderer.RenderTiles(tileSpecArray, zoom);
-
-		renderTarget2->Save("C:\\Users\\jon\\MapImageX2.png");
-
-	}
-#endif
-
-
-
-
-
-	//renderTarget->Save("C:\\Users\\jon\\MapImage.png");
 
 	//google::protobuf::ShutdownProtobufLibrary();
 

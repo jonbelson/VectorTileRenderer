@@ -56,9 +56,10 @@ namespace core::rendertarget
 		if (!line.empty())
 		{
 			s += " points=\"";
-			for (const auto& point : line)
+
+			for (size_t i = 0; i < line.size(); ++i)
 			{
-				geometry::Point transformed = ApplyTransforms(point);
+				geometry::Point transformed = ApplyTransforms(line[i]);
 				std::format_to(std::back_inserter(mSvgDocument), "{},{} ", transformed.x, transformed.y); 
 			}
 			s += "\"";
@@ -70,14 +71,14 @@ namespace core::rendertarget
 		if (!line.empty())
 		{
 			geometry::Point transformed = ApplyTransforms(line[0]);
-			std::format_to(std::back_inserter(s), "M {} {} ", transformed.x, transformed.y);
+			std::format_to(std::back_inserter(s), " M {},{} ", transformed.x, transformed.y);
 
 			for (size_t i = 1; i < line.size(); ++i)
 			{
 				transformed = ApplyTransforms(line[i]);
-				std::format_to(std::back_inserter(s), "L {} {} ", transformed.x, transformed.y);
+				std::format_to(std::back_inserter(s), "L {},{} ", transformed.x, transformed.y);
 			}
-			s += "Z\n";
+			s += "Z";
 		}
 	}
 
@@ -94,7 +95,7 @@ namespace core::rendertarget
 				WritePathData(interiorRing, s);
 			}
 
-			s += "Z\n";
+			s += "\"\n";
 		}
 	}
 
@@ -232,7 +233,7 @@ namespace core::rendertarget
 		WritePointsAttrib(polygon.exteriorRing, s);
 	}
 
-	// Polygon wtih interior rings.
+	// Polygon with interior rings.
 	void SvgRenderTarget::WritePath(const geometry::Polygon& polygon, bool fill, std::string& s)
 	{
 		WriteEmptyElement elem("path", s);
@@ -352,11 +353,21 @@ namespace core::rendertarget
 		mTransforms.clear();
 	}
 
+	void SvgRenderTarget::SetClipRect(const geometry::Rect& clip)
+	{
+		;
+	}
+
+	void SvgRenderTarget::ClearClipRect(void)
+	{
+		;
+	}
+
 	void SvgRenderTarget::Save(const std::string& outputName)
 	{
 		//sSvg = SvgHeader;
 
-		std::ofstream out(outputName, std::ios_base::binary);
+		std::ofstream out(outputName + ".svg", std::ios_base::binary);
 
 		if (out.is_open())
 		{

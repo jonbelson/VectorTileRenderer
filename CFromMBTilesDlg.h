@@ -13,6 +13,9 @@ class CFromMBTilesDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CFromMBTilesDlg)
 
+	enum struct Format { Bitmap, Svg };
+	Format m_Format{ Format::Bitmap };
+
 	CString m_sStyleFile;
 	int m_iX {};
 	int m_iY {};
@@ -21,6 +24,9 @@ class CFromMBTilesDlg : public CDialogEx
 	double m_fLongitude {};
 
 	std::unique_ptr<CFromMBTilesViewModel> m_pViewModel;
+
+	int m_iFormat;
+	CComboBox c_Format;
 
 public:
 	CFromMBTilesDlg(CWnd* pParent = nullptr);   // standard constructor

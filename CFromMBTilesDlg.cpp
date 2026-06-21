@@ -13,7 +13,9 @@
 
 #include <ShlObj.h>
 
+import core.rendertarget;
 import core.d2drendertarget;
+import core.svgrendertarget;
 import core.logger;
 import formats.mvt.style;
 import formats.mvt.tile;
@@ -24,6 +26,10 @@ import io.resource;
 
 class CFromMBTilesViewModel
 {
+public:
+	enum struct Format { Direct2d, Svg };
+
+private:
 	CString m_sStyleFile;
 	bool m_StyleChanged { true };
 
@@ -32,6 +38,8 @@ class CFromMBTilesViewModel
 	int m_iX{};
 	int m_iY{};
 	int m_iZoom;
+
+	Format m_Format{ Format::Direct2d };
 
 public:
 	enum struct Status
@@ -59,6 +67,11 @@ public:
 		m_sStyleFile = s;
 
 		return Status::Ok;
+	}
+
+	void SetFormat(Format format)
+	{
+		m_Format = format;
 	}
 
 	Status SetXYZoom(int x, int y, int zoom)
@@ -103,43 +116,39 @@ public:
 
 			m_StyleChanged = false;
 		}
-/*
-		//const std::string& tileSource = mStyle->mSourceTileUrl;
-		CStringA utf8MBTiles { CW2A(m_sMBTilesFile, CP_UTF8) };
-		auto tileFetcher = MbTilesFetcher::Create((LPCSTR) utf8MBTiles);
 
-		if (!tileFetcher)
-		{
-			switch (tileFetcher.error())
-			{
-				case MbTilesFetcher::Error::FileNotFound:
-					return Status::CouldNotAccessFile;
-					//case HttpTileFetcher::Error::CouldNotAccessServer:
-					//	return Status::CouldNotAccessServer;
-			}
-			return Status::CouldNotAccessFile;
-		}
-
-		mvt::tilecache::TileCache tileCache(tileFetcher.value());
-*/
-		UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
+		UINT dpi = GetDpiForSystem();
 
 		constexpr int TileSize = 512;
 		float dpiScale = dpi/96.0f;
 
-		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
-		renderTarget->PushScale(dpiScale);
+		auto renderTarget = std::unique_ptr<core::rendertarget::RenderTarget>{};
 
-		mvt::renderer::Renderer tileRenderer(mStyle.get());
-		tileRenderer.SetTileSize(TileSize);
+		switch (m_Format)
+		{
+			case Format::Direct2d:
+				renderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+				break;
+			case Format::Svg:
+				renderTarget = std::make_unique<core::rendertarget::SvgRenderTarget>(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+				break;
+		}
 
-		mvt::tile::TileSpec tileSpec { .zoom = m_iZoom, .y = m_iY, .x = m_iX };
-		mvt::renderer::RenderContext context(*renderTarget, *mStyle.get());
+		if (renderTarget)
+		{
+			renderTarget->PushScale(dpiScale);
 
-		tileRenderer.RenderTile(context, tileSpec);
+			mvt::renderer::Renderer tileRenderer(mStyle.get());
+			tileRenderer.SetTileSize(TileSize);
 
-		CStringA utf8Filename { CW2A(sFileName, CP_UTF8) };
-		renderTarget->Save((LPCSTR)utf8Filename);
+			mvt::tile::TileSpec tileSpec{ .zoom = m_iZoom, .y = m_iY, .x = m_iX };
+			mvt::renderer::RenderContext context(*renderTarget, *mStyle.get());
+
+			tileRenderer.RenderTile(context, tileSpec);
+
+			CStringA utf8Filename{ CW2A(sFileName, CP_UTF8) };
+			renderTarget->Save((LPCSTR)utf8Filename);
+		}
 
 		return Status::Ok;
 	}
@@ -153,7 +162,7 @@ IMPLEMENT_DYNAMIC(CFromMBTilesDlg, CDialogEx)
 
 CFromMBTilesDlg::CFromMBTilesDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FROM_MBTILES_DIALOG, pParent)
-	, m_sStyleFile(_T(""))
+	, m_iFormat(0)
 {
 	m_pViewModel = std::make_unique<CFromMBTilesViewModel>();
 }
@@ -176,23 +185,27 @@ void CFromMBTilesDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxDouble(pDX, m_fLatitude, -90, 90);
 	DDX_Text(pDX, IDC_EDIT_LONGITUDE, m_fLongitude);
 	DDV_MinMaxDouble(pDX, m_fLongitude, -180, 180);
+	DDX_CBIndex(pDX, IDC_COMBO_FORMAT, m_iFormat);
+
+	DDX_Control(pDX, IDC_COMBO_FORMAT, c_Format);
 }
 
 BOOL CFromMBTilesDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	if (auto* pCtrl = dynamic_cast<CMFCEditBrowseCtrl*>(GetDlgItem(IDC_MFCEDITBROWSE_MBTILES)); pCtrl)
-	{
-		pCtrl->SetCueBanner(L"Path to MBTiles file.");
-		static const wchar_t szFilter[] = L"MBTiles files (*.mbtiles)||";
-		pCtrl->EnableFileBrowseButton(L"mbtiles", szFilter, OFN_FILEMUSTEXIST);
-	}
-	if (auto* pCtrl = dynamic_cast<CMFCEditBrowseCtrl*>(GetDlgItem(IDC_MFCEDITBROWSE_STYLE)); pCtrl)
+	if (auto* pCtrl = dynamic_cast<CMFCEditBrowseCtrl*>(GetDlgItem(IDC_MFCEDITBROWSE_STYLE)))
 	{
 		static const wchar_t szFilter[] = L"JSON Style files (*.json)||";
 		pCtrl->EnableFileBrowseButton(L"json", szFilter, OFN_FILEMUSTEXIST);
 	}
+
+	for (const auto& [ format, name ] : { std::pair(Format::Bitmap, L"Bitmap"), std::pair(Format::Svg, L"SVG") })
+	{
+		int idx = c_Format.AddString(name);
+		c_Format.SetItemData(idx, static_cast<DWORD_PTR>(format));
+	}
+	c_Format.SetCurSel(0);
 
 	GetDlgItem(IDC_SPIN_Z)->SendMessage(UDM_SETRANGE32, 0, 18);
 	GetDlgItem(IDC_SPIN_Y)->SendMessage(UDM_SETRANGE32, 0, INT_MAX);
@@ -225,6 +238,16 @@ void CFromMBTilesDlg::OnBnClickedButtonRender()
 		sFileName.AppendFormat(_T("\\MBTiles-%d-%d-%d.png"), m_iZoom, m_iY, m_iX);
 
 		CoTaskMemFree(path);
+
+		switch ((Format)c_Format.GetItemData(m_iFormat))
+		{
+			case Format::Bitmap:
+				m_pViewModel->SetFormat(CFromMBTilesViewModel::Format::Direct2d);
+				break;
+			case Format::Svg:
+				m_pViewModel->SetFormat(CFromMBTilesViewModel::Format::Svg);
+				break;
+		}
 
 		auto status = m_pViewModel->SetXYZoom(m_iX, m_iY, m_iZoom);
 		if (status == CFromMBTilesViewModel::Status::Ok)
