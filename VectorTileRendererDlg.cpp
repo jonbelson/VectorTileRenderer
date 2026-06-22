@@ -34,6 +34,7 @@ import core.geometry;
 import core.logger;
 import formats.mvt.tilecache;
 import formats.mvt.tilefetcher;
+import formats.mvt.httptilefetcher;
 import formats.mvt.mbtilesfetcher;
 import formats.mvt.renderer;
 import formats.mvt.style;

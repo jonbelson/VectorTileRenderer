@@ -93,22 +93,24 @@ namespace mvt::tilecache
 					}
 				}
 
-				auto tilesData = mTileFetcher->FetchTiles(tilesToFetch);
-
-				// XXX Decode in parallel?
-
-				//for (const auto& tileData : tilesData)
-				for (size_t i=0; i<tilesData.size(); i++)
+				if (!tilesToFetch.empty())
 				{
-					auto& tileData = tilesData[i];
-					if (!tileData.empty())
+					auto tilesData = mTileFetcher->FetchTiles(tilesToFetch);
+
+					// XXX Decode in parallel?
+
+					for (size_t i = 0; i<tilesData.size(); i++)
 					{
-						if (auto newTile = tile::DecodeTile(tilesToFetch[i], tileData))
+						auto& tileData = tilesData[i];
+						if (!tileData.empty())
 						{
-							mCache.emplace_back(std::move(newTile));
-							if (mCache.size() > MaxCacheSize)
+							if (auto newTile = tile::DecodeTile(tilesToFetch[i], tileData))
 							{
-								mCache.erase(mCache.begin());
+								mCache.emplace_back(std::move(newTile));
+								if (mCache.size() > MaxCacheSize)
+								{
+									mCache.erase(mCache.begin());
+								}
 							}
 						}
 					}

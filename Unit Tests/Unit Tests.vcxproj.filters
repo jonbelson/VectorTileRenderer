@@ -210,6 +210,12 @@
     <ClCompile Include="..\formats\mvt\Operators-Camera.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\HttpTileFetcher.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\HttpTileFetcher.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

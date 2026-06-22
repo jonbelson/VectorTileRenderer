@@ -320,6 +320,12 @@
     <ClCompile Include="formats\mvt\Operators-Camera.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\HttpTileFetcher.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\HttpTileFetcher.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

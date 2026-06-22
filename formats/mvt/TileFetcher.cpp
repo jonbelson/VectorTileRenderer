@@ -9,6 +9,7 @@ module formats.mvt.tilefetcher;
 import std;
 import core.logger;
 
+import formats.mvt.httptilefetcher;
 import formats.mvt.mbtilesfetcher;
 
 namespace mvt::tilefetcher

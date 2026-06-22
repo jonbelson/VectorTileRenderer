@@ -19,6 +19,7 @@ import formats.mvt.layer;
 //import formats.mvt.symbol;
 
 import formats.mvt.tilefetcher;
+import formats.mvt.httptilefetcher;
 
 
 namespace mvt::renderer

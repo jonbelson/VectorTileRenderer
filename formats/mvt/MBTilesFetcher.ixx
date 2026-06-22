@@ -29,7 +29,12 @@ namespace mvt::tilefetcher
 
 		bool mValid { false };
 
+		static constexpr std::string_view SqlTemplate = "SELECT * FROM [tiles] WHERE zoom_level={z} AND tile_column={x} AND tile_row={y}";
+		static constexpr std::string_view SqlTemplate2 = "SELECT * FROM [tiles] WHERE zoom_level=? AND tile_column=? AND tile_row=?";
+
 		MbTilesFetcher(std::string_view filePath);
+
+		static std::string MakeSql(int zoom, int x, int y);
 
 	public:
 		virtual ~MbTilesFetcher();
@@ -41,6 +46,7 @@ namespace mvt::tilefetcher
 
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
+		virtual std::vector<TileData> FetchTiles(const std::vector<mvt::tile::TileSpec>& tileSpecs) override;
 
 		static std::expected<MbTileFetcherPtr, Error> Create(std::string_view filePath);
 	};

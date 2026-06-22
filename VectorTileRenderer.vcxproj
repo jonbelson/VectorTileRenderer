@@ -236,6 +236,8 @@
     <ClCompile Include="formats\mvt\glyphs.pb.cc">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
     </ClCompile>
+    <ClCompile Include="formats\mvt\HttpTileFetcher.cpp" />
+    <ClCompile Include="formats\mvt\HttpTileFetcher.ixx" />
     <ClCompile Include="formats\mvt\Layer.cpp" />
     <ClCompile Include="formats\mvt\Layer.ixx" />
     <ClCompile Include="formats\mvt\MBTilesFetcher.cpp" />
