@@ -34,6 +34,9 @@
     <Filter Include="Source Files\Unicode">
       <UniqueIdentifier>{03d7b80a-755f-43a4-89a0-e80e810b89ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Formats\GeoJSON">
+      <UniqueIdentifier>{91a6ff3e-3a53-478d-bf1e-53f0559ae79b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VectorTileRenderer.h">
@@ -325,6 +328,18 @@
     </ClCompile>
     <ClCompile Include="formats\mvt\HttpTileFetcher.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\geojson\Geometry.ixx">
+      <Filter>Source Files\Formats\GeoJSON</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\geojson\Feature.ixx">
+      <Filter>Source Files\Formats\GeoJSON</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\geojson\Parser.ixx">
+      <Filter>Source Files\Formats\GeoJSON</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\geojson\Parser.cpp">
+      <Filter>Source Files\Formats\GeoJSON</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -100,6 +100,11 @@
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)\External\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
+      <!--<ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>-->
+      <ModuleOutputFile>$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile>$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -228,6 +233,22 @@
     <ClCompile Include="core\SVGRenderTarget.cpp" />
     <ClCompile Include="core\SVGRenderTarget.ixx" />
     <ClCompile Include="CRenderAreaDlg.cpp" />
+    <ClCompile Include="formats\geojson\Feature.ixx">
+      <ModuleOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="formats\geojson\Geometry.ixx">
+      <ModuleOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="formats\geojson\Parser.cpp" />
+    <ClCompile Include="formats\geojson\Parser.ixx">
+      <ModuleOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="formats\mvt\Cache.ixx" />
     <ClCompile Include="formats\mvt\Debug.ixx" />
     <ClCompile Include="formats\mvt\Expressions.cpp" />

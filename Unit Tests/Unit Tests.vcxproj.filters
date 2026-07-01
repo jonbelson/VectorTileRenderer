@@ -216,6 +216,18 @@
     <ClCompile Include="..\formats\mvt\HttpTileFetcher.cpp">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\geojson\Feature.ixx">
+      <Filter>Project Modules\formats\geojson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\geojson\Geometry.ixx">
+      <Filter>Project Modules\formats\geojson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\geojson\Parser.ixx">
+      <Filter>Project Modules\formats\geojson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\geojson\Parser.cpp">
+      <Filter>Project Modules\formats\geojson</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -247,6 +259,9 @@
     </Filter>
     <Filter Include="Project Modules\Unicode">
       <UniqueIdentifier>{7a5748f3-a874-4359-b200-9b69992caee4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\formats\geojson">
+      <UniqueIdentifier>{48377687-0c05-41b3-ac14-e186a7d8cfec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -131,6 +131,7 @@ namespace core::logger
 		}
 	}
 
+
 	export template<typename... Args>
 	void Debug(const std::string_view format, Args&&... args)
 	{
@@ -155,9 +156,20 @@ namespace core::logger
 		_Write(Level::Error, format, std::forward<Args>(args)...);
 	}
 
+
+	void Debug(const std::string_view sv)
+	{
+		_Write(Level::Debug, sv);
+	}
+
 	void Info(const std::string_view sv)
 	{
 		_Write(Level::Info, sv);
+	}
+
+	void Warning(const std::string_view sv)
+	{
+		_Write(Level::Warning, sv);
 	}
 
 	export void Error(const std::string_view sv)

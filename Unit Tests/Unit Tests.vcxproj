@@ -67,6 +67,9 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\External\</AdditionalIncludeDirectories>
       <AdditionalModuleDependencies>%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ModuleOutputFile>$(IntDir)%(RelativeDir)</ModuleOutputFile>
+      <ModuleDependenciesFile>$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -126,6 +129,10 @@
     <ClCompile Include="..\core\JSON.ixx" />
     <ClCompile Include="..\core\Logger.ixx" />
     <ClCompile Include="..\core\RenderTarget.ixx" />
+    <ClCompile Include="..\formats\geojson\Feature.ixx" />
+    <ClCompile Include="..\formats\geojson\Geometry.ixx" />
+    <ClCompile Include="..\formats\geojson\Parser.cpp" />
+    <ClCompile Include="..\formats\geojson\Parser.ixx" />
     <ClCompile Include="..\formats\mvt\Cache.ixx" />
     <ClCompile Include="..\formats\mvt\Debug.ixx" />
     <ClCompile Include="..\formats\mvt\Expressions.cpp" />
