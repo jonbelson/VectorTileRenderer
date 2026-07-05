@@ -631,11 +631,36 @@ namespace mvt::symbol
 		}
 	}
 
+	// Rotate a rectangular bounding box around a point by a specified angle in degrees.
+	// Since the bounding box is axis-aligned, the rotated rectangle is returned as a PointArray of 5 points (4 corners + 1 diagonal).
+	static PointArray RotateRect(const Rect& rect, const Point& point, float angleDeg)
+	{
+		float angleRad = angleDeg/180.0f*std::numbers::pi_v<float>;
+
+		auto rotatePoint = [&](const Point& p) -> Point
+			{
+				float x = p.x - point.x;
+				float y = p.y - point.y;
+				float xRot = x*std::cos(angleRad) - y*std::sin(angleRad);
+				float yRot = x*std::sin(angleRad) + y*std::cos(angleRad);
+				return Point{ xRot + point.x, yRot + point.y };
+			};
+
+		PointArray points;
+
+		points.push_back(rotatePoint(rect.TopLeft()));
+		points.push_back(rotatePoint(rect.TopRight()));
+		points.push_back(rotatePoint(rect.BottomRight()));
+		points.push_back(rotatePoint(rect.BottomLeft()));
+		points.push_back(rotatePoint(rect.TopLeft()));
+		points.push_back(rotatePoint(rect.BottomRight()));
+
+		return points;
+	}
 
 	void Symbol::RenderPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 	{
 		//if (attribs.textField.find("Bracknell &") != std::string::npos)
-		if (attribs.textField.find("Islamic") != std::string::npos)
 		{
 			int i{};
 		}
@@ -660,6 +685,7 @@ namespace mvt::symbol
 
 		std::string textFont {};
 		FormattedText formattedText;
+		float textRotationDeg {};
 
 		Utf32Text utf32 = unicode::convert::Utf8ToUtf32(attribs.textField);
 
@@ -706,6 +732,8 @@ namespace mvt::symbol
 			if (hasText)
 			{
 				formattedText = FormatText(context.glyphs, textFont, attribs, utf32);
+
+				textRotationDeg = attribs.textRotate;
 			}
 		}
 
@@ -726,6 +754,7 @@ namespace mvt::symbol
 		if (hasText)
 		{
 			// XXX text-rotate.
+
 			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
 
 			cursor = AdjustForTextOffset(attribs, cursor);
@@ -768,9 +797,25 @@ namespace mvt::symbol
 
 			if (willDrawText)
 			{
+				std::optional<RotateAtPoint> rap;
+
+				if (attribs.textRotationAlignment == TextRotationAlignment::Map) //???
+				{
+					// Rotate to align x axis with line.
+					rap.emplace(&renderTarget, point, textRotationDeg /*attribs.textRotate*/);
+				}
+
 				RenderTextAtPoint(context, formattedText, attribs, point);
 
-				placedSymbols.Place(textBbox);
+				if (attribs.textRotationAlignment == TextRotationAlignment::Map)
+				{
+					auto pointArray = RotateRect(textBbox, point, textRotationDeg);
+					placedSymbols.Place(pointArray);
+				}
+				else
+				{
+					placedSymbols.Place(textBbox);
+				}
 			}
 		}
 	}

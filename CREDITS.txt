@@ -2,9 +2,16 @@
 JSON for Modern C++ for JSON parsing (https://github.com/nlohmann/json)
 stb_image.h for loading bitmap images (https://github.com/nothings/stb)
 
+SQLite for reading MBTiles databases.
+
 curl for downloading files from http servers
 zlib for decompressing downloaded files
 protobuf for decoding PBF-encoded data
+
+
+
+
+
 
 
 

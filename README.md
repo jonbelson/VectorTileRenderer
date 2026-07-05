@@ -1,3 +1,8 @@
+This project is public and MIT-licensed.  
+Forking and cloning are welcome.  
+However, this repository does not accept external pull requests.  
+Please use Issues for bug reports.
+
 protoc installed with 'winget install protoc'
 
 protoc --cpp_out=. vector_tile.proto
@@ -10,7 +15,6 @@ https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-msbuild?pivots=s
 protobuf installed via:
 
 vcpkg install protobuf:x64-windows
-
 
 vcpkg install zlib
 

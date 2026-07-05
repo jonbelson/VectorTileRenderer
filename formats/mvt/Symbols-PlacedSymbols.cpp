@@ -33,6 +33,18 @@ namespace mvt::symbol
 		renderTarget->DrawLine(&lineString);
 	}
 
+	static void DrawOutline(core::rendertarget::RenderTarget* renderTarget, const PointArray& points, Color c= Color("#0000ff"))
+	{
+		LineString lineString;
+		lineString.lines.push_back(points);
+
+		renderTarget->SetLineColor(c);
+		renderTarget->SetDashArray({});
+		renderTarget->SetLineColor(c);
+		renderTarget->SetLineWidth(2.0f);
+		renderTarget->DrawLine(&lineString);
+	}
+
 	static float MagnitudeSqr(const Point& p1, const Point& p2)
 	{
 		return (p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y);
@@ -251,7 +263,14 @@ namespace mvt::symbol
 		{
 			for (const auto& symbol : mPlaced)
 			{
-				DrawOutline(renderTarget, symbol.boundingBox);
+				if (symbol.line.empty())
+				{
+					DrawOutline(renderTarget, symbol.boundingBox);
+				}
+				else
+				{
+					DrawOutline(renderTarget, symbol.line);
+				}
 			}
 		}
 	}

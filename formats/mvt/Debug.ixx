@@ -21,5 +21,5 @@ namespace mvt::debug::visual
 	export constexpr bool DrawLineLabelOrigin = false;
 	export constexpr bool DrawLineLabelGlyphOrigin = false;
 	export constexpr bool NoCheckSymbolOverlap = false;
-	export constexpr bool DrawPlacedSymbols = false;
+	export constexpr bool DrawPlacedSymbols = true;//false;
 };
