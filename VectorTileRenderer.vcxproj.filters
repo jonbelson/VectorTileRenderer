@@ -341,6 +341,9 @@
     <ClCompile Include="formats\geojson\Parser.cpp">
       <Filter>Source Files\Formats\GeoJSON</Filter>
     </ClCompile>
+    <ClCompile Include="geo\Projector.ixx">
+      <Filter>Source Files\Geo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

@@ -195,6 +195,7 @@
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="..\geo\LatLong.ixx" />
+    <ClCompile Include="..\geo\Projector.ixx" />
     <ClCompile Include="..\io\Gzip.cpp" />
     <ClCompile Include="..\io\Gzip.ixx" />
     <ClCompile Include="..\io\Resource.cpp" />

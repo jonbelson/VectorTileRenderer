@@ -21,6 +21,8 @@ import formats.geojson.parser;
 import formats.geojson.feature;
 import formats.geojson.geometry;
 
+import geo.projector;
+
 import unicode.casemapping;
 import unicode.convert;
 
@@ -1172,3 +1174,19 @@ namespace GeoJSON
 
 	}
 }
+
+namespace Geo
+{
+
+
+	TEST(Coordinate, Convert) {
+
+		auto projector = geo::projector::Projector::Create("EPSG:4326", "EPSG:3857");
+
+		EXPECT_TRUE(projector != nullptr) << "Failed to create Projector";
+
+
+
+	}
+
+};

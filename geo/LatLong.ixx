@@ -13,5 +13,4 @@ namespace geo::latlong
 		double latitude {};
 		double longitude {};
 	};
-
 };
