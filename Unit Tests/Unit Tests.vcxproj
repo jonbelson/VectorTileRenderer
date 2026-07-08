@@ -136,6 +136,8 @@
     <ClCompile Include="..\formats\geojson\Geometry.ixx" />
     <ClCompile Include="..\formats\geojson\Parser.cpp" />
     <ClCompile Include="..\formats\geojson\Parser.ixx" />
+    <ClCompile Include="..\formats\geojson\Renderer.cpp" />
+    <ClCompile Include="..\formats\geojson\Renderer.ixx" />
     <ClCompile Include="..\formats\mvt\Cache.ixx" />
     <ClCompile Include="..\formats\mvt\Debug.ixx" />
     <ClCompile Include="..\formats\mvt\Expressions.cpp" />

@@ -231,6 +231,12 @@
     <ClCompile Include="..\geo\Projector.ixx">
       <Filter>Project Modules\geo</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\geojson\Renderer.cpp">
+      <Filter>Project Modules\formats\geojson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\geojson\Renderer.ixx">
+      <Filter>Project Modules\formats\geojson</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

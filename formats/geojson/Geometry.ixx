@@ -26,12 +26,10 @@ export namespace geojson::geometry
 	{
 		double longitude{};
 		double latitude{};
-		double altitude{};
+		double altitude{};	// XXX std::optional ?
 	};
 
 	export using Coordinates = std::vector<Position>;
-	//export using CoordinateArray = std::vector<Coordinates>;
-	//export using MultiCoordinateArray = std::vector<CoordinateArray>;
 
 	export using Span = std::span<Position>;
 	export using SpanArray = std::vector<Span>;
@@ -52,51 +50,4 @@ export namespace geojson::geometry
 		SpanArray spanArray;
 		MultiSpanArray multiSpanArray;
 	};
-
-	/*
-	export struct IGeometry {};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.2
-	export struct Point : IGeometry
-	{
-		Position pos;
-	};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.4
-	export struct LineString : IGeometry
-	{
-		std::vector<Position> positions;
-	};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6
-	export struct Polygon : IGeometry
-	{
-		std::vector< std::vector<Position> > rings;
-	};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.3
-	export struct MultiPoint : IGeometry
-	{
-		std::vector<Position> positions;
-	};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.5
-	export struct MulitLineString : IGeometry
-	{
-		std::vector< std::vector<Position> > rings;
-	};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.7
-	export struct MultiPolygon : IGeometry
-	{
-		std::vector< std::vector<Position> > rings;
-	};
-
-	// https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.8
-	export struct GeometryCollection : IGeometry
-	{
-		std::vector<IGeometry> geometries;
-	};
-	*/
-
 }

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Jonathan Belson
+// Licensed under the MIT License — use freely, keep this notice.
+// SPDX-License-Identifier: MIT
+// Full terms: see LICENSE in the project root.
+
 module;
 
 #include <proj.h>
@@ -16,6 +21,20 @@ namespace geo::projector
 	};
 
 	//export using Coord = std::variant<geo::latlong::LatLong, Grid>;
+
+	export namespace CRS
+	{
+		constexpr char WGS84[] = "EPSG:4326";
+		constexpr char WebMercator[] = "EPSG:3857";
+		constexpr char BNG[] = "EPSG:27700";
+	};
+
+	export struct MapContext
+	{
+		const char* targetCrs = CRS::WebMercator;
+		double pixelsToMetres = 1.0;
+		Coord origin{ 0.0, 0.0 };
+	};
 
 	/*
 
@@ -140,6 +159,45 @@ namespace geo::projector
 
 			return Coord{ result.v[0], result.v[1] };
 		}
+
+		std::vector<Coord> Project(const std::vector<Coord>& coords)
+		{
+			std::vector<Coord> projected;
+			projected.reserve(coords.size());
+
+			PJ_COORD pjCoord{};
+			PJ_COORD pjResult{};
+
+			for (const auto& coord : coords)
+			{
+				pjCoord = proj_coord(coord.x, coord.y, 0.0, 0.0);
+				pjResult = proj_trans(mProjection, PJ_FWD, pjCoord);
+
+				projected.emplace_back(Coord{ pjResult.v[0], pjResult.v[1] });
+			}
+
+			return projected;
+		}
+
+		std::vector<Coord> Unproject(const std::vector<Coord>& coords)
+		{
+			std::vector<Coord> projected;
+			projected.reserve(coords.size());
+
+			PJ_COORD pjCoord{};
+			PJ_COORD pjResult{};
+
+			for (const auto& coord : coords)
+			{
+				pjCoord = proj_coord(coord.x, coord.y, 0.0, 0.0);
+				pjResult = proj_trans(mProjection, PJ_INV, pjCoord);
+
+				projected.emplace_back(Coord{ pjResult.v[0], pjResult.v[1] });
+			}
+
+			return projected;
+		}
+
 
 		// source	Source CRS, e.g. "EPSG:4326" (WGS84), "EPSG:3857" (Web Mercator)
 		// target	Target CRS, e.g. "EPSG:4326" (WGS84), "EPSG:3857" (Web Mercator)

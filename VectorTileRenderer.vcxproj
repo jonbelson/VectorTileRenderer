@@ -252,6 +252,8 @@
       <ModuleDependenciesFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="formats\geojson\Renderer.cpp" />
+    <ClCompile Include="formats\geojson\Renderer.ixx" />
     <ClCompile Include="formats\mvt\Cache.ixx" />
     <ClCompile Include="formats\mvt\Debug.ixx" />
     <ClCompile Include="formats\mvt\Expressions.cpp" />
