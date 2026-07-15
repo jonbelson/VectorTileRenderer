@@ -21,6 +21,7 @@ namespace geojson::renderer
 	using RenderTarget = core::rendertarget::RenderTarget;
 	using MapContext = geo::projector::MapContext;
 	using Projector = geo::projector::Projector;
+	using Coordinates = geojson::geometry::Coordinates;
 	using Feature = geojson::feature::Feature;
 	using Geometry = geojson::geometry::Geometry;
 	using GeoJson = geojson::parser::GeoJson;
@@ -28,24 +29,21 @@ namespace geojson::renderer
 	export struct RenderContext
 	{
 		RenderTarget& renderTarget;
-		Projector& projector;
 	};
 
 	export class Renderer
 	{
-		bool RenderPoint(RenderContext& context, MapContext& mapContext, const Geometry& geometry) const;
-		bool RenderLine(RenderContext& context, MapContext& mapContext, const Geometry& geometry) const;
-		bool RenderPolygon(RenderContext& context, MapContext& mapContext, const Geometry& geometry) const;
+		bool RenderPoint(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const Geometry& geometry) const;
+		bool RenderLine(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const Geometry& geometry) const;
+		bool RenderPolygon(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const Geometry& geometry) const;
 
-		bool Render(RenderContext& context, MapContext& mapContext, const Geometry& geometry) const;
+		bool Render(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const Geometry& geometry) const;
 
 	public:
 		Renderer() {}
 
 		bool Render(RenderContext& context, MapContext& mapContext, const Feature& feature) const;
 		bool Render(RenderContext& context, MapContext& mapContext, const GeoJson& geojson) const;
-
-
 	};
 
 };

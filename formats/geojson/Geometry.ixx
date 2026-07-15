@@ -31,23 +31,37 @@ export namespace geojson::geometry
 
 	export using Coordinates = std::vector<Position>;
 
-	export using Span = std::span<Position>;
-	export using SpanArray = std::vector<Span>;
+	export template<typename T>
+	struct Range
+	{
+		size_t start{};
+		size_t count{};
 
-	export using SpanSpan = std::span<Span>;
-//	export using MultiSpanArray = std::vector< std::span<SpanArray> >;
-	export using MultiSpanArray = std::vector<SpanSpan>;
+		Range() = default;
+		Range(size_t start, size_t count) : start(start), count(count) {}
 
-	// Point, MultiPoint, LineString -> Span
-	// Polygon -> SpanArray (outer ring + inner rings)
-	// MultiLineString -> SpanArray (multiple lines)
-	// MultiPolygon -> MultiSpanArray (multiple polygons, each with outer ring + inner rings)
+		std::span<const T> View(std::span<const T> data) const
+		{
+			return data.subspan(start, count);// std::span<T>();
+		}
+	};
+
+	export using Line = Range<Position>;
+	export using LineArray = std::vector<Line>;
+
+	export using Lines = Range<Line>;
+	export using LinesArray = std::vector<Lines>;
+
+	// Point, MultiPoint, LineString -> Line
+	// Polygon -> LineArray (outer ring + inner rings)
+	// MultiLineString -> LineArray (multiple lines)
+	// MultiPolygon -> LinesArray (multiple polygons, each with outer ring + inner rings)
 
 	export struct Geometry
 	{
 		GeometryType type{ GeometryType::Unknown };
 
-		SpanArray spanArray;
-		MultiSpanArray multiSpanArray;
+		LineArray lineArray;
+		LinesArray linesArray;
 	};
 }

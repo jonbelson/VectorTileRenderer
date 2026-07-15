@@ -120,22 +120,22 @@ namespace geojson::parser
 			return false;
 		}
 
-		auto span = geometry::Span(feature.coordinates.data() + size, 1);
+		auto span = geometry::Line(size, 1);
 
-		geometry.spanArray.push_back(span);
-		geometry.multiSpanArray.push_back(std::span<geometry::Span>(geometry.spanArray.data(), 1));
+		geometry.lineArray.push_back(span);
+		geometry.linesArray.push_back(geometry::Range<geometry::Line>(size, 1));
 
 		return true;
 	}
 
 	// Parse a single array of coordinates and append to coordinate array.
 	// [ [ 100.0, 0.0], [101.0, 1.0] ]
-	geometry::Span ParseCoordinateArray(const json& data, geometry::Coordinates& coordinates)
+	geometry::Line ParseCoordinateArray(const json& data, geometry::Coordinates& coordinates)
 	{
 		if (!data.is_array())
 		{
 			core::logger::Warning("Invalid GeoJSON coordinates: not an array\n");
-			return geometry::Span{};
+			return geometry::Line{};
 		}
 
 		size_t size = coordinates.size();
@@ -156,65 +156,84 @@ namespace geojson::parser
 			else
 			{
 				core::logger::Warning("Invalid coordinate array in GeoJSON geometry\n");
-				return geometry::Span{};
+				return geometry::Line{};
 			}
 		}
 
-		return geometry::Span(coordinates.data() + size, coordinates.size() - size);
+		return geometry::Line(size, coordinates.size() - size);
 	}
 
-	bool ParseSpan(const json&data, feature::Feature& feature, geometry::Geometry& geometry)
+	bool ParseLine(const json& data, feature::Feature& feature, geometry::Geometry& geometry)
 	{
 		auto span = ParseCoordinateArray(data, feature.coordinates);
 
-		geometry.spanArray.push_back(span);
-		geometry.multiSpanArray.push_back(std::span<geometry::Span>(geometry.spanArray.data(), geometry.spanArray.size()));
+		size_t size = geometry.lineArray.size();
+
+		geometry.lineArray.push_back(span);
+		geometry.linesArray.push_back(geometry::Range<geometry::Line>(size, 1));
 
 		return true;
 	}
 
-	bool ParseSpanArray(const json& data, feature::Feature& feature, geometry::Geometry& geometry)
+	bool _ParseLineArray(const json& data, feature::Feature& feature, geometry::Geometry& geometry)
 	{
-		if (!data.is_array())
+		if (data.is_array())
 		{
-			core::logger::Warning("Invalid GeoJSON coordinates: not an array\n");
-			return false;
-		}
-
-		for (const auto& ring : data)
-		{
-			auto span = ParseCoordinateArray(ring, feature.coordinates);
-			if (span.empty())
+			for (const auto& ring : data)
 			{
-				core::logger::Warning("Failed to parse coordinates from GeoJSON geometry\n");
-				return false;
+				auto span = ParseCoordinateArray(ring, feature.coordinates);
+				if (span.count == 0)
+				{
+					core::logger::Warning("Failed to parse coordinates from GeoJSON geometry\n");
+					return false;
+				}
+				geometry.lineArray.push_back(span);
 			}
-			geometry.spanArray.push_back(span);
-		}
 
-		geometry.multiSpanArray.push_back(std::span<geometry::Span>(geometry.spanArray.data(), geometry.spanArray.size()));
+			return true;
+		}
 
 		return true;
 	}
 
-	bool ParseMultiSpanArray(const json& data, feature::Feature& feature, geometry::Geometry& geometry)
+	bool ParseLineArray(const json& data, feature::Feature& feature, geometry::Geometry& geometry)
 	{
 		if (!data.is_array())
 		{
 			core::logger::Warning("Invalid GeoJSON coordinates: not an array\n");
 			return false;
 		}
+
+		size_t size = geometry.lineArray.size();
+
+		if (_ParseLineArray(data, feature, geometry))
+		{
+			geometry.linesArray.push_back(geometry::Range<geometry::Line>(size, geometry.lineArray.size() - size));
+		}
+
+		return true;
+	}
+
+	bool ParseLinesArray(const json& data, feature::Feature& feature, geometry::Geometry& geometry)
+	{
+		if (!data.is_array())
+		{
+			core::logger::Warning("Invalid GeoJSON coordinates: not an array\n");
+			return false;
+		}
+
 
 		for (const auto& ringGroup : data)
 		{
-			if (!ParseSpanArray(ringGroup, feature, geometry))
+		size_t size = geometry.lineArray.size();
+			if (!_ParseLineArray(ringGroup, feature, geometry))
 			{
 				core::logger::Warning("Failed to parse coordinates from GeoJSON geometry\n");
 				return false;
 			}
+		geometry.linesArray.push_back(geometry::Range<geometry::Line>(size, geometry.lineArray.size() - size));
 		}
 
-		geometry.multiSpanArray.push_back(std::span<geometry::Span>(geometry.spanArray.data(), geometry.spanArray.size()));
 
 		return true;
 	}
@@ -274,17 +293,17 @@ namespace geojson::parser
 						case geometry::GeometryType::MultiPoint:
 						case geometry::GeometryType::LineString:
 							{
-								success = ParseSpan(coordinateData, feature, geom);
+								success = ParseLine(coordinateData, feature, geom);
 							}
 							break;
 
 						case geometry::GeometryType::Polygon:
 						case geometry::GeometryType::MultiLineString:
-							success = ParseSpanArray(coordinateData, feature, geom);
+							success = ParseLineArray(coordinateData, feature, geom);
 							break;
 
 						case geometry::GeometryType::MultiPolygon:
-							success = ParseMultiSpanArray(coordinateData, feature, geom);
+							success = ParseLinesArray(coordinateData, feature, geom);
 							break;
 
 						default:

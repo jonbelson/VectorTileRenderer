@@ -1153,8 +1153,8 @@ namespace GeoJSON
 
 						EXPECT_TRUE(geometry.type == geojson::geometry::GeometryType::Polygon);
 
-						EXPECT_TRUE(geometry.spanArray.size() == 2);
-						EXPECT_TRUE(geometry.multiSpanArray.size() == 1);
+						EXPECT_TRUE(geometry.lineArray.size() == 2);
+						EXPECT_TRUE(geometry.linesArray.size() == 1);
 					}
 				}
 			}

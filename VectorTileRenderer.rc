@@ -21,6 +21,7 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -50,7 +51,8 @@ BEGIN
     PUSHBUTTON      "Fetch From MBTiles...",IDC_BUTTON_FROM_MBTILES,7,47,121,14
     PUSHBUTTON      "Render From PBF...",IDC_BUTTON_FROM_pBF,7,69,121,14
     PUSHBUTTON      "Render Area...",IDC_BUTTON_RENDER_AREA,6,91,121,14
-    PUSHBUTTON      "Map Viewer...",IDC_BUTTON_MAP_VIEWER,6,111,121,14
+    PUSHBUTTON      "Map Viewer...",IDC_BUTTON_MAP_VIEWER,6,112,121,14
+    PUSHBUTTON      "Render GeoJSON...",IDC_BUTTON_MAP_GEOJSON,7,133,121,14
 END
 
 
@@ -150,6 +152,7 @@ END
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -279,6 +282,21 @@ BEGIN
     CONTROL         "",IDC_MAP_STATIC,"Static",SS_BLACKFRAME,7,32,466,441
 END
 
+IDD_RENDER_GEOJSON_DIALOG DIALOGEX 0, 0, 311, 177
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Render GeoJSON"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,254,156,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,56,156,50,14,NOT WS_VISIBLE
+    RTEXT           "GeoJSON file:",IDC_STATIC,7,47,45,8
+    CONTROL         "",IDC_MFCEDITBROWSE_GEOJSON,"MfcEditBrowse",WS_BORDER | WS_TABSTOP | 0x80,60,45,237,14
+    PUSHBUTTON      "Render",IDC_BUTTON_RENDER,254,129,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,9,149,296,1,WS_EX_STATICEDGE
+    CONTROL         "",IDC_MFCEDITBROWSE_PROJ_DATA,"MfcEditBrowse",WS_BORDER | WS_TABSTOP | 0x80,7,22,290,14
+    LTEXT           "Please select the directory containing PROJ data files, e.g. proj.db:",IDC_STATIC,7,7,297,9
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -327,6 +345,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 473
     END
+
+    IDD_RENDER_GEOJSON_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 304
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 170
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -357,6 +383,11 @@ BEGIN
 END
 
 IDD_MAP_VIEWER_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_RENDER_GEOJSON_DIALOG AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -433,6 +464,19 @@ BEGIN
     IDC_MFCEDITBROWSE_STYLE, 0x37c, 42, 0
 0x4d3c, 0x4346, 0x6445, 0x7469, 0x7242, 0x776f, 0x6573, 0x4d5f, 0x646f, 
 0x3e65, 0x3c31, 0x4d2f, 0x4346, 0x6445, 0x7469, 0x7242, 0x776f, 0x6573, 
+0x4d5f, 0x646f, 0x3e65, 
+    0
+END
+
+IDD_RENDER_GEOJSON_DIALOG DLGINIT
+BEGIN
+    IDC_MFCEDITBROWSE_GEOJSON, 0x37c, 42, 0
+0x4d3c, 0x4346, 0x6445, 0x7469, 0x7242, 0x776f, 0x6573, 0x4d5f, 0x646f, 
+0x3e65, 0x3c31, 0x4d2f, 0x4346, 0x6445, 0x7469, 0x7242, 0x776f, 0x6573, 
+0x4d5f, 0x646f, 0x3e65, 
+    IDC_MFCEDITBROWSE_PROJ_DATA, 0x37c, 42, 0
+0x4d3c, 0x4346, 0x6445, 0x7469, 0x7242, 0x776f, 0x6573, 0x4d5f, 0x646f, 
+0x3e65, 0x3c32, 0x4d2f, 0x4346, 0x6445, 0x7469, 0x7242, 0x776f, 0x6573, 
 0x4d5f, 0x646f, 0x3e65, 
     0
 END

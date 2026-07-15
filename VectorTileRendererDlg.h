@@ -37,4 +37,6 @@ protected:
 	afx_msg void OnBnClickedButtonFrompbf();
 	afx_msg void OnBnClickedButtonRenderArea();
 	afx_msg void OnBnClickedButtonMapViewer();
+public:
+    afx_msg void OnBnClickedButtonMapGeojson();
 };

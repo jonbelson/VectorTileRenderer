@@ -81,6 +81,9 @@
     <ClInclude Include="CMapViewerWnd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CRenderGeoJSON.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorTileRenderer.cpp">
@@ -348,7 +351,10 @@
       <Filter>Source Files\Formats\GeoJSON</Filter>
     </ClCompile>
     <ClCompile Include="formats\geojson\Renderer.cpp">
-      <Filter>Source Files\Core</Filter>
+      <Filter>Source Files\Formats\GeoJSON</Filter>
+    </ClCompile>
+    <ClCompile Include="CRenderGeoJSON.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -10,6 +10,7 @@ module;
 export module geo.projector;
 
 import std;
+import core.logger;
 import geo.latlong;
 
 namespace geo::projector
@@ -24,16 +25,9 @@ namespace geo::projector
 
 	export namespace CRS
 	{
-		constexpr char WGS84[] = "EPSG:4326";
-		constexpr char WebMercator[] = "EPSG:3857";
 		constexpr char BNG[] = "EPSG:27700";
-	};
-
-	export struct MapContext
-	{
-		const char* targetCrs = CRS::WebMercator;
-		double pixelsToMetres = 1.0;
-		Coord origin{ 0.0, 0.0 };
+		constexpr char WebMercator[] = "EPSG:3857";
+		constexpr char WGS84[] = "EPSG:4326";
 	};
 
 	/*
@@ -59,6 +53,17 @@ namespace geo::projector
 	export class Projector;
 	export using ProjectorPtr = std::unique_ptr<Projector>;
 
+
+	export struct MapContext
+	{
+		const char* sourceCrs = CRS::WGS84;
+		const char* targetCrs = CRS::WebMercator;
+		double pixelsToMetres = 1.0;
+		Coord origin{ 0.0, 0.0 };	// In target CRS
+		Projector& projector;
+	};
+
+
 	export class Projector
 	{
 		PJ_CONTEXT* mContext{};
@@ -67,9 +72,28 @@ namespace geo::projector
 		PJ_TYPE mSourceType { PJ_TYPE_UNKNOWN };
 		PJ_TYPE mTargetType { PJ_TYPE_UNKNOWN };
 
+		static inline std::string mSearchPath;
+
+		static void ProjLog(void*, int level, const char* msg)
+		{
+			core::logger::Debug(std::format("PROJ: {}\n", msg));
+		}
+
 		Projector()
 		{
 			mContext = proj_context_create();
+
+			if (!mSearchPath.empty())
+			{
+				std::vector<const char*> SearchPaths { mSearchPath.c_str() };
+				proj_context_set_search_paths(mContext, 1, SearchPaths.data());
+			}
+
+			proj_log_level(mContext, PJ_LOG_DEBUG);
+			proj_log_func(mContext, nullptr, ProjLog);
+
+			const char* version = proj_info().version;
+			const char* searchPath = proj_info().searchpath;
 		}
 
 		bool Init(const std::string& source, const std::string& target)
@@ -85,7 +109,16 @@ namespace geo::projector
 				mProjection = nullptr;
 			}
 
-			mProjection = proj_create_crs_to_crs(mContext, source.c_str(), target.c_str(), nullptr);
+//			mProjection = proj_create_crs_to_crs(mContext, source.c_str(), target.c_str(), nullptr);
+			mProjection = proj_create_crs_to_crs(mContext, "EPSG:4326", "EPSG:3857", nullptr);
+
+			if (!mProjection)
+			{
+				int error = proj_context_errno(mContext);
+				const char* message = proj_context_errno_string(mContext, error);
+				core::logger::Error(std::format("proj_create_crs_to_crs failed: {}\n", message));
+				return false;
+			}
 
 			if (mProjection)
 			{
@@ -128,7 +161,10 @@ namespace geo::projector
 			}
 		}
 
-
+		static void SetSearchPath(const std::string& path)
+		{
+			mSearchPath = path;
+		}
 
 		PJ_COORD Project(PJ_COORD coord)
 		{
@@ -160,7 +196,8 @@ namespace geo::projector
 			return Coord{ result.v[0], result.v[1] };
 		}
 
-		std::vector<Coord> Project(const std::vector<Coord>& coords)
+		//std::vector<Coord> Project(const std::vector<Coord>& coords)
+		std::vector<Coord> Project(std::span<const Coord> coords)
 		{
 			std::vector<Coord> projected;
 			projected.reserve(coords.size());
@@ -179,7 +216,7 @@ namespace geo::projector
 			return projected;
 		}
 
-		std::vector<Coord> Unproject(const std::vector<Coord>& coords)
+		std::vector<Coord> Unproject(std::span<const Coord> coords)
 		{
 			std::vector<Coord> projected;
 			projected.reserve(coords.size());

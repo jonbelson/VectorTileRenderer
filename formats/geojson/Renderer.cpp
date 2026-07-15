@@ -17,14 +17,36 @@ namespace geojson::renderer
 	using namespace geo;
 	using namespace geojson;
 
-	bool Renderer::RenderPoint(RenderContext& context, MapContext& mapContext, const geojson::geometry::Geometry& geometry) const
+	core::geometry::PointArray SpanToPointArray(RenderContext& context, MapContext& mapContext, std::span<const geojson::geometry::Position> span)
 	{
-		for (const auto& spanSpan : geometry.multiSpanArray)
+		core::geometry::PointArray pointArray;
+		pointArray.reserve(span.size());
+
+		// XXX Hack to test rendering.
+		projector::Coord origin = mapContext.projector.Project(mapContext.origin);
+
+		for (const auto& position : span)
+		{
+			auto result = mapContext.projector.Project(projector::Coord { position.longitude, position.latitude } );
+
+			double x = (result.x - origin.x)*mapContext.pixelsToMetres;
+			double y = (result.y - origin.y)*mapContext.pixelsToMetres;
+
+			pointArray.push_back(core::geometry::Point{ static_cast<float>(x), static_cast<float>(y) });
+		}
+
+		return pointArray;
+	}
+
+	bool Renderer::RenderPoint(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const geojson::geometry::Geometry& geometry) const
+	{
+		for (const auto& lines : geometry.linesArray)
 		{
 			core::geometry::MultiPoint multiPoint;
 
-			for (const auto& span : spanSpan)
+			for (const auto& line : lines.View(geometry.lineArray))
 			{
+				/*
 				core::geometry::PointArray pointArray;
 				pointArray.reserve(span.size());
 
@@ -34,24 +56,26 @@ namespace geojson::renderer
 
 					pointArray.push_back(core::geometry::Point{ static_cast<float>(result.x), static_cast<float>(result.y) });
 				}
+				*/
 
+				auto pointArray = SpanToPointArray(context, mapContext, coordinates /*line.View(coordinates)*/ );
 				multiPoint.points = std::move(pointArray);
 			}
-
 			context.renderTarget.DrawCircle(&multiPoint);
 		}
 
 		return true;
 	}
 
-	bool Renderer::RenderLine(RenderContext& context, MapContext& mapContext, const geojson::geometry::Geometry& geometry) const
+	bool Renderer::RenderLine(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const geojson::geometry::Geometry& geometry) const
 	{
-		for (const auto& spanSpan : geometry.multiSpanArray)
+		for (const auto& lines : geometry.linesArray)
 		{
 			core::geometry::LineString lineString;
 
-			for (const auto& span : spanSpan)
+			for (const auto& line : lines.View(geometry.lineArray))
 			{
+				/*
 				core::geometry::PointArray pointArray;
 				pointArray.reserve(span.size());
 
@@ -61,7 +85,9 @@ namespace geojson::renderer
 
 					pointArray.push_back(core::geometry::Point{ static_cast<float>(result.x), static_cast<float>(result.y) });
 				}
+				*/
 
+				auto pointArray = SpanToPointArray(context, mapContext, coordinates);
 				lineString.lines.push_back(std::move(pointArray));
 			}
 
@@ -71,19 +97,18 @@ namespace geojson::renderer
 		return true;
 	}
 
-	bool Renderer::RenderPolygon(RenderContext& context, MapContext& mapContext, const geojson::geometry::Geometry& geometry) const
+	bool Renderer::RenderPolygon(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const geojson::geometry::Geometry& geometry) const
 	{
 		core::geometry::MultiPolygon multiPolygon;
 
-		for (const auto& spanSpan : geometry.multiSpanArray)
+		for (const auto& lines : geometry.linesArray)
 		{
 			core::geometry::Polygon polygon;
 			
-			for (size_t i=0; i<spanSpan.size(); i++)
-			//for (const auto& span : spanSpan)
+			size_t i = 0;
+			for (const auto& line : lines.View(geometry.lineArray))
 			{
-				const auto& span = spanSpan[i];
-
+				/*
 				core::geometry::PointArray pointArray;
 				pointArray.reserve(span.size());
 
@@ -93,6 +118,11 @@ namespace geojson::renderer
 
 					pointArray.push_back(core::geometry::Point{ static_cast<float>(result.x), static_cast<float>(result.y) });
 				}
+				*/
+
+				auto pointArray = SpanToPointArray(context, mapContext, std::span<const geojson::geometry::Position>(coordinates).subspan(line.start, line.count));
+
+				pointArray.pop_back();
 
 				if (i == 0)
 				{
@@ -102,6 +132,8 @@ namespace geojson::renderer
 				{
 					polygon.interiorRings.push_back(std::move(pointArray));
 				}
+
+				i++;
 			}
 
 			multiPolygon.polygons.push_back(std::move(polygon));
@@ -112,7 +144,7 @@ namespace geojson::renderer
 		return true;
 	}
 
-	bool Renderer::Render(RenderContext& context, MapContext& mapContext, const geojson::geometry::Geometry& geometry) const
+	bool Renderer::Render(RenderContext& context, MapContext& mapContext, const Coordinates& coordinates, const geojson::geometry::Geometry& geometry) const
 	{
 		using namespace geojson::geometry;
 
@@ -120,16 +152,16 @@ namespace geojson::renderer
 		{
 			case GeometryType::Point:
 			case GeometryType::MultiPoint:
-				RenderPoint(context, mapContext, geometry);
+				RenderPoint(context, mapContext, coordinates, geometry);
 				break;
 			case GeometryType::LineString:
 			case GeometryType::MultiLineString:
-				RenderLine(context, mapContext, geometry);
+				RenderLine(context, mapContext, coordinates, geometry);
 				break;
 
 			case GeometryType::Polygon:
 			case GeometryType::MultiPolygon:
-				RenderPolygon(context, mapContext, geometry);
+				RenderPolygon(context, mapContext, coordinates, geometry);
 				break;
 
 			default:
@@ -144,9 +176,8 @@ namespace geojson::renderer
 	{
 		for (const auto& geometry : feature.geometries)
 		{
-			Render(context, mapContext, geometry);
+			Render(context, mapContext, feature.coordinates, geometry);
 		}
-
 
 		return true;
 	}
@@ -156,9 +187,9 @@ namespace geojson::renderer
 	{
 //		Projector& projector = context.projector
 
-		auto projector = Projector::Create(projector::CRS::WebMercator, mapContext.targetCrs);
+//		auto projector = Projector::Create(projector::CRS::WebMercator, mapContext.targetCrs);
 
-		if (projector)
+//		if (projector)
 		{
 			for (const auto& feature : geoJson)
 			{

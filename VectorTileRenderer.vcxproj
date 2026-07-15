@@ -209,6 +209,7 @@
     <ClInclude Include="CMapViewerDlg.h" />
     <ClInclude Include="CMapViewerWnd.h" />
     <ClInclude Include="CRenderAreaDlg.h" />
+    <ClInclude Include="CRenderGeoJSON.h" />
     <ClInclude Include="formats\mvt\glyphs.pb.h" />
     <ClInclude Include="formats\mvt\vector_tile.pb.h" />
     <ClInclude Include="framework.h" />
@@ -236,6 +237,7 @@
     <ClCompile Include="core\SVGRenderTarget.cpp" />
     <ClCompile Include="core\SVGRenderTarget.ixx" />
     <ClCompile Include="CRenderAreaDlg.cpp" />
+    <ClCompile Include="CRenderGeoJSON.cpp" />
     <ClCompile Include="formats\geojson\Feature.ixx">
       <ModuleOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleOutputFile>
       <ModuleDependenciesFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleDependenciesFile>

@@ -17,6 +17,7 @@
 #include "CFromServerDlg.h"
 #include "CMapViewerDlg.h"
 #include "CRenderAreaDlg.h"
+#include "CRenderGeoJSON.h"
 
 #include <format>
 #include <string>
@@ -216,6 +217,7 @@ BEGIN_MESSAGE_MAP(CVectorTileRendererDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_FROM_pBF, &CVectorTileRendererDlg::OnBnClickedButtonFrompbf)
 	ON_BN_CLICKED(IDC_BUTTON_RENDER_AREA, &CVectorTileRendererDlg::OnBnClickedButtonRenderArea)
 	ON_BN_CLICKED(IDC_BUTTON_MAP_VIEWER, &CVectorTileRendererDlg::OnBnClickedButtonMapViewer)
+    ON_BN_CLICKED(IDC_BUTTON_MAP_GEOJSON, &CVectorTileRendererDlg::OnBnClickedButtonMapGeojson)
 END_MESSAGE_MAP()
 
 
@@ -348,5 +350,11 @@ void CVectorTileRendererDlg::OnBnClickedButtonRenderArea()
 void CVectorTileRendererDlg::OnBnClickedButtonMapViewer()
 {
 	CMapViewerDlg dlg;
+	dlg.DoModal();
+}
+
+void CVectorTileRendererDlg::OnBnClickedButtonMapGeojson()
+{
+	CRenderGeoJSON dlg;
 	dlg.DoModal();
 }
