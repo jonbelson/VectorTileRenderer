@@ -20,12 +20,12 @@ I've tested it with MVT mapping from ESRI (Basemap service), Ordnance Survey
 
 ## Features
 
-Support for loading vector tiles from from web servers or local MBTILE files.
-Support for MapBox glyphs and sprites.
-Flexible rendering output via abstract RenderTarget interface. Current
-implementations are a raster renderer (using Direct2D) and a SVG renderer (not
-complete at this stage).
-Basic support for importing and rendering GeoJSON.
+- Support for loading vector tiles from from web servers or local MBTILE files.
+- Support for MapBox glyphs and sprites.
+- Flexible rendering output via abstract RenderTarget interface. Current
+implementations are a raster renderer (using Direct2D) and a SVG renderer
+(geometry only at this stage).
+-Basic support for importing and rendering GeoJSON.
 
 ## Code Structure
 
@@ -44,16 +44,24 @@ transformations.
 for performing upper/lowercase conversions.
 
 In addition there are a few simple test dialogs for testing the various
-components of the library.
+components of the project.
 
-The `Unit Tests` project contains unit tests for the various components of the library.
+The `Unit Tests` project contains unit tests for the various components of the project.
+
+## Credits
+
+JSON for Modern C++ for JSON parsing (https://github.com/nlohmann/json)<br>
+stb_image.h for loading bitmap images (https://github.com/nothings/stb)<br>
+SQLite for reading MBTiles databases<br>
+curl for downloading files from http servers<br>
+zlib for decompressing downloaded files<br>
+protobuf for decoding PBF-encoded data<br>
 
 ## Notes
 
 protoc installed with 'winget install protoc'
 
-protoc --cpp_out=. vector_tile.proto
-
+`protoc --cpp_out=. vector_tile.proto`
 
 vcpkg installed via:
 
