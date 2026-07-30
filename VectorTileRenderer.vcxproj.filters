@@ -356,6 +356,9 @@
     <ClCompile Include="CRenderGeoJSON.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="io\File.ixx">
+      <Filter>Source Files\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

@@ -198,6 +198,7 @@
     </ClCompile>
     <ClCompile Include="..\geo\LatLong.ixx" />
     <ClCompile Include="..\geo\Projector.ixx" />
+    <ClCompile Include="..\io\File.ixx" />
     <ClCompile Include="..\io\Gzip.cpp" />
     <ClCompile Include="..\io\Gzip.ixx" />
     <ClCompile Include="..\io\Resource.cpp" />

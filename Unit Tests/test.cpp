@@ -23,6 +23,8 @@ import formats.geojson.geometry;
 
 import geo.projector;
 
+import io.file;
+
 import unicode.casemapping;
 import unicode.convert;
 
@@ -1190,3 +1192,133 @@ namespace Geo
 	}
 
 };
+
+template<typename T>
+void WriteAsBinary(std::ofstream& out, const T& val)
+{
+	out.write(reinterpret_cast<const char*>(&val), sizeof(T));
+}
+
+static void CreateReadValuesData()
+{
+	const float f = 128.125f;
+	const double d = 128.968750;
+
+	std::ofstream out("ReadValues.bin");
+	WriteAsBinary(out, std::uint32_t{ 0x1234 });
+	WriteAsBinary(out, std::uint64_t{ 0x56789abc });
+	WriteAsBinary(out, std::uint8_t{ 0xde });
+	WriteAsBinary(out, f);
+	WriteAsBinary(out, d);
+	out << "Some Text";
+
+	WriteAsBinary(out, std::uint32_t{ std::byteswap(0x1234) });
+	WriteAsBinary(out, std::uint64_t{ std::byteswap(0x56789abcULL) });
+
+	std::uint32_t ui32{};
+	std::memcpy(&ui32, &f, sizeof(ui32));
+	std::uint32_t ui32_swapped = std::byteswap(ui32);
+	float f_swapped = std::bit_cast<float, uint32_t>(ui32_swapped);
+	WriteAsBinary(out, f_swapped);
+
+	std::uint64_t ui64{};
+	std::memcpy(&ui64, &f, sizeof(ui64));
+	std::uint64_t ui64_swapped = std::byteswap(ui64);
+	double d_swapped = std::bit_cast<double, uint64_t>(ui64_swapped);
+	WriteAsBinary(out, d_swapped);
+
+	out.close();
+
+}
+
+namespace Io
+{
+	TEST(File, ReadValues) {
+
+		//CreateReadValuesData();
+
+		// Binary data created with CreateReadValuesData() above.
+		// Hex dumped with  Format-Hex -Path ReadValues.bin
+		// Converted to code with Find/Replace '(\S+) ' '0x\1, '
+		std::vector<std::uint8_t> data = {
+			0x34, 0x12, 0x00, 0x00, 0xBC, 0x9A, 0x78, 0x56, 0x00, 0x00, 0x00, 0x00, 0xDE, 0x00, 0x20, 0x00, 
+			0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x60, 0x40, 0x53, 0x6F, 0x6D, 0x65, 0x20, 0x54, 0x65, 
+			0x78, 0x74, 0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x56, 0x78, 0x9A, 0xBC, 0x43, 0x00, 
+			0x20, 0x00, 0xCC, 0xCC, 0xCC, 0xCC, 0x43, 0x00, 0x20, 0x00
+		};
+
+
+		{
+			std::string s;
+			bool ok = io::file::Read(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(0x19)), 9), s);
+
+			EXPECT_TRUE(ok) << "Read failed for uint64_t\n";
+
+			EXPECT_TRUE(s == "Some Text") << "Incorrect values for std::string, got '" << s <<"' \n";
+		}
+
+		{
+			uint32_t ui32{};
+			bool ok = io::file::ReadLE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(0)), sizeof(ui32)), ui32);
+
+			EXPECT_TRUE(ok) << "Read failed for uint32_t\n";
+
+			EXPECT_TRUE(ui32 == 0x1234) << "Incorrect values for uint64_t\n";
+		}
+
+		{
+			uint64_t ui64{};
+			bool ok = io::file::ReadLE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(4)), sizeof(ui64)), ui64);
+
+			EXPECT_TRUE(ok) << "Read failed for uint64_t\n";
+
+			EXPECT_TRUE(ui64 == 0x56789abc) << "Incorrect values for uint64_t\n";
+		}
+
+
+		{
+			uint8_t ui8{};
+			bool ok = io::file::ReadLE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(12)), sizeof(ui8)), ui8);
+
+			EXPECT_TRUE(ok) << "Read failed for uint8_t\n";
+			EXPECT_TRUE(ui8 == 0xde) << "Incorrect values for uint8_t\n";
+		}
+
+		{
+			float f{};
+			bool ok = io::file::ReadLE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(13)), 4), f);
+
+			EXPECT_TRUE(ok) << "Read failed for float\n";
+			EXPECT_TRUE(f == 128.125f) << "Incorrect values for float\n";
+		}
+
+		{
+			double f{};
+			bool ok = io::file::ReadLE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(17)), 8), f);
+
+			EXPECT_TRUE(ok) << "Read failed for float\n";
+			EXPECT_TRUE(f == 128.968750) << "Incorrect values for double\n";
+		}
+
+		{
+			uint32_t ui32{};
+			bool ok = io::file::ReadBE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(0x22)), sizeof(ui32)), ui32);
+
+			EXPECT_TRUE(ok) << "Read failed for uint32_t\n";
+
+			EXPECT_TRUE(ui32 == 0x1234) << "Incorrect values for uint64_t\n";
+		}
+
+		{
+			uint64_t ui64{};
+			bool ok = io::file::ReadBE(std::span<std::byte>(reinterpret_cast<std::byte*>(&data.at(0x26)), sizeof(ui64)), ui64);
+
+			EXPECT_TRUE(ok) << "Read failed for uint64_t\n";
+
+			EXPECT_TRUE(ui64 == 0x56789abc) << "Incorrect values for uint64_t\n";
+		}
+
+
+	}
+
+}

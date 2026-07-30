@@ -59,6 +59,10 @@ protobuf for decoding PBF-encoded data<br>
 
 ## Notes
 
+I use AI clients for research and reference, but the project contains very
+little AI-generated code (mostly Direct2D boilerplate for setup and saving
+the image).
+
 protoc installed with 'winget install protoc'
 
 `protoc --cpp_out=. vector_tile.proto`
