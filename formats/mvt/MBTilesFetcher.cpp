@@ -9,9 +9,9 @@ module;
 
 #include "sqlite3.h"
 
-
 module formats.mvt.mbtilesfetcher;
 
+import io.file;
 import io.gzip;
 
 using namespace io;

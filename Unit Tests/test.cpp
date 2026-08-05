@@ -15,6 +15,8 @@ import core.geometry;
 import formats.mvt.expressions;
 import formats.mvt.operators;
 import formats.mvt.feature;
+//import formats.mvt.pmtilesfetcher;
+import formats.mvt.pmtilesfetcher.internal;
 import formats.mvt.symbol;
 
 import formats.geojson.parser;
@@ -1233,6 +1235,70 @@ static void CreateReadValuesData()
 
 namespace Io
 {
+	TEST(File, DataParser)
+	{
+		std::vector<std::uint8_t> pmtiles = 
+		{
+			0x50, 0x4D, 0x54, 0x69, 0x6C, 0x65, 0x73, 0x03, 0x7F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x77, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF1, 0xE1, 0x6F, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0xD3, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF1, 0xE1, 0x6F, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0xF1, 0xA1, 0x6F, 0x00, 0x00, 0x00, 0x00, 0x00, 0xDA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0xDA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x02, 0x02, 0x01, 0x00, 0x0E, 0x50, 0xA9, 0xAB, 0x00, 0x40, 0xDD, 0x4A, 0x1F, 0x60, 0x15,
+			0xDF, 0x00, 0x90, 0xB0, 0x72, 0x1F, 0x07, 0x58, 0x5F, 0xC5, 0x00, 0xE8, 0xC6, 0x5E, 0x1F, 0x1F,
+		};
+
+		std::span<std::byte> data(reinterpret_cast<std::byte*>(pmtiles.data()), pmtiles.size());
+
+		io::file::DataParser dataParser(data);
+
+		//std::string s;
+		//bool ok = dataParser.Read(s, 7);
+
+		//EXPECT_TRUE(ok) << "dataParser.Read() failed.\n";
+		//EXPECT_TRUE(s == "PMTiles") << "dataParser.Read() failed, got '" << s << "'\n";
+
+		//if (ok && s == "PMTiles")
+		{
+			//mvt::tilefetcher::PmTiles archive;
+
+			//bool ok = mvt::tilefetcher::Parse(dataParser, header);
+/*
+			uint8_t version{};
+			if (ok) ok = dataParser.ReadLE(version);
+			if (ok) ok = dataParser.ReadLE(header.RootOffset);
+			if (ok) ok = dataParser.ReadLE(header.RootLength);
+			if (ok) ok = dataParser.ReadLE(header.MetadataOffset);
+			if (ok) ok = dataParser.ReadLE(header.MetadataLength);
+
+			if (ok) ok = dataParser.ReadLE(header.LeafOffset);
+			if (ok) ok = dataParser.ReadLE(header.LeafLength);
+
+			if (ok) ok = dataParser.ReadLE(header.TileOffset);
+			if (ok) ok = dataParser.ReadLE(header.TileLength);
+
+			if (ok) ok = dataParser.ReadLE(header.NumAddressedTiles);
+			if (ok) ok = dataParser.ReadLE(header.NumTileEntries);
+			if (ok) ok = dataParser.ReadLE(header.NumTileContents);
+
+			if (ok) ok = dataParser.ReadLE(header.Clustered);
+			if (ok) ok = dataParser.ReadLE(header.InternalCompression);
+			if (ok) ok = dataParser.ReadLE(header.TileCompression);
+			if (ok) ok = dataParser.ReadLE(header.TileType);
+
+			if (ok) ok = dataParser.ReadLE(header.MinZoom);
+			if (ok) ok = dataParser.ReadLE(header.MaxZoom);
+
+			if (ok) ok = dataParser.ReadLE(header.MinPosition);
+			if (ok) ok = dataParser.ReadLE(header.MaxPosition);
+
+			if (ok) ok = dataParser.ReadLE(header.CenterZoom);
+			if (ok) ok = dataParser.ReadLE(header.CenterPosition);
+			*/
+		}
+	}
+
 	TEST(File, ReadValues) {
 
 		//CreateReadValuesData();

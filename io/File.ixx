@@ -67,7 +67,7 @@ namespace io::file
 		return Read<T, std::endian::big>(bytes, val);
 	}
 
-	export bool Read(std::span<std::byte> bytes, std::string& s)
+	export bool Read(std::span<const std::byte> bytes, std::string& s)
 	{
 		s.resize(bytes.size());
 
@@ -75,6 +75,15 @@ namespace io::file
 
 		return true;
 	}
+
+	//export bool ReadVarInt(std::span<const std::byte> bytes, uint64_t& val)
+	//{
+	//	if (bytes.size() != sizeof(T)) return false;
+
+	//	std::memcpy(&val, bytes.data(), sizeof(T));
+
+	//	return true;
+	//}
 
 
 	export class FileReader
@@ -146,5 +155,116 @@ namespace io::file
 
 	};
 
+
+	export class DataParser
+	{
+		std::span<const std::byte> mSpan;
+
+		std::int64_t mOffset{};
+
+		//bool WouldOverflow(size_t size)
+		//{
+		//	return mOffset + size > mSpan.size();
+		//}
+
+		template<typename T>
+		auto WouldOverflow(const T& val) -> bool
+		{
+			return mOffset + sizeof(T) > mSpan.size();
+		}
+
+
+	public:
+		DataParser(const Data& data)
+		{
+			mSpan = std::span<const std::byte>(data);
+		}
+
+		DataParser(std::span<const std::byte> span)
+		{
+			mSpan = span;
+		}
+
+		void Rewind(void)
+		{
+			mOffset = 0;
+		}
+
+		template<std::integral T>
+		auto ReadLE(T& val) -> bool
+		{
+			if (WouldOverflow(val)) return false;
+
+			if (io::file::ReadLE(mSpan.subspan(mOffset, sizeof(T)), val))
+			{
+				mOffset += sizeof(T);
+				return true;
+			}
+
+			return false;
+		}
+
+		template<std::integral T>
+		auto ReadBE(T& val) -> bool
+		{
+			if (WouldOverflow(val)) return false;
+
+			if (io::file::ReadBE(mSpan.subspan(mOffset, sizeof(T)), val))
+			{
+				mOffset += sizeof(T);
+				return true;
+			}
+
+			return false;
+		}
+
+		bool Read(std::string& s, size_t length)
+		{
+			if (mOffset + length > mSpan.size()) return false;
+
+			if (io::file::Read(mSpan.subspan(mOffset, length), s))
+			{
+				mOffset += s.length();
+				return true;
+			}
+
+			return false;
+		}
+
+		bool ReadVarIntLE(uint64_t& val)
+		{
+			uint8_t byte{};
+			uint64_t result{};
+
+			int count{};
+			int shift{};
+			do
+			{
+				if (WouldOverflow(byte)) return false;
+
+				if (!ReadLE(byte)) return false;
+
+				result |= (byte&0x7f)<<shift;
+				shift += 7;
+
+			} while (byte&0x80 && ++count<10);
+
+			val = result;
+
+			return true;
+		}
+
+		//bool ReadVarIntBE(uint64_t& val)
+		//{
+		//	if (ReadVarIntLE(val))
+		//	{
+		//		if constexpr (std::endian::native != std::endian::)
+		//		{
+		//			val = std::byteswap(val);
+		//		}
+		//	}
+		//}
+
+	};
 
 }

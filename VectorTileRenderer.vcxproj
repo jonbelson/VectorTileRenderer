@@ -294,6 +294,9 @@
     <ClCompile Include="formats\mvt\Operators.cpp" />
     <ClCompile Include="formats\mvt\Operators.ixx" />
     <ClCompile Include="formats\mvt\Parser.ixx" />
+    <ClCompile Include="formats\mvt\PMTilesFetcher.Internal.ixx" />
+    <ClCompile Include="formats\mvt\PMTIlesFetcher.cpp" />
+    <ClCompile Include="formats\mvt\PMTilesFetcher.ixx" />
     <ClCompile Include="formats\mvt\RenderContext.ixx" />
     <ClCompile Include="formats\mvt\Renderer.cpp" />
     <ClCompile Include="formats\mvt\Renderer.ixx" />

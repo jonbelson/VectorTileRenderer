@@ -11,6 +11,7 @@ import core.logger;
 
 import formats.mvt.httptilefetcher;
 import formats.mvt.mbtilesfetcher;
+import formats.mvt.pmtilesfetcher;
 
 namespace mvt::tilefetcher
 {
@@ -29,6 +30,11 @@ namespace mvt::tilefetcher
 		else if (uri.starts_with("mbtiles://"))
 		{
 			auto result = MbTilesFetcher::Create(uri.substr(10, uri.length() - 10));
+			if (result) return { std::unique_ptr<ITileFetcher>(std::move(result.value())) };
+		}
+		else if (uri.starts_with("pmtiles://"))
+		{
+			auto result = PmTilesFetcher::Create(uri.substr(10, uri.length() - 10));
 			if (result) return { std::unique_ptr<ITileFetcher>(std::move(result.value())) };
 		}
 		else if (uri.starts_with("tilepbf://"))

@@ -240,6 +240,15 @@
     <ClCompile Include="..\io\File.ixx">
       <Filter>Project Modules\io</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\PMTIlesFetcher.cpp">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\PMTilesFetcher.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\formats\mvt\PMTilesFetcher.Internal.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

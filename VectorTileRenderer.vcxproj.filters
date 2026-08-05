@@ -359,6 +359,15 @@
     <ClCompile Include="io\File.ixx">
       <Filter>Source Files\IO</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\PMTilesFetcher.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\PMTIlesFetcher.cpp">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\PMTilesFetcher.Internal.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">
