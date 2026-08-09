@@ -57,6 +57,7 @@ namespace mvt::renderer
 	geometry::MultiPolygon Renderer::TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc) const
 	{
 		geometry::MultiPolygon transformed;
+		transformed.polygons.reserve(multiPolygon.polygons.size());
 
 		for (const auto& polygon : multiPolygon.polygons)
 		{
@@ -69,6 +70,7 @@ namespace mvt::renderer
 	geometry::Polygon Renderer::TileToWorld(const geometry::Polygon& polygon, const WorldContext& wc) const
 	{
 		geometry::Polygon transformed;
+		transformed.interiorRings.reserve(polygon.interiorRings.size());
 
 		transformed.exteriorRing = TileToWorld(polygon.exteriorRing, wc);
 
@@ -85,6 +87,8 @@ namespace mvt::renderer
 	geometry::LineString Renderer::TileToWorld(const geometry::LineString& lineString, const WorldContext& wc) const
 	{
 		geometry::LineString transformed;
+		transformed.lines.reserve(lineString.lines.size());
+
 		for (const auto& pointArray : lineString.lines)
 		{
 			transformed.lines.emplace_back(TileToWorld(pointArray, wc));

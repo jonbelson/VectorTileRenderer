@@ -18,6 +18,7 @@ import formats.mvt.feature;
 //import formats.mvt.pmtilesfetcher;
 import formats.mvt.pmtilesfetcher.internal;
 import formats.mvt.symbol;
+import formats.mvt.tile;
 
 import formats.geojson.parser;
 import formats.geojson.feature;
@@ -950,6 +951,160 @@ namespace MVT
 
 		}
 
+	}
+
+	TEST(PMTiles, CountForZoom)
+	{
+		using namespace mvt::tilefetcher;
+
+		struct Test { uint64_t zoom; uint64_t count; };
+
+		Test tests[] =
+		{
+			{ 0, 1 },
+			{ 1, 4 },
+			{ 2, 16 },
+			{ 3, 64 },
+			{ 4, 256 },
+			{ 5, 1024 }
+		};
+
+		for (const auto& test : tests)
+		{
+			auto count = CountForZoom(test.zoom);
+
+			EXPECT_EQ(count, test.count);
+		}
+	}
+
+	TEST(PMTiles, BaseForZoom)
+	{
+		using namespace mvt::tilefetcher;
+
+		struct Test { uint64_t zoom; uint64_t base; };
+
+		Test tests[] =
+		{
+			{ 0, 0 },
+			{ 1, 1 },
+			{ 2, 5 },
+			{ 3, 21 },
+			{ 4, 85 },
+			{ 5, 341 },
+			{ 6, 1365 },
+			{ 7, 5461 },
+			{ 8, 21845 },
+			{ 9, 87381 },
+			{ 10, 349525 },
+			{ 11, 1398101 },
+			{ 12, 5592405 },
+			{ 13, 22369621 },
+			{ 14, 89478485 },
+			{ 15, 357913941 }
+		};
+
+		for (const auto& test : tests)
+		{
+			auto base = BaseForZoom(test.zoom);
+			EXPECT_EQ(base, test.base);
+		}
+	}
+
+
+	TEST(PMTiles, ZoomForTileID)
+	{
+		using namespace mvt::tilefetcher;
+
+		struct Test { uint64_t tileID; uint64_t zoom; };
+
+		Test tests[] =
+		{
+			{ 0, 0 },
+			{ 1, 1 },
+			{ 2, 1 },
+			{ 3, 1 },
+			{ 4, 1 },
+			{ 5, 2 },
+			{ 6, 2 },
+			{ 21, 3 }
+		};
+
+		for (const auto& test : tests)
+		{
+			auto zoom = ZoomForTileID(test.tileID);
+			EXPECT_EQ(zoom, test.zoom);
+		}
+	}
+
+	TEST(PMTiles, TileIDToTileSpec)
+	{
+		using namespace mvt::tilefetcher;
+		using namespace mvt::tile;
+
+		struct Test { uint64_t tileID; TileSpec tileSpec; };
+
+		Test tests[] =
+		{
+			{ 0, { .zoom = 0, .y = 0, .x = 0 } },
+			{ 1, { .zoom = 1, .y = 0, .x = 0 } },
+			{ 2, { .zoom = 1, .y = 1, .x = 0 } },
+			{ 3, { .zoom = 1, .y = 1, .x = 1 } },
+			{ 4, { .zoom = 1, .y = 0, .x = 1 } },
+			{ 5, { .zoom = 2, .y = 0, .x = 0 } },
+			{ 6, { .zoom = 2, .y = 0, .x = 1 } },
+			{ 7, { .zoom = 2, .y = 1, .x = 1 } },
+			{ 8, { .zoom = 2, .y = 1, .x = 0 } },
+			{ 9, { .zoom = 2, .y = 2, .x = 0 } },
+			{ 10, { .zoom = 2, .y = 3, .x = 0 } },
+			{ 11, { .zoom = 2, .y = 3, .x = 1 } },
+			{ 21, { .zoom = 3, .y = 0, .x = 0 } }
+		};
+
+		auto Format = [](const TileSpec& tileSpec) {
+			return std::format("({0}, {1}, {2})", tileSpec.zoom, tileSpec.y, tileSpec.x);
+		};
+
+		for (const auto& test : tests)
+		{
+			auto tileSpec = TileIDToTileSpec(test.tileID);
+			bool equal = (tileSpec.zoom == test.tileSpec.zoom) && (tileSpec.y == test.tileSpec.y) && (tileSpec.x == test.tileSpec.x);
+			EXPECT_TRUE(equal) << "TileID: " << test.tileID << " Expected: " << Format(test.tileSpec) << " " << "Got: " << Format(tileSpec);
+		}
+	}
+
+	TEST(PMTiles, TileSpecToTileID)
+	{
+		using namespace mvt::tilefetcher;
+		using namespace mvt::tile;
+
+		struct Test { TileSpec tileSpec; uint64_t tileID; };
+
+		Test tests[] =
+		{
+			{ { .zoom = 0, .y = 0, .x = 0 }, 0 },
+			{ { .zoom = 1, .y = 0, .x = 0 }, 1 },
+			{ { .zoom = 1, .y = 1, .x = 0 }, 2 },
+			{ { .zoom = 1, .y = 1, .x = 1 }, 3 },
+			{ { .zoom = 1, .y = 0, .x = 1 }, 4 },
+			{ { .zoom = 2, .y = 0, .x = 0 }, 5 },
+			{ { .zoom = 2, .y = 0, .x = 1 }, 6 },
+			{ { .zoom = 2, .y = 1, .x = 1 }, 7 },
+			{ { .zoom = 2, .y = 1, .x = 0 }, 8 },
+			{ { .zoom = 2, .y = 2, .x = 0 }, 9 },
+			{ { .zoom = 2, .y = 3, .x = 0 }, 10 },
+			{ { .zoom = 2, .y = 3, .x = 1 }, 11 },
+			{ { .zoom = 3, .y = 0, .x = 0 }, 21 }
+		};
+
+		auto Format = [](const TileSpec& tileSpec) {
+			return std::format("({0}, {1}, {2})", tileSpec.zoom, tileSpec.y, tileSpec.x);
+		};
+
+		for (const auto& test : tests)
+		{
+			auto tileID = TileSpecToTileID(test.tileSpec);
+			EXPECT_EQ(tileID, test.tileID) << "TileSpec: " << Format(test.tileSpec) << " Expected: " << test.tileID << " " << "Got: " << tileID;
+		}
 	}
 
 }

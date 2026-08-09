@@ -21,8 +21,11 @@ import io.resource;
 
 class CMapViewerWndViewModel
 {
-	constexpr static double InitialLatitude { 51.51525477169754 };
-	constexpr static double InitialLongitude { -0.14226616509484685 };
+	//constexpr static double InitialLatitude { 51.51525477169754 };
+	//constexpr static double InitialLongitude { -0.14226616509484685 };
+
+	constexpr static double InitialLatitude { 52.628578740648045 };
+	constexpr static double InitialLongitude { 1.292145786286048 };
 
 	constexpr static int MinZoom { 0 };
 	constexpr static int MaxZoom { 22 };
@@ -213,11 +216,13 @@ public:
 			int x = TLx/m_iTileSize;
 			int y = TLy/m_iTileSize;
 
-			int offsetX = TLx%m_iTileSize;
-			int offsetY = TLy%m_iTileSize;
-
 			int x2 = (TLx + m_iViewWidth)/m_iTileSize;
 			int y2 = (TLy + m_iViewHeight)/m_iTileSize;
+			//x2++;
+			//y2++;
+
+			int offsetX = TLx%m_iTileSize;
+			int offsetY = TLy%m_iTileSize;
 
 			mvt::tile::TileSpecArray tileSpecArray;
 

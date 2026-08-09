@@ -9,6 +9,7 @@ import std;
 
 import core.json;
 import core.logger;
+import formats.mvt.tile;
 import geo.latlong;
 import io.file;
 import io.gzip;
@@ -18,6 +19,130 @@ namespace mvt::tilefetcher
 	using uint8_t = std::uint8_t;
 	using uint32_t = std::uint32_t;
 	using uint64_t = std::uint64_t;
+
+	using TileSpec = mvt::tile::TileSpec;
+
+	export size_t CountForZoom(uint64_t zoom)
+	{
+		size_t n = 1ULL<<zoom;
+		size_t count = n*n;
+		return count;
+	}
+
+	export size_t BaseForZoom(uint64_t zoom)
+	{
+		size_t total{};
+		for (uint64_t i = 0; i<zoom; i++)
+		{
+			total += CountForZoom(i);
+		}
+		return total;
+	}
+
+	export uint64_t ZoomForTileID(uint64_t TileID)
+	{
+		if (TileID == 0) return 0;
+
+		uint64_t zoom{};
+		uint64_t base{};
+
+		while ((zoom<<2) + base <= TileID)
+		{
+			base += CountForZoom(zoom);
+			zoom++;
+		}
+
+		return zoom;
+	}
+
+	/*
+	template<size_t N>
+	using Indices = std::make_index_sequence<N>;
+
+	template<size_t... Is>
+	constexpr size_t TotalForZoom(std::index_sequence<Is...>)
+	{
+		return (CountForZoom<Is>() + ...);
+	}
+
+	constexpr size_t Count1 = TotalForZoom(Indices<1>{});
+	constexpr size_t Count2 = TotalForZoom(Indices<2>{});
+	constexpr size_t Count3 = TotalForZoom(Indices<3>{});
+	*/
+
+	static void Rotate(uint64_t s, uint64_t rx, uint64_t ry, uint64_t& x, uint64_t& y)
+	{
+		if (ry == 0)
+		{
+			if (rx == 1)
+			{
+				x = s*s - 1 - x;
+				y = s*s - 1 - y;
+			}
+			std::swap(x, y);
+		}
+	}
+
+	export TileSpec TileIDToTileSpec(uint64_t TileID)
+	{
+		uint64_t zoom = ZoomForTileID(TileID);
+
+		uint64_t n = 1ULL << zoom;
+
+		uint64_t base = BaseForZoom(zoom);
+		uint64_t d = TileID - base;
+
+		uint64_t x{};
+		uint64_t y{};
+		uint64_t t{ d };
+
+		uint64_t s{ 1 };
+
+		while (s < n)
+		{
+			uint64_t rx = 1 & (t/2);
+			uint64_t ry = 1 & (t xor rx);
+
+			Rotate(s, rx, ry, x, y);
+
+			x += s*rx;
+			y += s*ry;
+
+			t /= 4;
+
+			s<<= 1;
+		}
+
+		return TileSpec{ .zoom = static_cast<int>(zoom), .y = static_cast<int>(y), .x = static_cast<int>(x) };
+	}
+
+	export uint64_t TileSpecToTileID(const TileSpec& tileSpec)
+	{
+		uint64_t zoom = static_cast<uint64_t>(tileSpec.zoom);
+		uint64_t y = static_cast<uint64_t>(tileSpec.y);
+		uint64_t x = static_cast<uint64_t>(tileSpec.x);
+
+		size_t base = (zoom) ? BaseForZoom(zoom) : 0;
+
+		uint64_t d{};
+
+		int n = 1<<zoom;
+		uint64_t s = n/2;
+
+		while (s)
+		{
+			uint64_t rx = (x & s) ? 1 : 0;
+			uint64_t ry = (y & s) ? 1 : 0;
+
+			d += s*s*((3*rx) xor ry);
+
+			Rotate(s, rx, ry, x, y);
+
+			s /= 2;
+		}
+
+		return base + d;
+	}
 
 	export enum struct Compression
 	{
@@ -92,10 +217,9 @@ namespace mvt::tilefetcher
 		geo::latlong::LatLong CenterPosition{};
 	};
 
-
 	export struct PmTilesMetadata
 	{
-
+		std::unordered_map<std::string, std::string> Metadata;
 	};
 
 	export struct PmTilesDirectory
@@ -276,6 +400,28 @@ namespace mvt::tilefetcher
 
 
 			return true;
+		}
+
+		std::vector<std::byte> FetchTile(io::file::FileReader& fileReader, uint64_t TileID)
+		{
+			auto it = std::ranges::lower_bound(mDirectory.TileIDs, TileID);
+
+			if (it == mDirectory.TileIDs.end() || *it != TileID) return {};
+
+			auto index = it - mDirectory.TileIDs.begin();
+
+			uint64_t runLength = mDirectory.RunLengths[index];
+			uint64_t length = mDirectory.Lengths[index];
+			uint64_t offset = mDirectory.Offsets[index];
+
+			auto data = fileReader.Read(mHeader.TileOffset + offset, length);
+
+			if (io::gzip::IsGzipped(data))
+			{
+				data = io::gzip::Decompress(data);
+			}
+			
+			return data;
 		}
 	};
 
