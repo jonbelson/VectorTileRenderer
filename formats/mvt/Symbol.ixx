@@ -218,14 +218,13 @@ export namespace mvt::symbol
 		}
 	};
 
-
-	class LineWalker;
-
-
 	int GetGlyphBlockStart(uint32_t codePoint)
 	{
 		return (codePoint >> 8)*256;
 	}
+
+
+	class LineWalker;
 
 	// Represents a Symbol from a Feature.
 	export class Symbol
@@ -241,7 +240,7 @@ export namespace mvt::symbol
 		struct Line
 		{
 			std::vector<uint32_t> text;	// utf32
-			float widthPx { 0.0f };
+			float widthPx { 0.0f };		// Ink width of line.
 		};
 
 		// Represents a piece of text split into lines of individual words.
@@ -254,17 +253,41 @@ export namespace mvt::symbol
 			float heightPx { 0.0f };
 		};
 
+		// Get smallest value of glyph.top for a line.
+		float GetSmallestTop(const mvt::style::Glyphs& glyphs, const std::string& textFont, const Line& line)
+		{
+			float smallestTop { -99990.0f };
+
+			for (size_t i=0; i<line.text.size(); i++)
+			{
+				const auto cp = line.text[i];
+
+				if (cp == 32) continue;	// XXX Kludge, as <space> has a top of 0.
+
+				if (auto glyphSpec = glyphs.Lookup(textFont, cp, 0.0f))
+				{
+					smallestTop = std::max(smallestTop, static_cast<float>(glyphSpec->top));
+				}
+			}
+
+			return smallestTop;
+		}
+
 		// Get word length in pixels when drawn using glyphs from specified Glyphs instance.
 		// Result calculated for glyphs of GlyphSize pixels.
 		// text		Array of utf32 codepoints.
 		float GetWordLength(const mvt::style::Glyphs& glyphs, const std::string& textFont, float textLetterSpacing, const Utf32Text& text)
 		{
 			float lengthPx { 0.0f };
+			float maxHeightPx { 0.0f };
 
 			float padding = textLetterSpacing*style::GlyphSize;
 
-			for (const auto& cp : text)
+			//for (const auto& cp : text)
+			for (size_t i=0; i<text.size(); i++)
 			{
+				const auto cp = text[i];
+
 				int blockStart = GetGlyphBlockStart(cp);
 
 				auto glyphAtlas = glyphs.Lookup(textFont, blockStart);
@@ -272,10 +295,25 @@ export namespace mvt::symbol
 				{
 					if (glyphAtlas->glyphs.contains(cp))
 					{
-						lengthPx += glyphAtlas->glyphs.at(cp).advance + padding;
+						const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
+
+						bool isLast = i == text.size() - 1;
+						if (isLast)
+						{
+							lengthPx += glyphSpec.left + glyphSpec.width;
+						}
+						else
+						{
+							lengthPx += glyphSpec.advance + padding;
+						}
+
+
 					}
 				}
 			}
+
+			//if (lengthPx) lengthPx -= padding;
+
 			return lengthPx;
 		}
 

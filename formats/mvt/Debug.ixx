@@ -17,6 +17,7 @@ namespace mvt::debug::visual
 	export constexpr bool NoGlyphRotation = false;
 	export constexpr bool DrawPointLabelOrigin = false;
 	export constexpr bool DrawPointLabelOutline = false;
+	export constexpr bool DrawPointLabelGlyphMarker = false;
 	export constexpr bool DrawLineLabelPath = false;
 	export constexpr bool DrawLineLabelOrigin = false;
 	export constexpr bool DrawLineLabelGlyphOrigin = false;

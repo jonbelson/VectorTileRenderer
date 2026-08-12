@@ -289,6 +289,10 @@ namespace mvt::style
 		return std::move(glyphAtlas);
 	}
 
+	int GetGlyphBlockStart(uint32_t codePoint)
+	{
+		return (codePoint >> 8)*256;
+	}
 
 	// Interface to Glyphs referenced by the Style.
 	export class Glyphs
@@ -354,6 +358,21 @@ namespace mvt::style
 	public:
 		Glyphs() {}
 		Glyphs(const std::string& glyphUri) : mGlyphUri(glyphUri) {}
+
+		const GlyphSpec* Lookup(const std::string& font, uint32_t cp, float haloSizePx = 0.0f) const
+		{
+			auto glyphAtlas = Lookup(font, GetGlyphBlockStart(cp), haloSizePx);
+			if (glyphAtlas)
+			{
+				if (glyphAtlas->glyphs.contains(cp))
+				{
+					const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
+					return &glyphSpec;
+				}
+			}
+
+			return nullptr;
+		}
 
 		// Fetch glyph Bitmap with specified name and block start number (e.g. 1024 for 1024-1279 range).
 		// font			Name of font.

@@ -344,7 +344,7 @@ namespace mvt::symbol
 		float padding = attribs.textLetterSpacing*style::GlyphSize;
 		float maxTextWidthPx = attribs.textMaxWidth*style::GlyphSize;
 
-		size_t start{} , end{};
+		size_t start{}, end{};
 
 		size_t lastBreak { std::string::npos };
 
@@ -407,47 +407,6 @@ namespace mvt::symbol
 
 				lastBreak = std::string::npos;
 
-#if 0
-				// Search backwards for the last point we can split at (either a space or hyphen).
-				for (size_t j=end; j>=start; j--)
-				{
-					uint32_t jch = utf32[j];
-					if (jch == ' ' || jch == '-' || jch == '\n' || jch == '/')
-					{
-						if (jch == '/' && j < utf32.size() - 1)
-						{
-							// We want to split /after/ the '/'.
-							j++;
-						}
-
-						//std::string_view text = textField.substr(start, j - start);
-						std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + j);
-						line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
-						ft.lines.push_back(line);
-
-						line = {};
-						width = 0.0f;
-
-						i = j;
-						start = i;
-						end = i;
-
-						if ((jch == ' ' || jch == '\n') && j < utf32.size() - 1)
-						{
-							start++;
-							end++;
-						}
-						else if (jch == '/' && j < utf32.size() - 1)
-						{
-							end++;
-						}
-
-						break;
-					}
-
-					if (j == start) break;
-				}
-#endif
 				continue;
 			}
 			else
@@ -456,7 +415,7 @@ namespace mvt::symbol
 				{
 				}
 
-				width += advance;
+				width += advance + padding;
 				end++;
 			}
 		}
@@ -474,11 +433,22 @@ namespace mvt::symbol
 				ft.widthPx = std::max(ft.widthPx, line.widthPx);
 			}
 
-			ft.widthPx += style::GlyphPbfPadding;
-
 			float rowHeightPx = attribs.textLineHeight*style::GlyphSize;
 
-			ft.heightPx = ft.lines.size()*rowHeightPx + style::DefaultDecender;
+			size_t numLines = ft.lines.size();
+			for (size_t i = 0; i<numLines; i++)
+			{
+				bool isLast = i == ft.lines.size() - 1;
+				if (isLast)
+				{
+					ft.heightPx += style::GlyphSize;
+				}
+				else
+				{
+					ft.heightPx += rowHeightPx;
+				}
+			}
+
 		}
 
 		return ft;
@@ -1076,14 +1046,19 @@ namespace mvt::symbol
 			for (size_t i = 0; i<formattedText.lines.size(); i++)
 			{
 				cursor = AdjustForTextJustify(formattedText, i, attribs, Point(start.x, cursor.y));
-				//cursor = AdjustForTextOffset(attribs, cursor);
+
+				const auto& line = formattedText.lines[i];
+
+				if (i == 0)
+				{
+					float smallestTop = GetSmallestTop(glyphs, font, line);
+					cursor.y += textScale*smallestTop;
+				}
 
 				if (i != 0)
 				{
 					cursor.y += textLineHeight;
 				}
-
-				const auto& line = formattedText.lines[i];
 
 				for (size_t j = 0; j<line.text.size(); j++)
 				{
@@ -1103,7 +1078,7 @@ namespace mvt::symbol
 						float x = cursor.x;
 						float y = cursor.y;
 
-						x += glyphSpec.left*textScale;
+						if (j!= 0) x += glyphSpec.left*textScale;
 
 						float ypos = y - textScale*glyphSpec.top;
 						Point topLeft{ x, ypos };
@@ -1123,6 +1098,12 @@ namespace mvt::symbol
 
 							renderTarget.SetActiveBitmap(glyphHandle);
 							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+
+							if constexpr (mvt::debug::visual::DrawPointLabelGlyphMarker)
+							{
+								DrawDot(&renderTarget, topLeft, Color("#00ff00"), 1.0f);
+								DrawDot(&renderTarget, destRect.BottomRight(), Color("#0000ff"), 1.0f);
+							}
 						}
 
 						cursor.x += glyphSpec.advance*textScale + padding;
