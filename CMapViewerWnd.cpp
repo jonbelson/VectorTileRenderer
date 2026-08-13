@@ -253,7 +253,8 @@ public:
 					if (bitmap)
 					{
 						auto size = bitmap->GetSize();
-						auto dest = D2D1::RectF(0.0f, 0.0f, static_cast<float>(m_iTileSize), static_cast<float>(m_iTileSize));
+//						auto dest = D2D1::RectF(0.0f, 0.0f, static_cast<float>(m_iTileSize), static_cast<float>(m_iTileSize));
+						auto dest = D2D1::RectF(0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height));
 						pRenderTarget->DrawBitmap(bitmap, dest);
 
 						//m_pRenderTarget->Save("c:\\temp\\tile.png");
