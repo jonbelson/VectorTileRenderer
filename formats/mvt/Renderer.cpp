@@ -356,11 +356,10 @@ namespace mvt::renderer
 
 		for (const auto& layer : mStyle->mLayers)
 		{
-			if (layer->mId == "land line/ridge")
-			{
-				//continue;
-				int jj{};
-			}
+			//if (layer->mId == "land line/ridge")
+			//{
+			//	int jj{};
+			//}
 
 			//if (layer->mType != LayerType::Symbol) continue;
 

@@ -40,7 +40,7 @@ bool _OperatorDecision<arity>::ParseFromJson(const json& data)
 				case Arity::BinaryOrTernary:
 					return mValues.size() == 2 || mValues.size() == 3;
 				case Arity::Nary:
-					return mValues.size() >= 2;
+					return mValues.size() >= 2 || mValues.size()==0;	// XXX I've seen [ "all" ], invalid but presumably means 'true'.
 			}
 		}
 	}

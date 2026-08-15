@@ -318,6 +318,58 @@ namespace mvt::tilefetcher
 			return true;
 		}
 
+		static bool ParseDirectory(std::vector<std::byte>& data, PmTilesDirectory& directory)
+		{
+			if (data.empty()) return false;
+
+			io::file::DataParser dataParser(data);
+
+			uint64_t numEntries{};
+			if (!dataParser.ReadVarIntLE(numEntries)) return false;
+
+			directory.TileIDs.resize(numEntries);
+			directory.RunLengths.resize(numEntries);
+			directory.Lengths.resize(numEntries);
+			directory.Offsets.resize(numEntries);
+
+			uint64_t val{};
+			uint64_t lastId{};
+			for (uint64_t i = 0; i < numEntries; i++)
+			{
+				if (!dataParser.ReadVarIntLE(val)) return false;
+				lastId += val;
+				directory.TileIDs[i] = lastId;
+			}
+
+			for (uint64_t i = 0; i < numEntries; i++)
+			{
+				if (!dataParser.ReadVarIntLE(val)) return false;
+				directory.RunLengths[i] = val;
+			}
+
+			for (uint64_t i = 0; i < numEntries; i++)
+			{
+				if (!dataParser.ReadVarIntLE(val)) return false;
+				directory.Lengths[i] = val;
+			}
+
+			for (uint64_t i = 0; i < numEntries; i++)
+			{
+				if (!dataParser.ReadVarIntLE(val)) return false;
+				if (val == 0 && i > 0)
+				{
+					uint64_t prev = directory.Offsets[i - 1];
+					directory.Offsets[i] = directory.Offsets[i - 1] + directory.Lengths[i - 1];
+				}
+				else
+				{
+					directory.Offsets[i] = val - 1;
+				}
+			}
+
+			return true;
+		}
+
 		bool ParseDirectory(io::file::FileReader& fileReader)
 		{
 			if (mHeader.RootOffset == 0 || mHeader.RootLength == 0) return true;
@@ -330,52 +382,7 @@ namespace mvt::tilefetcher
 				data = io::gzip::Decompress(data);
 			}
 
-			io::file::DataParser dataParser(data);
-
-			uint64_t numEntries{};
-			if (!dataParser.ReadVarIntLE(numEntries)) return false;
-
-			mDirectory.TileIDs.resize(numEntries);
-			mDirectory.RunLengths.resize(numEntries);
-			mDirectory.Lengths.resize(numEntries);
-			mDirectory.Offsets.resize(numEntries);
-
-			uint64_t val{};
-			uint64_t lastId{};
-			for (uint64_t i = 0; i < numEntries; i++)
-			{
-				if (!dataParser.ReadVarIntLE(val)) return false;
-				lastId += val;
-				mDirectory.TileIDs[i] = lastId;
-			}
-
-			for (uint64_t i = 0; i < numEntries; i++)
-			{
-				if (!dataParser.ReadVarIntLE(val)) return false;
-				mDirectory.RunLengths[i] = val;
-			}
-
-			for (uint64_t i = 0; i < numEntries; i++)
-			{
-				if (!dataParser.ReadVarIntLE(val)) return false;
-				mDirectory.Lengths[i] = val;
-			}
-
-			for (uint64_t i = 0; i < numEntries; i++)
-			{
-				if (!dataParser.ReadVarIntLE(val)) return false;
-				if (val == 0 && i > 0)
-				{
-					uint64_t prev = mDirectory.Offsets[i - 1];
-					mDirectory.Offsets[i] = mDirectory.Offsets[i - 1] + mDirectory.Lengths[i - 1];
-				}
-				else
-				{
-					mDirectory.Offsets[i] = val - 1;
-				}
-			}
-
-			return true;
+			return ParseDirectory(data, mDirectory);
 		}
 
 		bool Parse(io::file::FileReader& fileReader)
@@ -404,9 +411,11 @@ namespace mvt::tilefetcher
 
 		std::vector<std::byte> FetchTile(io::file::FileReader& fileReader, uint64_t TileID)
 		{
-			auto it = std::ranges::lower_bound(mDirectory.TileIDs, TileID);
+			auto it = std::ranges::upper_bound(mDirectory.TileIDs, TileID);
 
-			if (it == mDirectory.TileIDs.end() || *it != TileID) return {};
+			if (it == mDirectory.TileIDs.end() /* || *it != TileID*/) return {};
+
+			--it;
 
 			auto index = it - mDirectory.TileIDs.begin();
 
@@ -414,7 +423,53 @@ namespace mvt::tilefetcher
 			uint64_t length = mDirectory.Lengths[index];
 			uint64_t offset = mDirectory.Offsets[index];
 
-			auto data = fileReader.Read(mHeader.TileOffset + offset, length);
+			std::vector<std::byte> data;
+			if (runLength == 0)
+			{
+				auto leafDirData = fileReader.Read(mHeader.LeafOffset + offset, length);
+
+				if (io::gzip::IsGzipped(leafDirData))
+				{
+					leafDirData = io::gzip::Decompress(leafDirData);
+				}
+
+				PmTilesDirectory leafDirectory;
+				if (ParseDirectory(leafDirData, leafDirectory))
+				{
+					if (leafDirectory.TileIDs.empty()) return data;
+
+					auto it = std::ranges::upper_bound(leafDirectory.TileIDs, TileID);
+
+					if (it == leafDirectory.TileIDs.end() /* || *it != TileID*/) return {};
+
+					--it;
+
+					if (TileID < *it)
+					{
+						return data;
+					}
+
+					auto leafIndex = it - leafDirectory.TileIDs.begin();
+
+					uint64_t runLength = leafDirectory.RunLengths[leafIndex];
+					uint64_t length = leafDirectory.Lengths[leafIndex];
+					uint64_t offset = leafDirectory.Offsets[leafIndex];
+
+					// Data for tiles 'TileID' to 'TileID + runLength'.
+					if (TileID >= *it && TileID < *it + runLength)
+					{
+						data = fileReader.Read(mHeader.TileOffset + offset, length);
+					}
+				}
+			}
+			else
+			{
+				// Data for tiles 'TileID' to 'TileID + runLength'.
+				if (TileID >= *it && TileID < *it + runLength)
+				{
+					data = fileReader.Read(mHeader.TileOffset + offset, length);
+				}
+			}
 
 			if (io::gzip::IsGzipped(data))
 			{
