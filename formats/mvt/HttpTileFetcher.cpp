@@ -17,6 +17,10 @@ using namespace io;
 
 namespace mvt::tilefetcher
 {
+	std::size_t HttpTileFetcher::GetHash(void) const
+	{
+		return std::hash<std::string>{}(mUrl);
+	}
 
 	std::string HttpTileFetcher::MakeUrl(int zoom, int x, int y) const
 	{

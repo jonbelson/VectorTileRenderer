@@ -20,6 +20,8 @@ namespace mvt::tilefetcher
 
 	export class PmTilesFetcher : public ITileFetcher
 	{
+		std::string mFilePath;
+
 		std::unique_ptr<io::file::FileReader> mFileReader;
 		std::unique_ptr<PmTiles> mPmTiles;
 
@@ -28,12 +30,14 @@ namespace mvt::tilefetcher
 		bool Parse(std::string_view filePath);
 
 	public:
-		virtual ~PmTilesFetcher();
+		virtual ~PmTilesFetcher() = default;
 
 		enum Error
 		{
 			FileNotFound, CouldNotOpenFile, IncorrectFormat
 		};
+
+		virtual std::size_t GetHash(void) const;
 
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;

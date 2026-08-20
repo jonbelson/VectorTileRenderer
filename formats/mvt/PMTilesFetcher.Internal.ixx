@@ -228,6 +228,11 @@ namespace mvt::tilefetcher
 		std::vector<uint64_t> RunLengths;
 		std::vector<uint64_t> Lengths;
 		std::vector<uint64_t> Offsets;
+
+		bool IsValidIndex(uint64_t index) const
+		{
+			return index < TileIDs.size() && index < RunLengths.size() && index < Lengths.size() && index < Offsets.size();
+		}
 	};
 
 	export struct PmTiles
@@ -419,6 +424,8 @@ namespace mvt::tilefetcher
 
 			auto index = it - mDirectory.TileIDs.begin();
 
+			if (!mDirectory.IsValidIndex(index)) return {};
+
 			uint64_t runLength = mDirectory.RunLengths[index];
 			uint64_t length = mDirectory.Lengths[index];
 			uint64_t offset = mDirectory.Offsets[index];
@@ -450,6 +457,8 @@ namespace mvt::tilefetcher
 					}
 
 					auto leafIndex = it - leafDirectory.TileIDs.begin();
+
+					if (!leafDirectory.IsValidIndex(leafIndex)) return data;
 
 					uint64_t runLength = leafDirectory.RunLengths[leafIndex];
 					uint64_t length = leafDirectory.Lengths[leafIndex];

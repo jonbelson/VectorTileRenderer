@@ -27,6 +27,8 @@ namespace mvt::tilefetcher
 
 		HttpTileFetcher(std::string_view url) : mUrl(url) {}
 
+		std::string MakeUrl(int zoom, int x, int y) const;
+
 	public:
 		virtual ~HttpTileFetcher() {}
 
@@ -35,7 +37,7 @@ namespace mvt::tilefetcher
 			InvalidUrl, MissingTemplates
 		};
 
-		std::string MakeUrl(int zoom, int x, int y) const;
+		virtual std::size_t GetHash(void) const;
 
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;

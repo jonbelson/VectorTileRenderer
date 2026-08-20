@@ -18,6 +18,10 @@ using namespace io;
 
 namespace mvt::tilefetcher
 {
+	std::size_t MbTilesFetcher::GetHash(void) const
+	{
+		return std::hash<std::string>{}(mFilePath);
+	}
 
 	MbTilesFetcher::MbTilesFetcher(std::string_view filePath) : mFilePath(filePath)
 	{
@@ -25,7 +29,6 @@ namespace mvt::tilefetcher
 
 		mValid = result == SQLITE_OK;
 	}
-
 
 	MbTilesFetcher::~MbTilesFetcher()
 	{
@@ -60,7 +63,6 @@ namespace mvt::tilefetcher
 	{
 		return FetchTile(tileSpec.zoom, tileSpec.x, tileSpec.y);
 	}
-
 
 	// Read data blob from 'tiles' table.
 	// [ zoom_level:INTEGER, tile_column:INTERGER, tile_row:INTEGER, tile_data:BLOB ]
@@ -165,7 +167,6 @@ namespace mvt::tilefetcher
 
 		return tilesData;
 	}
-
 
 	std::expected<MbTileFetcherPtr, MbTilesFetcher::Error> MbTilesFetcher::Create(std::string_view filePath)
 	{

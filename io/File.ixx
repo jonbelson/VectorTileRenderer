@@ -3,6 +3,10 @@
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
+module;
+
+#include <cassert>
+
 export module io.file;
 
 import std;
@@ -116,6 +120,8 @@ namespace io::file
 
 		Data Read(size_t start, size_t size)
 		{
+			assert(mFile.is_open());
+
 			if (!mFile) return {};
 			if (start > mFileSize) return {};
 
@@ -240,11 +246,9 @@ namespace io::file
 			int shift{};
 			do
 			{
-				if (WouldOverflow(byte)) return false;
-
 				if (!ReadLE(byte)) return false;
 
-				result |= (byte&0x7f)<<shift;
+				result |= static_cast<uint64_t>(byte&0x7f)<<shift;
 				shift += 7;
 
 			} while (byte&0x80 && ++count<10);

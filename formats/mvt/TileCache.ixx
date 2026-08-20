@@ -16,35 +16,42 @@ namespace mvt::tilecache
 
 	export class TileCache
 	{
-		std::unique_ptr<tilefetcher::ITileFetcher> mTileFetcher;
-
-		static constexpr int MaxCacheSize { 32 };
-
-		std::vector< std::unique_ptr<const tile::Tile> > mCache;
-
-		const mvt::tile::Tile* GetTileFromCache(int x, int y, int zoom)
+		struct Entry
 		{
-			//auto iter = std::find_if(std::begin(mCache), std::end(mCache), [x, y, zoom](const auto& tile) {
-			//							return tile->X() == x && tile->Y() == y && tile->Zoom() == zoom;
-			//						 });
+			size_t hash{};	// Hash from associated TileFetcher.
+			std::unique_ptr<const tile::Tile> tile;
+		};
 
-			for (size_t i = mCache.size(); i>0; i--)
+		static constexpr int MaxCacheSize { 64 };
+
+		std::vector<Entry> mCache;
+
+		std::shared_ptr<tilefetcher::ITileFetcher> mTileFetcher;
+
+		const tile::Tile* GetTileFromCache(int zoom, int y, int x)
+		{
+			if (!mTileFetcher) return nullptr;
+
+			std::size_t hash = mTileFetcher->GetHash();
+
+			for (size_t i = mCache.size(); i-- > 0; )
 			{
-				size_t idx = i - 1;	
-				if (mCache[idx]->X() == x && mCache[idx]->Y() == y && mCache[idx]->Zoom() == zoom)
+				Entry& entry = mCache[i];
+
+				if (entry.hash == hash && entry.tile->Zoom() == zoom && entry.tile->Y() == y && entry.tile->X() == x)
 				{
-					auto tile = std::move(mCache[idx]);
-					mCache.erase(mCache.begin() + idx);
+					auto tile = std::move(entry);
+					mCache.erase(mCache.begin() + i);
 					mCache.push_back(std::move(tile));
 
-					return mCache.back().get();
+					return mCache.back().tile.get();
 				}
 			}
 
 			return nullptr;
 		}
 
-		const tile::Tile* FetchTile(int x, int y, int zoom)
+		const tile::Tile* FetchTile(int zoom, int y, int x)
 		{
 			if (mTileFetcher)
 			{
@@ -56,7 +63,7 @@ namespace mvt::tilecache
 					{
 						const auto tile = newTile.get();
 
-						mCache.emplace_back(std::move(newTile));
+						mCache.emplace_back(Entry{ .hash = mTileFetcher->GetHash(), .tile = std::move(newTile) });
 
 						if (mCache.size() > MaxCacheSize)
 						{
@@ -74,9 +81,10 @@ namespace mvt::tilecache
 	public:
 		TileCache(tilefetcher::ITileFetcher* tileFetcher = nullptr) : mTileFetcher(tileFetcher) {}
 
-		void SetTileFetcher(std::unique_ptr<tilefetcher::ITileFetcher>& tileFetcher)
+		void SetTileFetcher(std::shared_ptr<tilefetcher::ITileFetcher> tileFetcher)
 		{
-			mTileFetcher = std::move(tileFetcher);
+//			mTileFetcher = std::move(tileFetcher);
+			mTileFetcher = tileFetcher;
 		}
 
 		void PrefetchTiles(const tile::TileSpecArray& tileSpecArray, int zoom)
@@ -87,7 +95,7 @@ namespace mvt::tilecache
 
 				for (const auto& tileSpec : tileSpecArray)
 				{
-					if (!GetTileFromCache(tileSpec.x, tileSpec.y, zoom))
+					if (!GetTileFromCache(zoom, tileSpec.y, tileSpec.x))
 					{
 						tilesToFetch.emplace_back(tile::TileSpec{ .zoom = zoom, .y = tileSpec.y, .x = tileSpec.x });
 					}
@@ -106,7 +114,8 @@ namespace mvt::tilecache
 						{
 							if (auto newTile = tile::DecodeTile(tilesToFetch[i], tileData))
 							{
-								mCache.emplace_back(std::move(newTile));
+								mCache.emplace_back(Entry{ .hash = mTileFetcher->GetHash(), .tile = std::move(newTile) });
+
 								if (mCache.size() > MaxCacheSize)
 								{
 									mCache.erase(mCache.begin());
@@ -120,19 +129,17 @@ namespace mvt::tilecache
 
 		const tile::Tile* GetTile(int x, int y, int zoom)
 		{
-			if (auto tile = GetTileFromCache(x, y, zoom))
+			if (auto tile = GetTileFromCache(zoom, y, x))
 			{
 				return tile;
 			}
 
 			if (mTileFetcher)
 			{
-				return FetchTile(x, y, zoom);
+				return FetchTile(zoom, y, x);
 			}
 
 			return nullptr;
 		}
-
-
 	};
 }

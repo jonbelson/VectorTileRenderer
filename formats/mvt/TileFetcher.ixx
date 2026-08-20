@@ -27,6 +27,9 @@ namespace mvt::tilefetcher
 		public:
 			virtual ~ITileFetcher() = default;
 
+			// TileFetchers with the same hash should interchangeable.
+			virtual std::size_t GetHash() const = 0;
+
 			// Fetch the Tile PBF, decompressing if necessary.
 			virtual TileData FetchTile(int x, int y, int zoom) = 0;
 			virtual TileData FetchTile(const mvt::tile::TileSpec& tileSpec) = 0;
@@ -63,6 +66,8 @@ namespace mvt::tilefetcher
 			FileNotFound
 		};
 
+		virtual std::size_t GetHash() const { return std::hash<std::string>{}(mFilePath); };
+
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
 		{
 			std::ifstream f(mFilePath, std::ios::binary);
@@ -97,5 +102,6 @@ namespace mvt::tilefetcher
 		}
 	};
 
+	// Create TileFetcher based on URI.
 	export std::expected<std::unique_ptr<ITileFetcher>, bool> CreateTileFetcher(std::string_view uri);
 }

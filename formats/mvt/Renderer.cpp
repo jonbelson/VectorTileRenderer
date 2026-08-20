@@ -18,7 +18,7 @@ import formats.mvt.debug;
 import formats.mvt.layer;
 //import formats.mvt.symbol;
 
-import formats.mvt.tilefetcher;
+//import formats.mvt.tilefetcher;
 import formats.mvt.httptilefetcher;
 
 
@@ -508,61 +508,65 @@ namespace mvt::renderer
 	}
 
 
-	static std::unique_ptr<ITileFetcher> CreateFetcher(const mvt::style::Source& source)
+	std::shared_ptr<ITileFetcher> Renderer::CreateFetcher(const mvt::style::Source& source)
 	{
-		//ITileFetcher* tileFetcher {};
-		std::unique_ptr<ITileFetcher> tileFetcher;
+		std::shared_ptr<ITileFetcher> tileFetcher;
 
 		if (!source.mTiles.empty())
 		{
-			auto result = HttpTileFetcher::Create(source.mTiles.front());
-			if (result)
+			// Check for a cached TileFetcher for this source.
+			tileFetcher = mTileFetcherCache.GetItem(source.mTiles.front());
+
+			if (!tileFetcher)
 			{
-				//tileFetcher = result.value();
-				return std::move(result.value());
+				auto result = HttpTileFetcher::Create(source.mTiles.front());
+				if (result)
+				{
+					tileFetcher = std::move(result.value());
+					mTileFetcherCache.AddItem(source.mTiles.front(), tileFetcher);
+				}
 			}
 		}
 		else if (!source.mUrl.empty())
 		{
-			auto result = CreateTileFetcher(source.mUrl);
-			if (result)
+			// Check for a cached TileFetcher for this source.
+			tileFetcher = mTileFetcherCache.GetItem(source.mUrl);
+
+			if (!tileFetcher)
 			{
-				//tileFetcher = result.value();
-				return std::move(result.value());
-			}
-			else
-			{
-				core::logger::Write(std::format("Failed to create TileFetcher from url '{}'\n", source.mUrl));
+				auto result = CreateTileFetcher(source.mUrl);
+				if (result)
+				{
+					tileFetcher = std::move(result.value());
+					mTileFetcherCache.AddItem(source.mUrl, tileFetcher);
+				}
+				else
+				{
+					core::logger::Write(std::format("Failed to create TileFetcher from url '{}'\n", source.mUrl));
+				}
 			}
 		}
 
-		return {};//tileFetcher;
+		return tileFetcher;
 	}
-
 
 	void Renderer::PrefetchTiles(const tile::TileSpecArray& tileSpecArray, int zoom)
 	{
-		//for (size_t i = 0; i<tileSpecArray.size(); i++)
-		//{
-		//	const auto& tileSpec = tileSpecArray[i];
-
-			for (const auto& [name, source] : mStyle->mSources)
+		for (const auto& [name, source] : mStyle->mSources)
+		{
+			if (source.mType == "vector")
 			{
-				if (source.mType == "vector")
+				auto tileFetcher = CreateFetcher(source);
+
+				if (tileFetcher)
 				{
-					auto tileFetcher = CreateFetcher(source);
+					mTileCache.SetTileFetcher(tileFetcher);
 
-					if (tileFetcher)
-					{
-						mTileCache.SetTileFetcher(tileFetcher);
-
-						mTileCache.PrefetchTiles(tileSpecArray, zoom);
-					}
+					mTileCache.PrefetchTiles(tileSpecArray, zoom);
 				}
 			}
-		//}
+		}
 	}
-
 
 	bool Renderer::RenderTile(renderer::RenderContext& context, const tile::TileSpec& tileSpec)
 	{

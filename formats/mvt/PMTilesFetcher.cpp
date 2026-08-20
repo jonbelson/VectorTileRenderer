@@ -23,9 +23,9 @@ namespace mvt::tilefetcher
 		mPmTiles = { std::make_unique<PmTiles>() };
 	}
 
-	PmTilesFetcher::~PmTilesFetcher()
+	std::size_t PmTilesFetcher::GetHash(void) const
 	{
-
+		return std::hash<std::string>{}(mFilePath);
 	}
 
 	bool PmTilesFetcher::Parse(std::string_view filePath)
@@ -94,10 +94,8 @@ namespace mvt::tilefetcher
 			return std::unexpected(Error::CouldNotOpenFile);
 		}
 
+		tileFetcher->mFilePath = std::string(filePath);
+
 		return tileFetcher;
 	}
-
-
-
 };
-

@@ -18,7 +18,7 @@ import formats.mvt.style;
 import formats.mvt.symbol;
 import formats.mvt.tile;
 import formats.mvt.tilecache;
-//import formats.mvt.tilefetcher;
+import formats.mvt.tilefetcher;
 import geo.latlong;
 
 namespace mvt::renderer
@@ -42,8 +42,11 @@ namespace mvt::renderer
 		};
 
 		using BitmapCache = cache::Cache<std::size_t, bitmap::Bitmap>;
-		
 		BitmapCache mBitmapCache;
+
+		using TileFetcherCache = cache::Cache</*std::size_t*/ std::string, tilefetcher::ITileFetcher>;
+		TileFetcherCache mTileFetcherCache;
+
 		tilecache::TileCache mTileCache;
 
 		style::Style* mStyle = nullptr;
@@ -67,6 +70,8 @@ namespace mvt::renderer
 		bool RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y);
 
 		void PrefetchTiles(const tile::TileSpecArray& tileSpecArray, int zoom);
+
+		std::shared_ptr<tilefetcher::ITileFetcher> CreateFetcher(const mvt::style::Source& source);
 
 	public:
 		Renderer(style::Style* style, int tileSize = 512)
