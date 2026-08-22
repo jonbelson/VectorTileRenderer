@@ -373,6 +373,11 @@ namespace mvt::renderer
 
 			for (const auto& feature : features)
 			{
+				//if (feature.mValues.contains("name") && feature.mValues.at("name") == mvt::feature::ValueField{ "Home Bargains" })
+				//{
+				//	int i{};
+				//}
+
 				// Check if this Layer is filtered out - only Expressions that match the filter are shown.
 				if (layer->mFilter.GetValue(feature, zoom) == false)
 					continue;

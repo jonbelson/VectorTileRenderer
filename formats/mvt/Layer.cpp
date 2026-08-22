@@ -129,7 +129,6 @@ namespace mvt::layer
 
 	template<expression_subclass T>
 	static bool ReadProperty(T& expression, const nlohmann::json& data, const std::string& field)
-		//requires std::derived_from<T, Expression>
 	{
 		if (data.contains(field))
 		{
@@ -151,6 +150,8 @@ namespace mvt::layer
 		TryReadInt(data, "minzoom", mMinZoom);
 		TryReadInt(data, "maxzoom", mMaxZoom);
 
+	//assert(mSourceLayer != "pois" && mSourceLayer != "pois");
+
 		std::string type;
 		if (!TryReadString(data, "type", type))
 			return false;
@@ -158,8 +159,6 @@ namespace mvt::layer
 		mType = LayerTypeToEnum(type);
 
 		ReadProperty(mFilter, data, "filter");
-
-	//assert(mSourceLayer != "sites" && mSourceLayer != "buildings");
 
 		if (data.contains("paint"))
 		{

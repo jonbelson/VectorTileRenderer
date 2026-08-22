@@ -284,12 +284,6 @@
     <ClCompile Include="formats\mvt\Operators-Lookup.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
-    <ClCompile Include="formats\mvt\Operators-String.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="formats\mvt\Operators-String.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="formats\mvt\Operators-Types.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
@@ -366,6 +360,12 @@
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
     <ClCompile Include="formats\mvt\PMTilesFetcher.Internal.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-String.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-String.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
   </ItemGroup>

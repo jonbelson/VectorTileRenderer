@@ -87,6 +87,25 @@ Value OperatorDowncase::Evaluate(const mvt::feature::Feature& feature, float zoo
 }
 
 
+bool OperatorIsSupportedScript::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "is-supported-script"))
+	{
+		return data.size() == 2;
+	}
+
+	return false;
+}
+
+Value OperatorIsSupportedScript::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	// XXX Parse https://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt and extract RtoL ranges.
+
+	return true;
+}
+
+
+
 bool OperatorUpcase::ParseFromJson(const json& data)
 {
 	if (IsOperatorOfType(data, "upcase"))

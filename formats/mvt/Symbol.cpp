@@ -474,10 +474,10 @@ namespace mvt::symbol
 
 		float padding = attribs.textLetterSpacing*style::GlyphSize;
 
-		if (attribs.textField == "Palmer Park Avenue")
-		{
-			int i {};
-		}
+		//if (attribs.textField == "Palmer Park Avenue")
+		//{
+		//	int i {};
+		//}
 
 		{
 			auto& glyphs = context.glyphs;
@@ -630,10 +630,10 @@ namespace mvt::symbol
 
 	void Symbol::RenderPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 	{
-		//if (attribs.textField.find("Bracknell &") != std::string::npos)
-		{
-			int i{};
-		}
+		//if (attribs.textField.find("Home Bargains") != std::string::npos)
+		//{
+		//	int i{};
+		//}
 
 		auto& renderTarget = context.renderTarget;
 
@@ -645,6 +645,8 @@ namespace mvt::symbol
 
 		bool iconAllowOverlap = attribs.iconAllowOverlap;
 		bool textAllowOverlap = attribs.textAllowOverlap;
+
+		TextAnchor textAnchor = attribs.textAnchor;
 
 		Rect iconBbox {};
 		Rect textBbox {};
@@ -725,6 +727,31 @@ namespace mvt::symbol
 		{
 			// XXX text-rotate.
 
+			std::vector<TextAnchor> textAnchors = { attribs.textVariableAnchor };
+			if (textAnchors.empty())
+			{
+				textAnchors = { attribs.textAnchor };
+			}
+
+			for (TextAnchor anchor : textAnchors)
+			{
+				Point cursor = AdjustForTextAnchor(formattedText, anchor, attribs, point);
+				cursor = AdjustForTextOffset(anchor, attribs, cursor);
+
+				// Calculate bounding box of text and check if it overlaps.
+				Rect bbox(cursor, formattedText.widthPx*attribs.textScale, formattedText.heightPx*attribs.textScale);
+				bbox.Inflate(attribs.textPadding, attribs.textPadding);
+
+				if (textAllowOverlap || !placedSymbols.HasOverlap(bbox))
+				{
+					textBbox = bbox;
+					willDrawText = true;
+					textAnchor = anchor;
+					break;
+				}
+			}
+
+			/*
 			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
 
 			cursor = AdjustForTextOffset(attribs, cursor);
@@ -735,6 +762,7 @@ namespace mvt::symbol
 
 			textBbox = bbox;
 			willDrawText = textAllowOverlap || !placedSymbols.HasOverlap(bbox);
+			*/
 		}
 
 
@@ -775,7 +803,7 @@ namespace mvt::symbol
 					rap.emplace(&renderTarget, point, textRotationDeg /*attribs.textRotate*/);
 				}
 
-				RenderTextAtPoint(context, formattedText, attribs, point);
+				RenderTextAtPoint(context, formattedText, textAnchor, attribs, point);
 
 				if (attribs.textRotationAlignment == TextRotationAlignment::Map)
 				{
@@ -948,7 +976,7 @@ namespace mvt::symbol
 				else
 				{
 					// XXX text-rotate.
-					Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+					Point cursor = AdjustForTextAnchor(formattedText, attribs.textAnchor, attribs, point);
 
 					// Calculate bounding box of text and check if it overlaps.
 					Rect bbox(cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
@@ -995,7 +1023,7 @@ namespace mvt::symbol
 					}
 					else
 					{
-						RenderTextAtPoint(context, formattedText, attribs, point);
+						RenderTextAtPoint(context, formattedText, attribs.textAnchor, attribs, point);
 
 						placedSymbols.Place(textBbox);
 					}
@@ -1013,7 +1041,7 @@ namespace mvt::symbol
 	// Draw formatted text at a specified position.
 	// Note there is no checking for overlapping, this should be done by the caller if required.
 	// point	Position to draw text.
-	void Symbol::RenderTextAtPoint(renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point)
+	void Symbol::RenderTextAtPoint(renderer::RenderContext& context, FormattedText& formattedText, TextAnchor textAnchor, const SymbolAttribs& attribs, const Point& point)
 	{
 		auto& renderTarget = context.renderTarget;
 
@@ -1038,8 +1066,8 @@ namespace mvt::symbol
 
 		for (auto& pass : { Pass::Halo, Pass::Text })
 		{
-			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
-			cursor = AdjustForTextOffset(attribs, cursor);
+			Point cursor = AdjustForTextAnchor(formattedText, textAnchor, attribs, point);
+			cursor = AdjustForTextOffset(textAnchor, attribs, cursor);
 
 			const Point start = cursor;
 
@@ -1119,7 +1147,7 @@ namespace mvt::symbol
 		if constexpr (debug::visual::DrawPointLabelOutline)
 		{
 			// Calculate bounding box of text.
-			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
+			Point cursor = AdjustForTextAnchor(formattedText, textAnchor, attribs, point);
 			float leftmost { cursor.x };
 			for (size_t i=0; i < formattedText.lines.size(); i++)
 			{
@@ -1128,7 +1156,7 @@ namespace mvt::symbol
 			}
 			cursor.x = leftmost;
 			//cursor = AdjustForTextJustify(formattedText, 0, attribs, Point(cursor.x, cursor.y));
-			cursor = AdjustForTextOffset(attribs, cursor);
+			cursor = AdjustForTextOffset(textAnchor, attribs, cursor);
 			Rect bbox(cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 			bbox.Inflate(attribs.textPadding, attribs.textPadding);
 

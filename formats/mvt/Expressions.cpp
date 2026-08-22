@@ -101,10 +101,21 @@ static bool IsOldFilterFormat(const json& data)
 		else if (IsStringOfValue(type, "in"))
 		{
 			// Expression "in" only has two value arguments.
-			if (data.size() >= 3)
+			if (data.size() > 3) return true;
+
+			if (data.size() >= 1 && !data[1].is_string()) return false;	// 'key' must be string.
+
+			for (size_t i = 1; i<data.size(); i++)
 			{
-				return true;
+				if (data[i].is_array()) return false;	// An Expression.
+
+				if (!data[i].is_string() && !data[i].is_number() && !data[i].is_boolean())
+				{
+					return false;
+				}
 			}
+
+			return true;
 		}
 		else if (IsStringOfValue(type, "all"))
 		{

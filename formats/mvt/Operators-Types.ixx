@@ -21,6 +21,16 @@ using namespace core::json;
 // https://docs.mapbox.com/style-spec/reference/expressions/#types
 //
 
+
+export class OperatorFormat : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
+
 export class OperatorImage : public IOperator
 {
 	struct Image

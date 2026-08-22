@@ -94,6 +94,10 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 		switch (exprType)
 		{
 			// Types.
+			case ExpressionType::Format:
+				{
+					return MakeExpression<OperatorFormat>(data);
+				}
 			case ExpressionType::Boolean:
 				{
 					return MakeExpression<OperatorBoolean>(data);
@@ -241,7 +245,6 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 					return MakeExpression<OperatorMatch>(data);
 				}
 
-
 			// Ramps, scales, curves.
 			case ExpressionType::Interpolate:
 				{
@@ -251,7 +254,6 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorStep>(data);
 				}
-
 
 			// Variable binding.
 			case ExpressionType::Let:
@@ -272,14 +274,16 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorDowncase>(data);
 				}
+			case ExpressionType::IsSupportedScript:
+				{
+					return MakeExpression<OperatorIsSupportedScript>(data);
+				}
 			case ExpressionType::Upcase:
 				{
 					return MakeExpression<OperatorUpcase>(data);
 				}
 
-
 			// Color.
-
 
 			// Math.
 			case ExpressionType::Subtraction:
@@ -390,9 +394,6 @@ std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data)
 				{
 					return MakeExpression<OperatorTan>(data);
 				}
-
-
-
 
 			// Camera.
 			case ExpressionType::Zoom:

@@ -89,6 +89,7 @@ export namespace mvt::symbol
 		TextRotationAlignment textRotationAlignment;
 		float textSize { 16.0f };
 		TextTransform textTransform { TextTransform::None };
+		std::vector<TextAnchor> textVariableAnchor;
 
 		float textScale { 1.0f };	// Calculated font size scaler compared with GlyphSize.
 
@@ -215,6 +216,10 @@ export namespace mvt::symbol
 					break;
 			}
 
+			for (const auto& anchor : layer->mTextVariableAnchor.GetValue(feature, zoom))
+			{
+				textVariableAnchor.push_back(TextAnchorToEnum(anchor));
+			}
 		}
 	};
 
@@ -409,7 +414,8 @@ export namespace mvt::symbol
 		}
 
 		// Adjust rendering position based on TextAnchor.
-		Point AdjustForTextAnchor(const FormattedText& formattedText, const SymbolAttribs& attribs, const Point& p)
+		// Passed in textAnchor overrides values in attribs.textAnchor and attribs.textVariableAnchor.
+		Point AdjustForTextAnchor(const FormattedText& formattedText, TextAnchor textAnchor, const SymbolAttribs& attribs, const Point& p)
 		{
 			Point point { p };
 
@@ -417,7 +423,7 @@ export namespace mvt::symbol
 			float heightPx = formattedText.heightPx*attribs.textScale;
 
 			// X axis
-			switch (attribs.textAnchor)
+			switch (textAnchor)
 			{
 				case TextAnchor::Center:
 				case TextAnchor::Top:
@@ -434,7 +440,7 @@ export namespace mvt::symbol
 			}
 
 			// Y axis
-			switch (attribs.textAnchor)
+			switch (textAnchor)
 			{
 				case TextAnchor::Center:
 				case TextAnchor::Left:
@@ -454,10 +460,42 @@ export namespace mvt::symbol
 		}
 
 		// Calculate rendering position based on TextOffset.
-		Point AdjustForTextOffset(/*const FormattedText& formattedText,*/ const SymbolAttribs& attribs, const Point& p)
+		// Passed in textAnchor overrides values in attribs.textAnchor and attribs.textVariableAnchor.
+		Point AdjustForTextOffset(TextAnchor textAnchor, const SymbolAttribs& attribs, const Point& p)
 		{
-			float offX = attribs.textOffset[0]*attribs.textSize;
-			float offY = attribs.textOffset[1]*attribs.textSize;
+			// It seems that for text-variable-anchor, text-offset is applied in the direction of the anchor.
+
+			float offX{};
+			float offY{};
+
+			float scaledOffsetX = attribs.textOffset[0]*attribs.textSize;
+			float scaledOffsetY = attribs.textOffset[1]*attribs.textSize;
+
+			if (attribs.textVariableAnchor.empty())
+			{
+				offX = scaledOffsetX;
+				offY = scaledOffsetY;
+			}
+			else
+			{
+				if (textAnchor == TextAnchor::TopLeft || textAnchor == TextAnchor::Left || textAnchor == TextAnchor::BottomLeft)
+				{
+					offX = std::abs(scaledOffsetX);
+				}
+				else if (textAnchor == TextAnchor::TopRight || textAnchor == TextAnchor::Right || textAnchor == TextAnchor::BottomRight)
+				{
+					offX = -std::abs(scaledOffsetX);
+				}
+
+				if (textAnchor == TextAnchor::TopLeft || textAnchor == TextAnchor::Top || textAnchor == TextAnchor::TopRight)
+				{
+					offY = std::abs(scaledOffsetY);
+				}
+				else if (textAnchor == TextAnchor::BottomLeft || textAnchor == TextAnchor::Bottom || textAnchor == TextAnchor::BottomRight)
+				{
+					offY = -std::abs(scaledOffsetY);
+				}
+			}
 
 			return Point(p.x + offX, p.y + offY);
 		}
@@ -503,7 +541,7 @@ export namespace mvt::symbol
 
 		// Draw formatted text at specified point.
 		// point	
-		void RenderTextAtPoint(renderer::RenderContext& context, FormattedText& formattedText, const SymbolAttribs& attribs, const Point& point /*, PlacedSymbols& placedSymbols*/);
+		void RenderTextAtPoint(renderer::RenderContext& context, FormattedText& formattedText, TextAnchor textAnchor, const SymbolAttribs& attribs, const Point& point /*, PlacedSymbols& placedSymbols*/);
 
 		void RenderMultiPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const MultiPoint& multiPoint, PlacedSymbols& placedSymbols)
 		{

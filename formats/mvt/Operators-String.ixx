@@ -29,6 +29,14 @@ public:
 	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
 };
 
+export class OperatorIsSupportedScript : public IOperator
+{
+public:
+	virtual bool ParseFromJson(const json& data) override;
+
+	virtual Value Evaluate(const mvt::feature::Feature& feature, float zoom) override;
+};
+
 export class OperatorUpcase : public IOperator
 {
 public:

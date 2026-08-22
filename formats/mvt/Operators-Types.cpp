@@ -21,6 +21,45 @@ import :common;
 using namespace core::json;
 
 
+// [ "format", string|image, {}, string|image, {} ]
+bool OperatorFormat::ParseFromJson(const json& data)
+{
+	if (IsOperatorOfType(data, "format"))
+	{
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			if (mValues.size()%2 != 0) return false;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// XXX Should return formatted text with styling, but for now just return the string part.
+// XXX Should support 'image' as well as text.
+Value OperatorFormat::Evaluate(const mvt::feature::Feature& feature, float zoom)
+{
+	std::string result;
+
+	for (size_t i = 0; i<mValues.size(); i += 2)
+	{
+		Value input = GetValue(mValues[i], feature, zoom);
+
+		if (!input.IsString()) return {};	// XXX 'image' not supported.
+
+		result += input.GetString();
+
+		Value options = GetValue(mValues[i + 1], feature, zoom);
+
+		// XXX Need to parse options.
+		if (!options.IsObject()) return {};
+	}
+
+	return result;
+}
+
 
 // [ "image", image, options, image, options, ... ]: string
 bool OperatorImage::ParseFromJson(const json& data)
