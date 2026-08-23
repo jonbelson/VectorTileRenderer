@@ -85,6 +85,7 @@ export namespace mvt::symbol
 		float textOpacity { 1.0f };
 		bool textOptional { false };
 		float textPadding { 2.0f };
+		float textRadialOffset { 0.0f };
 		float textRotate { 0.0f };
 		TextRotationAlignment textRotationAlignment;
 		float textSize { 16.0f };
@@ -165,6 +166,7 @@ export namespace mvt::symbol
 			textOpacity = layer->mTextOpacity.GetValue(feature, zoom);
 			textOptional = layer->mTextOptional.GetValue(feature, zoom);
 			textPadding = layer->mTextPadding.GetValue(feature, zoom);
+			textRadialOffset = layer->mTextRadialOffset.GetValue(feature, zoom);
 			textRotate = layer->mTextRotate.GetValue(feature, zoom);
 			textRotationAlignment = TextRotationAlignmentToEnum(layer->mTextRotationAlignment.GetValue(feature, zoom));
 			textSize = layer->mTextSize.GetValue(feature, zoom);
@@ -533,6 +535,58 @@ export namespace mvt::symbol
 			}
 		}
 
+		Point AdjustForTextRadialOffset(TextAnchor textAnchor, const SymbolAttribs& attribs, const Point& point)
+		{
+			if (attribs.textRadialOffset != 0.0f)
+			{
+				float axialOffset = std::max(0.0f, attribs.textRadialOffset)*attribs.textSize;
+
+				float diagonalOffset = axialOffset/std::numbers::sqrt2_v<float>;
+
+				float offX{};
+				float offY{};
+
+				switch (textAnchor)
+				{
+					case TextAnchor::BottomLeft:
+					case TextAnchor::BottomRight:
+						offY -= diagonalOffset;
+						break;
+					case TextAnchor::TopLeft:
+					case TextAnchor::TopRight:
+						offY += diagonalOffset;
+						break;
+					case TextAnchor::Top:
+						offY += axialOffset;
+						break;
+					case TextAnchor::Bottom:
+						offY -= axialOffset;
+						break;
+				}
+
+				switch (textAnchor)
+				{
+					case TextAnchor::BottomRight:
+					case TextAnchor::TopRight:
+						offX -= diagonalOffset;
+						break;
+					case TextAnchor::BottomLeft:
+					case TextAnchor::TopLeft:
+						offX += diagonalOffset;
+						break;
+					case TextAnchor::Left:
+						offX += axialOffset;
+						break;
+					case TextAnchor::Right:
+						offX -= axialOffset;
+						break;
+				}
+
+				return Point(point.x + offX, point.y + offY);
+			}
+
+			return point;
+		}
 
 		// Draw text along a PointArray.
 		// Caller should check for symbol overlap (if required).

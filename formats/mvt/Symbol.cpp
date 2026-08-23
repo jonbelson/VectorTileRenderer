@@ -737,6 +737,7 @@ namespace mvt::symbol
 			{
 				Point cursor = AdjustForTextAnchor(formattedText, anchor, attribs, point);
 				cursor = AdjustForTextOffset(anchor, attribs, cursor);
+				cursor = AdjustForTextRadialOffset(anchor, attribs, cursor);
 
 				// Calculate bounding box of text and check if it overlaps.
 				Rect bbox(cursor, formattedText.widthPx*attribs.textScale, formattedText.heightPx*attribs.textScale);
@@ -750,19 +751,6 @@ namespace mvt::symbol
 					break;
 				}
 			}
-
-			/*
-			Point cursor = AdjustForTextAnchor(formattedText, attribs, point);
-
-			cursor = AdjustForTextOffset(attribs, cursor);
-
-			// Calculate bounding box of text and check if it overlaps.
-			Rect bbox (cursor, formattedText.widthPx*attribs.textScale, formattedText.heightPx*attribs.textScale);
-			bbox.Inflate(attribs.textPadding, attribs.textPadding);
-
-			textBbox = bbox;
-			willDrawText = textAllowOverlap || !placedSymbols.HasOverlap(bbox);
-			*/
 		}
 
 
@@ -1068,6 +1056,7 @@ namespace mvt::symbol
 		{
 			Point cursor = AdjustForTextAnchor(formattedText, textAnchor, attribs, point);
 			cursor = AdjustForTextOffset(textAnchor, attribs, cursor);
+			cursor = AdjustForTextRadialOffset(textAnchor, attribs, cursor);
 
 			const Point start = cursor;
 
@@ -1157,6 +1146,8 @@ namespace mvt::symbol
 			cursor.x = leftmost;
 			//cursor = AdjustForTextJustify(formattedText, 0, attribs, Point(cursor.x, cursor.y));
 			cursor = AdjustForTextOffset(textAnchor, attribs, cursor);
+			cursor = AdjustForTextRadialOffset(textAnchor, attribs, cursor);
+
 			Rect bbox(cursor, formattedText.widthPx*textScale, formattedText.heightPx*textScale);
 			bbox.Inflate(attribs.textPadding, attribs.textPadding);
 
