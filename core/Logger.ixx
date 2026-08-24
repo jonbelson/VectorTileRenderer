@@ -40,6 +40,8 @@ namespace core::logger
 
 		Level mLevel { Level::Debug };
 
+		const std::chrono::time_zone* mTimeZone = std::chrono::current_zone();
+
 		Logger() { mImpl = std::make_unique<NullLogger>(); }
 
 	public:
@@ -68,7 +70,7 @@ namespace core::logger
 				using namespace std::chrono;
 
 				const auto now = system_clock::now();
-				auto local = zoned_time{ current_zone(), now };
+				auto local = zoned_time{ mTimeZone, now };
 
 				std::string timeStamp = std::format("{0:%Y-%m-%d %H:%M:%S}", local);
 

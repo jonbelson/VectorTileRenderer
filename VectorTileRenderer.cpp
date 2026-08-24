@@ -28,8 +28,56 @@ END_MESSAGE_MAP()
 
 // CVectorTileRendererApp construction
 
+static int AllocHook(int nAllocType, void* pvData,
+			  size_t nSize, int nBlockUse, long lRequest,
+			  const unsigned char* szFileName, int nLine)
+{
+	if (nBlockUse == _CRT_BLOCK) return TRUE;
+
+	static thread_local bool inHook{ false };
+
+	if (inHook) return TRUE;
+
+	inHook = true;
+
+	if (lRequest >= 8000 && lRequest <= 8900)
+	{
+		//ASSERT(nSize != 32);
+
+		if (!(nAllocType > 0) && (nAllocType < 4)) return TRUE;
+		if (!(nBlockUse >= 0) && (nBlockUse < 5)) return TRUE;
+
+		static const char* operation[] = { "", "allocating", "re-allocating", "freeing" };
+		static const char* blockType[] = { "Free", "Normal", "CRT", "Ignore", "Client" };
+
+		if (!szFileName) szFileName = (const unsigned char*) "Unknown";
+
+		TRACE(traceAppMsg, 0,
+			  "Memory operation in %s, line %d: %s a %zu-byte '%s' block (#%ld)\n",
+			  szFileName, nLine,
+			  operation[nAllocType],
+			  nSize,
+			  blockType[nBlockUse],
+			  lRequest );
+	}
+
+	inHook = false;
+
+	return TRUE;
+}
+
 CVectorTileRendererApp::CVectorTileRendererApp()
 {
+#ifdef _DEBUG
+	//int flags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+	//flags |= _CRTDBG_ALLOC_MEM_DF;
+	//flags |= _CRTDBG_LEAK_CHECK_DF;
+	//flags |= _CRTDBG_DELAY_FREE_MEM_DF;
+	//_CrtSetDbgFlag(flags);
+
+	//_CrtSetAllocHook(&AllocHook);
+#endif
+
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 

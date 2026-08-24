@@ -25,6 +25,11 @@ namespace mvt::style
 	export constexpr int GlyphPbfPadding = 3;
 	export constexpr int GlyphPadding = 1;
 
+	export void ShutdownProtobuf(void)
+	{
+		google::protobuf::ShutdownProtobufLibrary();
+	}
+
 	namespace proto
 	{
 		// Raw SDF for glyphs in a block.

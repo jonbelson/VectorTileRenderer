@@ -140,7 +140,9 @@ Value OperatorInterpolate::Evaluate(const mvt::feature::Feature& feature, float 
 								float baseValue = std::get<float>(base);
 								float ratio = GetExponentialRatio(stopInput1, stopInput2, inputValue, baseValue);
 
-								result = std::visit(ExponentialOperator(ratio), mStops[i].output, mStops[i + 1].output);
+								Value output1 = GetValue(mStops[i].output, feature, zoom);
+								Value output2 = GetValue(mStops[i + 1].output, feature, zoom);
+								result = std::visit(ExponentialOperator(ratio), output1, output2);
 							}
 						}
 						else
@@ -234,7 +236,7 @@ Value OperatorStep::Evaluate(const mvt::feature::Feature& feature, float zoom)
 
 			float stopInputValue = stopInput.GetFloat();
 
-			if (stopInputValue < inputValue)
+			if (stopInputValue <= inputValue)
 			{
 				return GetValue(inputOutput.output, feature, zoom);
 			}

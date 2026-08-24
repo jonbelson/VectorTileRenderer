@@ -19,6 +19,11 @@ import geo.latlong;
 
 namespace mvt::tile
 {
+	export void ShutdownProtobuf(void)
+	{
+		google::protobuf::ShutdownProtobufLibrary();
+	}
+
 	export struct TileSpec
 	{
 		int zoom {};

@@ -122,7 +122,11 @@ public:
 
 	}
 
-	virtual ~CMapViewerWndViewModel() = default;
+	virtual ~CMapViewerWndViewModel()
+	{
+		mvt::tile::ShutdownProtobuf();
+		mvt::style::ShutdownProtobuf();
+	}
 
 	void SetSize(int iWidth, int iHeight)
 	{
