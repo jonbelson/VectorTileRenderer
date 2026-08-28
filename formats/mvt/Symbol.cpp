@@ -3,6 +3,10 @@
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
+module;
+
+#include <cassert>
+
 module formats.mvt.symbol;
 
 import std;
@@ -365,14 +369,16 @@ namespace mvt::symbol
 
 			if (!glyphAtlas) continue;
 
-			float advance{};
-			if (glyphAtlas->glyphs.contains(cp))
-			{
-				advance = static_cast<float>(glyphAtlas->glyphs.at(cp).advance);
-			}
+			if (!glyphAtlas->glyphs.contains(cp)) continue;
+
+			float advance = static_cast<float>(glyphAtlas->glyphs.at(cp).advance);
 
 			if (cp == '\n')
 			{
+				assert(start <= end);
+
+				if (start > end) end = start;
+
 				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + end);
 				line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
 				ft.lines.push_back(line);
