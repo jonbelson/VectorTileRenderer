@@ -330,6 +330,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="unicode\Properties.cpp" />
+    <ClCompile Include="unicode\Properties.ixx" />
     <ClCompile Include="unicode\CaseMapping.cpp" />
     <ClCompile Include="unicode\CaseMapping.ixx" />
     <ClCompile Include="unicode\Convert.ixx" />

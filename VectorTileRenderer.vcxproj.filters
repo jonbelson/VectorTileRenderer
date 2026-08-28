@@ -368,6 +368,12 @@
     <ClCompile Include="formats\mvt\Operators-String.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
+    <ClCompile Include="unicode\Properties.ixx">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Properties.cpp">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">
