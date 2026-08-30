@@ -249,6 +249,24 @@
     <ClCompile Include="..\formats\mvt\PMTilesFetcher.Internal.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\unicode\BidiClass.cpp">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\BidiClass.ixx">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\Category.cpp">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\Category.ixx">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\Script.cpp">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\unicode\Script.ixx">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

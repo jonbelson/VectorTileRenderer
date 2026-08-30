@@ -206,9 +206,15 @@
     <ClCompile Include="..\io\Gzip.ixx" />
     <ClCompile Include="..\io\Resource.cpp" />
     <ClCompile Include="..\io\Resource.ixx" />
+    <ClCompile Include="..\unicode\BidiClass.cpp" />
+    <ClCompile Include="..\unicode\BidiClass.ixx" />
     <ClCompile Include="..\unicode\CaseMapping.cpp" />
     <ClCompile Include="..\unicode\CaseMapping.ixx" />
+    <ClCompile Include="..\unicode\Category.cpp" />
+    <ClCompile Include="..\unicode\Category.ixx" />
     <ClCompile Include="..\unicode\Convert.ixx" />
+    <ClCompile Include="..\unicode\Script.cpp" />
+    <ClCompile Include="..\unicode\Script.ixx" />
     <ClCompile Include="test.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp23</LanguageStandard>
       <AdditionalModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)VectorTi.5BE6E0B2\x64\Debug\;%(AdditionalModuleDependencies)</AdditionalModuleDependencies>

@@ -374,6 +374,24 @@
     <ClCompile Include="unicode\Properties.cpp">
       <Filter>Source Files\Unicode</Filter>
     </ClCompile>
+    <ClCompile Include="unicode\BidiClass.cpp">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\BidiClass.ixx">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Script.cpp">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Script.ixx">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Category.cpp">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Category.ixx">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

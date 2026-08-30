@@ -15,7 +15,6 @@ namespace unicode::casemapping
 {
 	using Entry = std::pair<uint32_t, uint32_t>;
 
-	//static constexpr std::array<Entry, 1505> LowerToUpper = {{
 	static constexpr auto LowerToUpper = std::to_array<Entry>({
 
 		{ 0x0061, 0x0041 },   // LATIN SMALL LETTER A
