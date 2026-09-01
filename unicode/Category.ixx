@@ -17,7 +17,9 @@ namespace unicode::category
 
 	export enum class Category
 	{
-		CasedLetter,
+		Unknown,
+
+		CasedLetter,			// 1
 		ClosePunctuation,
 		ConnectorPunctuation,
 		Control,
@@ -26,7 +28,7 @@ namespace unicode::category
 		DecimalNumber,
 		EnclosingMark,
 		FinalPunctuation,
-		Format,
+		Format,					// 10
 		InitialPunctuation,
 		Letter,
 		LetterNumber,
@@ -36,7 +38,7 @@ namespace unicode::category
 		MathSymbol,
 		ModifierLetter,
 		ModifierSymbol,
-		NonspacingMark,
+		NonspacingMark,			// 20
 		Number,
 		OpenPunctuation,
 		Other,
@@ -46,7 +48,7 @@ namespace unicode::category
 		OtherSymbol,
 		ParagraphSeparator,
 		PrivateUse,
-		Punctuation,
+		Punctuation,			// 30
 		Separator,
 		SpaceSeparator,
 		SpacingMark,
@@ -57,13 +59,15 @@ namespace unicode::category
 		UppercaseLetter,
 	};
 
-	export bool IsLeftToRight(uint32_t codePoint);
-	export bool IsLeftToRight(const Utf32Text& utf32);
+	export Category GetCategory(uint32_t codePoint);
 
-	export bool IsShaped(uint32_t codePoint);
-	export bool IsShaped(const Utf32Text& utf32);
+	//export bool IsLeftToRight(uint32_t codePoint);
+	//export bool IsLeftToRight(const Utf32Text& utf32);
 
-	// Using 'simple' to mean left to right, not shaped, not a mark.
-	export bool IsSimple(uint32_t codePoint);
-	export bool IsSimple(const Utf32Text& utf32);
+	//export bool IsShaped(uint32_t codePoint);
+	//export bool IsShaped(const Utf32Text& utf32);
+
+	//// Using 'simple' to mean left to right, not shaped, not a mark.
+	//export bool IsSimple(uint32_t codePoint);
+	//export bool IsSimple(const Utf32Text& utf32);
 };

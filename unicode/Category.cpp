@@ -19,7 +19,7 @@ namespace unicode::category
 	{
 		uint32_t	start{};
 		uint32_t	end{};
-		Category	category{ Category::Unassigned };
+		Category	category{ Category::Unknown };
 	};
 
 	static constexpr auto CategoryRanges = std::to_array<Entry>(
@@ -4125,7 +4125,20 @@ namespace unicode::category
 		{ 0x10FFFE, 0x10FFFF, Category::Unassigned },	// <noncharacter-10FFFE>..<noncharacter-10FFFF>
 	});
 
+	Category GetCategory(uint32_t codePoint)
+	{
+		// Find first entry whose .end is not < codePoint.
+		auto it = std::lower_bound(CategoryRanges.begin(), CategoryRanges.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+			return entry.end < cp;
+		});
 
+		if (it != CategoryRanges.end() && it->start <= codePoint)
+		{
+			return it->category;
+		}
+
+		return Category::Unknown;
+	}
 
 
 

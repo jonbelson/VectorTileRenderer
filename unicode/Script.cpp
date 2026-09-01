@@ -19,7 +19,7 @@ namespace unicode::script
 	{
 		uint32_t	start{};
 		uint32_t	end{};
-		Script		script{ Script::Common };
+		Script		script{ Script::Unknown };
 	};
 
 	static constexpr auto ScriptRanges = std::to_array<Entry>(
@@ -1005,6 +1005,21 @@ namespace unicode::script
 		{ 0xE0100, 0xE01EF, Script::Inherited },	// VARIATION SELECTOR-17..VARIATION SELECTOR-256
 	});
 
+
+	Script GetScript(uint32_t codePoint)
+	{
+		// Find first entry whose .end is not < codePoint.
+		auto it = std::lower_bound(ScriptRanges.begin(), ScriptRanges.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+			return entry.end < cp;
+		});
+
+		if (it != ScriptRanges.end() && it->start <= codePoint)
+		{
+			return it->script;
+		}
+
+		return Script::Unknown;
+	}
 
 
 	/*

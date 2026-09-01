@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -18,6 +18,8 @@ namespace unicode::bidiclass
 
 	export enum class BidiClass
 	{
+		Unknown,
+
 		ArabicLetter,
 		ArabicNumber,
 		BoundaryNeutral,
@@ -42,6 +44,9 @@ namespace unicode::bidiclass
 		SegmentSeparator,
 		WhiteSpace,
 	};
+
+	export BidiClass GetBidiClass(uint32_t corePoint);
+
 
 	// Returns the uppercase code point for the specified code point, else the original if no mapping exists.
 	export uint32_t ToUpper(uint32_t codePoint);

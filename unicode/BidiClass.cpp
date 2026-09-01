@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -19,7 +19,7 @@ namespace unicode::bidiclass
 	{
 		uint32_t		start{};
 		uint32_t		end{};
-		BidiClass		bidiClass{ BidiClass::LeftToRight };
+		BidiClass		bidiClass{ BidiClass::Unknown };
 	};
 
 
@@ -1615,6 +1615,20 @@ namespace unicode::bidiclass
 		});
 
 
+		BidiClass GetBidiClass(uint32_t codePoint)
+		{
+			// Find first entry whose .end is not < codePoint.
+			auto it = std::lower_bound(BidiRanges.begin(), BidiRanges.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+				return entry.end < cp;
+			});
+
+			if (it != BidiRanges.end() && it->start <= codePoint)
+			{
+				return it->bidiClass;
+			}
+
+			return BidiClass::Unknown;
+		}
 
 /*
 

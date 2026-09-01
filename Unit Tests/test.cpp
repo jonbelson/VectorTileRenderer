@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License � use freely, keep this notice.
+// Licensed under the MIT License — use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -30,11 +30,13 @@ import io.file;
 
 import unicode.casemapping;
 import unicode.convert;
+import unicode.bidiclass;
+import unicode.category;
+import unicode.script;
 
-namespace MVT
+namespace Unicode
 {
-
-	TEST(Unicode, Utf8ToUtf32)
+	TEST(Convert, Utf8ToUtf32)
 	{
 		struct Test
 		{
@@ -67,7 +69,7 @@ namespace MVT
 		}
 	}
 
-	TEST(Unicode, ToUpper)
+	TEST(Convert, ToUpper)
 	{
 		using namespace unicode::casemapping;
 		using namespace unicode::convert;
@@ -103,6 +105,110 @@ namespace MVT
 			EXPECT_EQ(outputUtf8, test.output) << "Converted value incorrect : " << std::format("got {}, expected {}", outputUtf8, test.input) << "\n";
 		}
 	}
+
+	TEST(Lookup, Script)
+	{
+		using namespace unicode::script;
+
+		struct Test
+		{
+			char32_t codePoint;
+			Script script;
+		};
+
+		static_assert(U'ε'  == 0x03B5);
+		static_assert(U'官' == 0x5B98);
+		static_assert(U'พ'  == 0x0E1E);
+
+		constexpr auto tests = std::to_array<Test>({
+			{ U'a', Script::Latin },
+			{ U'ε', Script::Greek },
+			{ U'官', Script::Han },
+			{ U'พ', Script::Thai }
+		});
+
+		for (const auto& test : tests)
+		{
+			auto result = GetScript(static_cast<uint32_t>(test.codePoint));
+
+			int script = static_cast<int>(result);
+			EXPECT_TRUE(result == test.script) << "Script incorrect : " << "U' " <<  static_cast<uint32_t>(test.codePoint) << "' gave " << script << "\n";
+		}
+
+	}
+
+
+	TEST(Lookup, Category)
+	{
+		using namespace unicode::category;
+
+		struct Test
+		{
+			char32_t codePoint;
+			Category category;
+		};
+
+		constexpr auto tests = std::to_array<Test>({
+			{ U'a',			Category::LowercaseLetter },	// a
+			{ U'B',			Category::UppercaseLetter },	// B
+			{ U'+',			Category::MathSymbol },			// +
+			{ U'\"',		Category::OtherPunctuation },	// "
+			{ U'\u00A3',	Category::CurrencySymbol },		// £
+			{ U'\u03B5',	Category::LowercaseLetter },	// ε
+			{ U'\u5B98',	Category::OtherLetter },		// 官
+			{ U'\u0E1E',	Category::OtherLetter }			// พ
+		});
+
+		for (const auto& test : tests)
+		{
+			auto result = GetCategory(static_cast<uint32_t>(test.codePoint));
+
+			uint32_t cp = static_cast<uint32_t>(test.codePoint);
+			int category = static_cast<int>(result);
+			EXPECT_TRUE(result == test.category) << "Category incorrect : " << "U'\\u" << std::hex << cp << std::dec << "' gave " << category << " not " << static_cast<int>(test.category) << "\n";
+		}
+	}
+
+	TEST(Lookup, BidiClass)
+	{
+		using namespace unicode::bidiclass;
+
+		struct Test
+		{
+			char32_t codePoint;
+			BidiClass bidiClass;
+		};
+
+		static_assert(U'ε'  == 0x03B5);
+		static_assert(U'官' == 0x5B98);
+		static_assert(U'พ'  == 0x0E1E);
+
+		constexpr auto tests = std::to_array<Test>({
+			{ U'\'', BidiClass::OtherNeutral },
+			{ U'a', BidiClass::LeftToRight },
+			{ U'ε', BidiClass::LeftToRight },
+			{ U'官', BidiClass::LeftToRight },
+			{ U'พ', BidiClass::LeftToRight },
+			{ U'ط', BidiClass::ArabicLetter },
+			{ U'ב', BidiClass::RightToLeft },
+			{ U' ', BidiClass::WhiteSpace },
+		});
+
+		for (const auto& test : tests)
+		{
+			auto result = GetBidiClass(static_cast<uint32_t>(test.codePoint));
+
+			uint32_t cp = static_cast<uint32_t>(test.codePoint);
+			int bidiClass = static_cast<int>(result);
+			EXPECT_TRUE(result == test.bidiClass) << "BidiClass incorrect : " << "U'\\u" << std::hex << cp << std::dec << "' gave " << bidiClass << " not " << static_cast<int>(test.bidiClass) << "\n";
+		}
+
+	}
+}
+
+namespace MVT
+{
+
 	TEST(Core, Geometry)
 	{
 		using core::geometry::Rect;
