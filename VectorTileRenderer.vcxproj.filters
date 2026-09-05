@@ -392,6 +392,12 @@
     <ClCompile Include="unicode\Category.ixx">
       <Filter>Source Files\Unicode</Filter>
     </ClCompile>
+    <ClCompile Include="unicode\Blocks.ixx">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode\Blocks.cpp">
+      <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

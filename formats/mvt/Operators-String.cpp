@@ -8,8 +8,12 @@ import std;
 import formats.mvt.feature;
 import core.geometry;
 import core.json;
+import unicode.bidiclass;
+import unicode.blocks;
 import unicode.casemapping;
+import unicode.category;
 import unicode.convert;
+import unicode.script;
 
 import :common;
 
@@ -97,9 +101,53 @@ bool OperatorIsSupportedScript::ParseFromJson(const json& data)
 	return false;
 }
 
+template<typename T, typename... Args>
+constexpr bool IsOneOf(const T& value, Args&&... args)
+{
+	return ((value == args) || ...);
+}
+
 Value OperatorIsSupportedScript::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
 	// XXX Parse https://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt and extract RtoL ranges.
+
+	assert(mValues.size() == 1);
+
+	if (mValues.size() == 1)
+	{
+		Value value = GetValue(mValues[0], feature, zoom);
+
+		if (value.IsString())
+		{
+			using namespace unicode;
+			using bc = unicode::bidiclass::BidiClass;
+			using cat = unicode::category::Category;
+
+			const auto& str = value.GetString();
+			
+			auto utf32 = unicode::convert::Utf8ToUtf32(str);
+
+			for (const auto& cp : utf32)
+			{
+				//auto in = blocks::IsInBlock<blocks::Name::BasicLatin>(cp);
+
+				auto bidiClass = bidiclass::GetBidiClass(cp);
+				if (IsOneOf(bidiClass, bc::RightToLeft, bc::ArabicLetter, bc::RightToLeftEmbedding, bc::RightToLeftOverride, bc::RightToLeftIsolate))
+				{
+					return { false };
+				}
+
+				auto category = unicode::category::GetCategory(cp);
+				if (IsOneOf(category, cat::SpacingMark, cat::NonspacingMark, cat::EnclosingMark))
+				{
+					return { false };
+				}
+
+				auto script = unicode::script::GetScript(cp);
+			}
+		}
+
+	}
 
 	return true;
 }

@@ -332,6 +332,8 @@
     </ClCompile>
     <ClCompile Include="unicode\BidiClass.cpp" />
     <ClCompile Include="unicode\BidiClass.ixx" />
+    <ClCompile Include="unicode\Blocks.cpp" />
+    <ClCompile Include="unicode\Blocks.ixx" />
     <ClCompile Include="unicode\Category.cpp" />
     <ClCompile Include="unicode\Category.ixx" />
     <ClCompile Include="unicode\Properties.cpp" />

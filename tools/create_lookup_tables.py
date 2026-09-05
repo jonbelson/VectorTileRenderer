@@ -5,6 +5,7 @@
 # https://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
 # https://www.unicode.org/Public/UNIDATA/extracted/DerivedGeneralCategory.txt
 # https://www.unicode.org/Public/UCD/latest/ucd/Scripts.txt
+# https://www.unicode.org/Public/12.0.0/ucd/Blocks.txt
 
 
 bidi_classes = [ "LeftToRight", "RightToLeft", "EuropeanNumber", "EuropeanSeparator", "EuropeanTerminator", "ArabicNumber", "CommonSeparator", "ParagraphSeparator", "SegmentSeparator", "WhiteSpace", "OtherNeutral", "BoundaryNeutral", "NonspacingMark", "ArabicLetter", "LeftToRightOverride", "RightToLeftOverride", "LeftToRightEmbedding", "RightToLeftEmbedding", "PopDirectionalFormat", "LeftToRightIsolate", "RightToLeftIsolate", "FirstStrongIsolate", "PopDirectionalIsolate" ]
@@ -139,7 +140,6 @@ try:
 			print(f"\t\t{{ 0x{item.start:04X}, 0x{item.end:04X}, {prefix}::{item.value} }},\t// {item.comment}")
 
 		print(f"\t}});")
-
 
 
 	#
@@ -283,6 +283,46 @@ try:
 
 
 
+	#
+	# Process Blocks.txt
+	#
+
+	NUM_BLOCKS_COLS = 2
+	BLOCKS_RANGE = 0
+	BLOCKS_NAME = 1
+
+	blocks_entries = []
+
+	blocks_f = open("Blocks.txt", 'r');
+
+	table = {ord(c): None for c in "_- \n"}
+
+	for line in blocks_f:
+
+		fields = line.split(';')
+
+		if len(fields) > 0 and fields[0].startswith('#'):
+			continue;
+
+		if len(fields) >= NUM_BLOCKS_COLS:
+
+			(start, end) = get_range(fields[BLOCKS_RANGE])
+
+			comment = fields[BLOCKS_NAME].strip()
+			block_name = fields[BLOCKS_NAME].translate(table)
+
+			blocks_entries.append(Entry(start, end, block_name, comment))
+
+
+	blocks_entries.sort(key = lambda entry: entry.value)
+
+	merge_ranges(blocks_entries)
+
+	print(blocks_entries)
+
+
+
+
 	# Create scripts enum from scripts that have been found.
 	script_names = {}
 
@@ -299,6 +339,25 @@ try:
 
 	print()
 
+
+	# Create blocks enum from blocks that have been found.
+	blocks_names = {}
+
+	for entry in blocks_entries:
+		blocks_names[entry.value] = 1
+
+	print("\tenum class Name")
+	print("\t{")
+
+	for key, value in sorted(blocks_names.items()):
+		print("\t\t" + key + ", ")
+
+	print("\t};")
+
+	print()
+
+
+
 	print("\tenum class BidiClass {")
 	for c in sorted(bidi_classes):
 		print("\t\t" + c + ",")
@@ -314,21 +373,17 @@ try:
 
 	print()
 
-	# print("struct BidiRange")
-	# print("\t{")
-	# print("\tuint32_t\tstart{};")
-	# print("\tuint32_t\tend{};")
-	# print("\tBidiClass\tclass{ BidiClass::LeftToRight };")
-	# print("\tGeneralCategory\tcategory{ GeneralCategory::LeftToRight };")
-	# print("\tScript script{ Script::Unknown }")
-	# print("};")
-
 
 	write_enum("BidiRanges", "Entry", "BidiClass", bidi_entries)
 
 	write_enum("CategoryRanges", "Entry", "GeneralCategory", category_entries)
 
 	write_enum("ScriptRanges", "Entry", "Script", scripts_entries)
+
+	write_enum("BlockRanges", "Entry", "Name", blocks_entries)
+
+
+
 
 
 	# Merge the three sets of data, splitting ranges where required.

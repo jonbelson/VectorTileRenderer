@@ -209,6 +209,8 @@
     <ClCompile Include="..\io\Resource.ixx" />
     <ClCompile Include="..\unicode\BidiClass.cpp" />
     <ClCompile Include="..\unicode\BidiClass.ixx" />
+    <ClCompile Include="..\unicode\Blocks.cpp" />
+    <ClCompile Include="..\unicode\Blocks.ixx" />
     <ClCompile Include="..\unicode\CaseMapping.cpp" />
     <ClCompile Include="..\unicode\CaseMapping.ixx" />
     <ClCompile Include="..\unicode\Category.cpp" />
