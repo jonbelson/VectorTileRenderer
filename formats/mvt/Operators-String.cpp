@@ -95,7 +95,10 @@ bool OperatorIsSupportedScript::ParseFromJson(const json& data)
 {
 	if (IsOperatorOfType(data, "is-supported-script"))
 	{
-		return data.size() == 2;
+		if (JsonArrayToValueArray(data, mValues, 1))
+		{
+			return data.size() == 2;
+		}
 	}
 
 	return false;
@@ -122,6 +125,7 @@ Value OperatorIsSupportedScript::Evaluate(const mvt::feature::Feature& feature, 
 			using namespace unicode;
 			using bc = unicode::bidiclass::BidiClass;
 			using cat = unicode::category::Category;
+			using name = unicode::blocks::Name;
 
 			const auto& str = value.GetString();
 			
@@ -129,7 +133,11 @@ Value OperatorIsSupportedScript::Evaluate(const mvt::feature::Feature& feature, 
 
 			for (const auto& cp : utf32)
 			{
-				//auto in = blocks::IsInBlock<blocks::Name::BasicLatin>(cp);
+				if (!blocks::IsSimple(cp)) return false;
+
+				/*
+				auto in = blocks::IsInBlock<name::Arabic>(cp) || blocks::IsInBlock<name::ArabicSupplement>(cp) || blocks::IsInBlock<name::ArabicExtendedA>(cp)
+							|| blocks::IsInBlock<name::ArabicPresentationFormsA>(cp) || blocks::IsInBlock<name::ArabicPresentationFormsB>(cp);
 
 				auto bidiClass = bidiclass::GetBidiClass(cp);
 				if (IsOneOf(bidiClass, bc::RightToLeft, bc::ArabicLetter, bc::RightToLeftEmbedding, bc::RightToLeftOverride, bc::RightToLeftIsolate))
@@ -144,12 +152,15 @@ Value OperatorIsSupportedScript::Evaluate(const mvt::feature::Feature& feature, 
 				}
 
 				auto script = unicode::script::GetScript(cp);
+				*/
 			}
+
+			return true;
 		}
 
 	}
 
-	return true;
+	return false;
 }
 
 

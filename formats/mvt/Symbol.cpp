@@ -21,6 +21,7 @@ import formats.mvt.renderer;
 import formats.mvt.rendercontext;
 import formats.mvt.style;
 import formats.mvt.feature;
+import unicode.blocks;
 import unicode.convert;
 
 namespace mvt::symbol
@@ -363,6 +364,29 @@ namespace mvt::symbol
 				lastBreak = i;
 			}
 
+			if (cp == '\n')
+			{
+				assert(start <= end);
+
+				if (start > end) end = start;
+
+				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + end + 1);
+				if (unicode::blocks::IsSimple(text))
+				{
+					line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
+					ft.lines.push_back(line);
+				}
+
+				line = {};
+				width = 0.0f;
+				start = i + 1;
+				end = start;
+
+				lastBreak = std::string::npos;
+
+				continue;
+			}
+
 			int blockStart = GetGlyphBlockStart(cp);
 
 			auto glyphAtlas = glyphs.Lookup(font, blockStart);
@@ -372,25 +396,6 @@ namespace mvt::symbol
 			if (!glyphAtlas->glyphs.contains(cp)) continue;
 
 			float advance = static_cast<float>(glyphAtlas->glyphs.at(cp).advance);
-
-			if (cp == '\n')
-			{
-				assert(start <= end);
-
-				if (start > end) end = start;
-
-				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + end);
-				line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
-				ft.lines.push_back(line);
-
-				line = {};
-				width = 0.0f;
-				start = i  + 1;
-
-				lastBreak = std::string::npos;
-
-				continue;
-			}
 
 			// Have we overflowed text-max-width and have found a break point on this line?
 			if (width + advance > maxTextWidthPx && lastBreak != std::string::npos)
@@ -402,8 +407,11 @@ namespace mvt::symbol
 				if (breakChar == '/' || breakChar == '-') bp++;	// We want to keep the break character.
 
 				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + bp);
-				line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
-				ft.lines.push_back(line);
+				if (unicode::blocks::IsSimple(text))
+				{
+					line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
+					ft.lines.push_back(line);
+				}
 
 				line = {};
 				width = 0.0f;
@@ -427,9 +435,11 @@ namespace mvt::symbol
 		}
 
 		std::vector<uint32_t> text(utf32.begin() + start, utf32.end());
-		line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
-
-		ft.lines.push_back(line);
+		if (unicode::blocks::IsSimple(text))
+		{
+			line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
+			ft.lines.push_back(line);
+		}
 
 		// Calculate bounding box.
 		if (!ft.lines.empty())

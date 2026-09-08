@@ -656,6 +656,15 @@ namespace unicode::blocks
 		return codePoint >= block.start && codePoint <= block.end;
 	}
 
+	export template<Name... names>
+	constexpr bool IsInAnyBlock(uint32_t codePoint)
+	{
+		return (IsInBlock<names>(codePoint) || ...);
+	}
+
+	export bool IsSimple(uint32_t codePoint);
+	export bool IsSimple(std::span<uint32_t> utf32);
+
 	static_assert(GetBlock(Name::Adlam).start == 0x1E900);
 	static_assert(GetBlock(Name::AegeanNumbers).end   == 0x1013F);
 };
