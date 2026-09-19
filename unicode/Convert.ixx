@@ -174,4 +174,9 @@ namespace unicode::convert
 		return s;
 	}
 
+	export std::string u32stringToUtf8(const std::u32string& u32str)
+	{
+		return Utf32ToUtf8(std::vector<uint32_t>(u32str.begin(), u32str.end()));
+	}
+
 };

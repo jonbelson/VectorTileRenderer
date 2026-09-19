@@ -330,6 +330,7 @@ namespace unicode::blocks
 
 
 	// TODO Needs to be in .ixx file for constexpr GetBlock(). Consider moving to partition.
+	// TODO Range starts are DIV 16, so could use a std::unordered_map<> for fast lookup of codePoint >> 4. Not constexpr though.
 	static constexpr auto BlockRanges = std::to_array<Entry>(
 	{
 		{ 0x1E900, 0x1E95F, Name::Adlam },	// Adlam

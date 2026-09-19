@@ -161,7 +161,6 @@ export enum struct ExpressionType
 
 // Variant for supported Expression types.
 // XXX Should use std::vector<Value> instead of std::vector<std::string> and std::vector<float>.
-// XXX Should support std::map<std::string, Value> for objects.
 using ValueVariant = std::variant<std::monostate, float, std::string, bool, core::color::Color, FloatArray, StringArray, BoolArray, ValueMap, OperatorPtr>;
 
 export class Value : public ValueVariant

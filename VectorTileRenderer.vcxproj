@@ -263,6 +263,7 @@
     <ClCompile Include="formats\mvt\Feature.ixx" />
     <ClCompile Include="formats\mvt\glyphs.pb.cc">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="formats\mvt\HttpTileFetcher.cpp" />
     <ClCompile Include="formats\mvt\HttpTileFetcher.ixx" />
@@ -316,6 +317,7 @@
     <ClCompile Include="formats\mvt\TileFetcher.ixx" />
     <ClCompile Include="formats\mvt\vector_tile.pb.cc">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4018;4244;4251;4267</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="geo\LatLong.ixx" />
     <ClCompile Include="geo\Projector.ixx" />
@@ -343,6 +345,7 @@
     <ClCompile Include="unicode\Convert.ixx" />
     <ClCompile Include="unicode\Script.cpp" />
     <ClCompile Include="unicode\Script.ixx" />
+    <ClCompile Include="unicode\Shaping.ixx" />
     <ClCompile Include="VectorTileRenderer.cpp" />
     <ClCompile Include="VectorTileRendererDlg.cpp" />
   </ItemGroup>

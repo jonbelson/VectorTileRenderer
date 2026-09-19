@@ -33,9 +33,144 @@ import unicode.convert;
 import unicode.bidiclass;
 import unicode.category;
 import unicode.script;
+import unicode.shaping;
 
 namespace Unicode
 {
+	TEST(Shaping, Arabic)
+	{
+		using namespace unicode::shaping;
+
+		struct Test
+		{
+			std::vector<uint32_t> utf32;
+			std::vector<uint32_t> result;
+		};
+
+		Test tests[] = {
+			{ { U'\U00000643', U'\U0000062a', U'\U00000628' }, { U'\U0000fedb', u'\ufe98', u'\ufe90' } }, // 'Kataba' (كَتَبَ) - Kaf, Taa, Baa
+
+			{ { u'\u0639', u'\u0644', u'\u064a', u'\u0643', u'\u0645' }, { u'\ufecb', u'\ufee0', u'\ufef4', u'\ufedc', u'\ufee2' } }, // 'Alaykum' (عَلَيْكُمْ) - Ayn, Lam, Yaa, Kaf, Meem
+
+			{ { U'\U00000644', U'\U00000627' }, { U'\U0000FEFB' } },	// Lam + plain Alef -> 
+			{ { U'\U00000644', U'\U00000622' }, { U'\U0000FEF5' } },	// Lam + Alef Madda -> 
+		};
+
+		//std::vector<uint8_t> utf8{ 0xe6, 0xb0, 0xb4 };
+
+		for (const auto& test : tests)
+		{
+			//std::string_view sv(reinterpret_cast<const char*>(test.utf8.data()), test.utf8.size());
+
+			auto result = unicode::shaping::ShapeArabicText(test.utf32);
+
+			//EXPECT_TRUE(utf32.size() == 1) << "Size incorrect : " << std::format("{}", test.utf8) << "\n";
+
+			if (!result.empty())
+			{
+				EXPECT_EQ(result, test.result) << "result incorrect : " << "\n";
+			}
+		}
+	}
+
+	TEST(Shaping, SplitIntoSegments)
+	{
+		using namespace unicode::bidiclass;
+		using namespace unicode::shaping;
+
+		struct Test
+		{
+			//std::vector<uint32_t> utf32;
+			std::u32string input;
+			//const char32_t* input;
+			std::vector<Segment> result;
+		};
+
+		Test tests[] = {
+			{ U"Abcdef", { Segment{ BidiClass::LeftToRight } } },
+			{ U"كَتَبَ", { Segment{ BidiClass::ArabicLetter } } },
+			{ U"كَتَبَ Qwerty", { Segment{ BidiClass::ArabicLetter }, Segment{ BidiClass::LeftToRight } } },
+			{ U"testing عَلَيْكُمْ", { Segment{ BidiClass::LeftToRight }, Segment{ BidiClass::ArabicLetter } } },
+		};
+
+		for (const auto& test : tests)
+		{
+			std::vector<uint32_t> utf32;
+			for (size_t i=0; i<test.input.length(); i++)
+			{
+				utf32.push_back(test.input[i]);
+			}
+
+			auto result = SplitIntoSegments(utf32);
+
+			EXPECT_EQ(result.size(), test.result.size()) << "result incorrect size: " << "\n";
+
+			if (result.size() == test.result.size())
+			{
+				for (size_t i = 0; i < result.size(); i++)
+				{
+					EXPECT_EQ(result[i].bidiClass, test.result[i].bidiClass) << "result incorrect bidiClass: " << "\n";
+				}
+			}
+		}
+	}
+
+	TEST(Shaping, ShapeScript)
+	{
+		using namespace unicode::bidiclass;
+		using namespace unicode::convert;
+		using namespace unicode::shaping;
+
+		struct Test
+		{
+			std::u32string input;
+			std::u32string output;
+		};
+
+		Test tests[] = {
+
+			{ U"\u0645\u0631\u062D\u0628\u0627", U"\uFE8E\uFE92\uFEA3\uFEAE\uFEE3" },	// "Hello" (مرحبا)
+			{ U"\u0633\u0644\u0627\u0645", U"\uFEE1\uFEFC\uFEB3" },	// "Peace" (سلام)
+			{ U"\u0639\u0631\u0628\u064A", U"\uFEF2\uFE91\uFEAE\uFECB" }, // "Arabic" (عربي)
+
+			{ U"\u0635\u0628\u0627\u062D\u0020\u0627\u0644\u062E\u064A\u0631", U"\uFEAE\uFEF4\uFEA8\uFEDF\uFE8D\u0020\uFEA1\uFE8E\uFE92\uFEBB" },	// "Good Morning" (صباح الخير)
+
+///			{ U"\u0043\u006F\u0064\u0065\u0020\u0639\u0631\u0628\u064A", U"\u0043\u006F\u0064\u0065\u0020\u0FEF2\u0FEAE\u0FEAD\uFECB" }	// "Code Arabic" (Code عربي)
+
+		};
+
+		for (const auto& test : tests)
+		{
+			std::vector<uint32_t> utf32;
+			for (size_t i=0; i<test.input.length(); i++)
+			{
+				utf32.push_back(test.input[i]);
+			}
+
+			auto result = ShapeScript(utf32);
+
+			auto utf8 = unicode::convert::Utf32ToUtf8(result);
+
+			auto output = unicode::convert::u32stringToUtf8(test.output);
+
+			EXPECT_EQ(utf8.size(), output.size()) << "result incorrect size for '" << output << "': " << "\n";
+
+			if (utf8.size() == output.size())
+			{
+				for (size_t i = 0; i < utf8.size(); i++)
+				{
+					EXPECT_EQ(utf8[i], output[i]) << "result incorrect. got : " << utf8 << " instead of " << output << "\n";
+
+					bool equal = utf8[i] == output[i];
+					if (!equal)
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	TEST(Convert, Utf8ToUtf32)
 	{
 		struct Test
@@ -192,6 +327,8 @@ namespace Unicode
 			{ U'ط', BidiClass::ArabicLetter },
 			{ U'ב', BidiClass::RightToLeft },
 			{ U' ', BidiClass::WhiteSpace },
+			{ U'\u070E', BidiClass::ArabicLetter },		// @missing range
+			{ U'\U00010806', BidiClass::RightToLeft }	// @missing range
 		});
 
 		for (const auto& test : tests)

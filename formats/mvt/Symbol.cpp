@@ -906,6 +906,11 @@ namespace mvt::symbol
 				{
 					formattedText = FormatText(context.glyphs, textFont, attribs, utf32);
 				}
+				else
+				{
+					// If the text contains unsupported codepoints, treat as text absent.
+					hasText = unicode::blocks::IsSimple(utf32);
+				}
 			}
 		}
 

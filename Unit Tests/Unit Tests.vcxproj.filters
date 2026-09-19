@@ -273,6 +273,9 @@
     <ClCompile Include="..\unicode\Blocks.ixx">
       <Filter>Project Modules\Unicode</Filter>
     </ClCompile>
+    <ClCompile Include="..\unicode\Shaping.ixx">
+      <Filter>Project Modules\Unicode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

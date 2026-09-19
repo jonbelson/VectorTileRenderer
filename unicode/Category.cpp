@@ -15,6 +15,8 @@ namespace unicode::category
 {
 	// https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt
 
+	constexpr uint32_t UnicodeEnd = 0x10ffff;
+
 	struct Entry
 	{
 		uint32_t	start{};
@@ -4135,6 +4137,11 @@ namespace unicode::category
 		if (it != CategoryRanges.end() && it->start <= codePoint)
 		{
 			return it->category;
+		}
+
+		if (codePoint <= UnicodeEnd)
+		{
+			return Category::Unassigned;
 		}
 
 		return Category::Unknown;

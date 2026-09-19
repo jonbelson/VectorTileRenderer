@@ -15,6 +15,8 @@ namespace unicode::bidiclass
 {
 	// https://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
 
+	constexpr uint32_t UnicodeEnd = 0x10ffff;
+
 	struct Entry
 	{
 		uint32_t		start{};
@@ -1612,101 +1614,72 @@ namespace unicode::bidiclass
 		{ 0xFFFFE, 0xFFFFF, BidiClass::BoundaryNeutral },	// <noncharacter-FFFFE>..<noncharacter-FFFFF>
 		{ 0x100000, 0x10FFFD, BidiClass::LeftToRight },	// <private-use-100000>..<private-use-10FFFD>
 		{ 0x10FFFE, 0x10FFFF, BidiClass::BoundaryNeutral },	// <noncharacter-10FFFE>..<noncharacter-10FFFF>
+	});
+
+	static constexpr auto MissingEntries = std::to_array<Entry>(
+	{
+		{ 0x0590, 0x05FF, BidiClass::RightToLeft },
+		{ 0x0600, 0x07BF, BidiClass::ArabicLetter },
+		{ 0x07C0, 0x085F, BidiClass::RightToLeft },
+		{ 0x0860, 0x08FF, BidiClass::ArabicLetter },
+		{ 0x20A0, 0x20CF, BidiClass::EuropeanTerminator },
+		{ 0xFB1D, 0xFB4F, BidiClass::RightToLeft },
+		{ 0xFB50, 0xFDCF, BidiClass::ArabicLetter },
+		{ 0xFDF0, 0xFDFF, BidiClass::ArabicLetter },
+		{ 0xFE70, 0xFEFF, BidiClass::ArabicLetter },
+		{ 0x10800, 0x10CFF, BidiClass::RightToLeft },
+		{ 0x10D00, 0x10D3F, BidiClass::ArabicLetter },
+		{ 0x10D40, 0x10EBF, BidiClass::RightToLeft },
+		{ 0x10EC0, 0x10EFF, BidiClass::ArabicLetter },
+		{ 0x10F00, 0x10F2F, BidiClass::RightToLeft },
+		{ 0x10F30, 0x10F6F, BidiClass::ArabicLetter },
+		{ 0x10F70, 0x10FFF, BidiClass::RightToLeft },
+		{ 0x1E800, 0x1EC6F, BidiClass::RightToLeft },
+		{ 0x1EC70, 0x1ECBF, BidiClass::ArabicLetter },
+		{ 0x1ECC0, 0x1ECFF, BidiClass::RightToLeft },
+		{ 0x1ED00, 0x1ED4F, BidiClass::ArabicLetter },
+		{ 0x1ED50, 0x1EDFF, BidiClass::RightToLeft },
+		{ 0x1EE00, 0x1EEFF, BidiClass::ArabicLetter },
+		{ 0x1EF00, 0x1EFFF, BidiClass::RightToLeft }		
+	});
+
+	template<typename T>
+	constexpr static bool IsInBlock(uint32_t codePoint, uint32_t start, uint32_t end)
+	{
+		static_assert(start <= end);
+
+		return codePoint >= start && codePoint <= end;
+	}
+
+	BidiClass GetBidiClass(uint32_t codePoint)
+	{
+		// Find first entry whose .end is not < codePoint.
+		auto it = std::lower_bound(BidiRanges.begin(), BidiRanges.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+			return entry.end < cp;
 		});
 
-
-		BidiClass GetBidiClass(uint32_t codePoint)
+		if (it != BidiRanges.end() && it->start <= codePoint)
 		{
-			// Find first entry whose .end is not < codePoint.
-			auto it = std::lower_bound(BidiRanges.begin(), BidiRanges.end(), codePoint, [](const Entry& entry, uint32_t cp) {
-				return entry.end < cp;
-			});
-
-			if (it != BidiRanges.end() && it->start <= codePoint)
-			{
-				return it->bidiClass;
-			}
-
-			return BidiClass::Unknown;
+			return it->bidiClass;
 		}
 
-/*
+		// Search the '@missing' blocks.
+		auto it2 = std::lower_bound(MissingEntries.begin(), MissingEntries.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+			return entry.end < cp;
+		});
 
-	bool IsLeftToRight(uint32_t codePoint)
-	{
-		auto it = std::upper_bound(Ranges.begin(), Ranges.end(), codePoint, [](uint32_t cp, const BidiRange& range) {
-			return range.start < cp;
-								   });
-
-		if (it != Ranges.end() && codePoint >= it->start && codePoint <= it->end)
+		if (it2 != MissingEntries.end() && it2->start <= codePoint)
 		{
-			return it->bidiClass == BidiClass::LeftToRight;
+			return it2->bidiClass;
 		}
 
-		return true;
+		if (codePoint <= UnicodeEnd)
+		{
+			return BidiClass::LeftToRight;
+		}
+
+		return BidiClass::Unknown;
 	}
 
-	bool IsLeftToRight(const Utf32Text& utf32)
-	{
-		for (size_t i = 0; i < utf32.size(); ++i)
-		{
-			if (!IsLeftToRight(utf32[i]))
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	//bool IsShaped(uint32_t codePoint)
-	//{
-
-	//	return false;
-	//}
-
-	//bool IsShaped(const Utf32Text& utf32)
-	//{
-
-	//	return false;
-	//}
-
-	// Can this codepoint be rendered as a simple glyph.
-	bool IsSimple(uint32_t codePoint)
-	{
-		auto it = std::upper_bound(Ranges.begin(), Ranges.end(), codePoint, [](uint32_t cp, const BidiRange& range) {
-			return range.start < cp;
-								   });
-
-		if (it != Ranges.end())
-		{
-			if (it->bidiClass == BidiClass::RightToLeft || it->bidiClass == BidiClass::ArabicLetter)
-			{
-				return false;
-			}
-
-			if (it->category == GeneralCategory::NonspacingMark || it->category == GeneralCategory::SpacingMark || it->category == GeneralCategory::EnclosingMark)
-			{
-				return false;
-			}
-
-			// XXX script that requires shaping.
-
-		}
-
-		return true;
-	}
-
-	// Can this string be rendered as a left to right sequence of glyphs.
-	bool IsSimple(const Utf32Text& utf32)
-	{
-		for (const auto& cp : utf32)
-		{
-			if (!IsSimple(cp)) return false;
-		}
-
-		return true;
-	}
-	*/
 };
 
