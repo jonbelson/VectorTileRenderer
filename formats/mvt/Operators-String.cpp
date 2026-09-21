@@ -133,7 +133,7 @@ Value OperatorIsSupportedScript::Evaluate(const mvt::feature::Feature& feature, 
 
 			for (const auto& cp : utf32)
 			{
-				if (!blocks::IsSimple(cp)) return false;
+				if (!blocks::IsSupported(cp)) return false;
 
 				/*
 				auto in = blocks::IsInBlock<name::Arabic>(cp) || blocks::IsInBlock<name::ArabicSupplement>(cp) || blocks::IsInBlock<name::ArabicExtendedA>(cp)

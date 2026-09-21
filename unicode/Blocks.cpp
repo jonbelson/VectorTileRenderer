@@ -25,13 +25,15 @@ namespace unicode::blocks
 	//	});
 
 
-	// Lo-fi check to see if a codePoint is from a script that requires shaping, RtoL etc.
+	// Lo-fi check to see if a codepoint is from a script that is supported.
 	// Returns true for simple LtoR glyph.
-	bool IsSimple(uint32_t cp)
+	bool IsSupported(uint32_t cp)
 	{
 		bool supported{ false };
 
 		if (!supported) supported = IsInAnyBlock<Name::BasicLatin, Name::Latin1Supplement, Name::LatinExtendedA, Name::LatinExtendedB, Name::LatinExtendedC, Name::LatinExtendedD, Name::LatinExtendedE>(cp);
+
+		if (!supported) supported = IsInAnyBlock<Name::Arabic, Name::ArabicSupplement, Name::ArabicExtendedA, Name::ArabicPresentationFormsA, Name::ArabicPresentationFormsB>(cp);
 
 		if (!supported) supported = IsInAnyBlock<Name::GreekandCoptic, Name::GreekExtended>(cp);
 		if (!supported) supported = IsInAnyBlock<Name::Cyrillic, Name::CyrillicExtendedA, Name::CyrillicExtendedB, Name::CyrillicExtendedC, Name::CyrillicSupplement>(cp);
@@ -48,18 +50,56 @@ namespace unicode::blocks
 		if (!supported) supported = IsInAnyBlock<Name::CurrencySymbols, Name::GeneralPunctuation, Name::LetterlikeSymbols, Name::NumberForms>(cp);
 		if (!supported) supported = IsInAnyBlock<Name::Arrows, Name::MathematicalOperators, Name::MiscellaneousSymbols, Name::MiscellaneousSymbolsandArrows, Name::Dingbats>(cp);
 
+		if (!supported) supported = IsInAnyBlock<Name::Tifinagh>(cp);
+
 		return supported;
 	}
 
-	// Check if there are any non-'simple' codepoints in the passed UTF-32 array.
-	bool IsSimple(std::span<uint32_t> utf32)
+	// Check if there are any unsupported codepoints in the passed UTF-32 array.
+	bool IsSupported(std::span<uint32_t> utf32)
 	{
 		for (auto cp : utf32)
 		{
-			if (!IsSimple(cp)) return false;
+			if (!IsSupported(cp)) return false;
 		}
 
 		return true;
 	}
 
+	// Has at least one supported line of text.
+	bool HasSupportedLine(std::span<uint32_t> utf32)
+	{
+		size_t start{};
+
+		for (size_t i = 0; i<utf32.size(); i++)
+		{
+			if (utf32[i] == '\n' || i == utf32.size() - 1)
+			{
+				if (IsSupported(utf32.subspan(start, i - start + 1)))
+				{
+					return true;
+				}
+				start = i;
+			}
+		}
+
+		return false;
+	}
+
+	// Check if a codepoint is 7-bit ASCII.
+	constexpr bool IsSimple(uint32_t codePoint)
+	{
+		return IsInBlock<Name::BasicLatin>(codePoint);
+	}
+
+	// Check if there are any non-'simple' codepoints in the passed UTF-32 array.
+	constexpr bool IsSimple(std::span<uint32_t> utf32)
+	{
+		for (auto cp : utf32)
+		{
+			if (!IsSimple(cp)) return false;
+		}
+		
+		return true;
+	}
 };

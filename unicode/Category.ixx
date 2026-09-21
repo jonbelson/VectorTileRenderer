@@ -60,14 +60,4 @@ namespace unicode::category
 	};
 
 	export Category GetCategory(uint32_t codePoint);
-
-	//export bool IsLeftToRight(uint32_t codePoint);
-	//export bool IsLeftToRight(const Utf32Text& utf32);
-
-	//export bool IsShaped(uint32_t codePoint);
-	//export bool IsShaped(const Utf32Text& utf32);
-
-	//// Using 'simple' to mean left to right, not shaped, not a mark.
-	//export bool IsSimple(uint32_t codePoint);
-	//export bool IsSimple(const Utf32Text& utf32);
 };

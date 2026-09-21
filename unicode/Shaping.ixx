@@ -592,8 +592,10 @@ namespace unicode::shaping
 				shapedText.insert(shapedText.end(), reversed.begin(), reversed.end());
 
 				//std::copy(shapedSegment.begin(), shapedSegment.end(), shapedText);
-
-
+			}
+			else
+			{
+				shapedText.insert(shapedText.end(), segment.codePoints.begin(), segment.codePoints.end());
 			}
 		}
 

@@ -338,8 +338,6 @@
     <ClCompile Include="unicode\Blocks.ixx" />
     <ClCompile Include="unicode\Category.cpp" />
     <ClCompile Include="unicode\Category.ixx" />
-    <ClCompile Include="unicode\Properties.cpp" />
-    <ClCompile Include="unicode\Properties.ixx" />
     <ClCompile Include="unicode\CaseMapping.cpp" />
     <ClCompile Include="unicode\CaseMapping.ixx" />
     <ClCompile Include="unicode\Convert.ixx" />

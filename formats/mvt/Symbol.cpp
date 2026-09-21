@@ -23,6 +23,7 @@ import formats.mvt.style;
 import formats.mvt.feature;
 import unicode.blocks;
 import unicode.convert;
+import unicode.shaping;
 
 namespace mvt::symbol
 {
@@ -371,8 +372,13 @@ namespace mvt::symbol
 				if (start > end) end = start;
 
 				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + end + 1);
-				if (unicode::blocks::IsSimple(text))
+				if (unicode::blocks::IsSupported(text))
 				{
+					//if (!unicode::blocks::IsSimple(text))
+					//{
+					//	text = unicode::shaping::ShapeScript(text);
+					//}
+
 					line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
 					ft.lines.push_back(line);
 				}
@@ -407,8 +413,13 @@ namespace mvt::symbol
 				if (breakChar == '/' || breakChar == '-') bp++;	// We want to keep the break character.
 
 				std::vector<uint32_t> text(utf32.begin() + start, utf32.begin() + bp);
-				if (unicode::blocks::IsSimple(text))
+				if (unicode::blocks::IsSupported(text))
 				{
+					//if (!unicode::blocks::IsSimple(text))
+					//{
+					//	text = unicode::shaping::ShapeScript(text);
+					//}
+
 					line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
 					ft.lines.push_back(line);
 				}
@@ -435,8 +446,13 @@ namespace mvt::symbol
 		}
 
 		std::vector<uint32_t> text(utf32.begin() + start, utf32.end());
-		if (unicode::blocks::IsSimple(text))
+		if (unicode::blocks::IsSupported(text))
 		{
+			//if (!unicode::blocks::IsSimple(text))
+			//{
+			//	text = unicode::shaping::ShapeScript(text);
+			//}
+
 			line = { text, GetWordLength(glyphs, font, attribs.textLetterSpacing, text) };
 			ft.lines.push_back(line);
 		}
@@ -719,6 +735,14 @@ namespace mvt::symbol
 
 			if (hasText)
 			{
+				if (unicode::blocks::HasSupportedLine(utf32))
+				{
+					if (!unicode::blocks::IsSimple(utf32))
+					{
+						utf32 = unicode::shaping::ShapeScript(utf32);
+					}
+				}
+
 				formattedText = FormatText(context.glyphs, textFont, attribs, utf32);
 
 				textRotationDeg = attribs.textRotate;
@@ -909,7 +933,7 @@ namespace mvt::symbol
 				else
 				{
 					// If the text contains unsupported codepoints, treat as text absent.
-					hasText = unicode::blocks::IsSimple(utf32);
+					hasText = unicode::blocks::IsSupported(utf32);
 				}
 			}
 		}
