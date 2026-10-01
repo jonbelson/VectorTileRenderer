@@ -225,7 +225,7 @@ export namespace mvt::symbol
 		}
 	};
 
-	int GetGlyphBlockStart(uint32_t codePoint)
+	export int GetGlyphBlockStart(uint32_t codePoint)
 	{
 		return (codePoint >> 8)*256;
 	}

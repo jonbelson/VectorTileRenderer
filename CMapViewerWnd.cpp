@@ -113,7 +113,7 @@ public:
 		{
 			auto [x1, y1] = mvt::tile::LatLongToTileF(m_iZoom, InitialLatitude, InitialLongitude);
 
-			auto latLong = mvt::tile::TileToLatLong(m_iZoom, x1, y1);
+			auto latLong = mvt::tile::TileFToLatLong(m_iZoom, x1, y1);
 
 			auto [x2, y2] = mvt::tile::LatLongToTileF(m_iZoom, latLong);
 
@@ -133,8 +133,15 @@ public:
 		m_iViewWidth = iWidth;
 		m_iViewHeight = iHeight;
 
+		m_pRenderContext = nullptr;
 		m_pRenderTarget = nullptr;
+
 		m_pRenderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(iWidth, iHeight);
+
+		if (m_pStyle)
+		{
+			m_pRenderContext = std::make_unique<mvt::renderer::RenderContext>(*m_pRenderTarget, *m_pStyle);
+		}
 	}
 
 	bool SetServerAddress(const CString& s)
@@ -178,7 +185,7 @@ public:
 		if (m_iZoom >= MaxZoom) return;
 
 		// Get lat/long of View centre.
-		auto latLong = mvt::tile::TileToLatLong(m_iZoom, float(m_iVisibleCentreX)/m_iTileSize, float(m_iVisibleCentreY)/m_iTileSize);
+		auto latLong = mvt::tile::TileFToLatLong(m_iZoom, double(m_iVisibleCentreX)/m_iTileSize, double(m_iVisibleCentreY)/m_iTileSize);
 
 		m_iZoom++;
 
@@ -195,7 +202,7 @@ public:
 		if (m_iZoom <= MinZoom) return;
 
 		// Get lat/long of View centre.
-		auto latLong = mvt::tile::TileToLatLong(m_iZoom, float(m_iVisibleCentreX)/m_iTileSize, float(m_iVisibleCentreY)/m_iTileSize);
+		auto latLong = mvt::tile::TileFToLatLong(m_iZoom, double(m_iVisibleCentreX)/m_iTileSize, double(m_iVisibleCentreY)/m_iTileSize);
 
 		m_iZoom--;
 
@@ -217,16 +224,16 @@ public:
 			uint64_t TLx = (iViewCentreX <= m_iVisibleCentreX) ? m_iVisibleCentreX - iViewCentreX : 0;
 			uint64_t TLy = (iViewCentreY <= m_iVisibleCentreY) ? m_iVisibleCentreY - iViewCentreY : 0;
 
-			int x = TLx/m_iTileSize;
-			int y = TLy/m_iTileSize;
+			int x = static_cast<int>(TLx/m_iTileSize);
+			int y = static_cast<int>(TLy/m_iTileSize);
 
-			int x2 = (TLx + m_iViewWidth)/m_iTileSize;
-			int y2 = (TLy + m_iViewHeight)/m_iTileSize;
+			int x2 = static_cast<int>((TLx + m_iViewWidth)/m_iTileSize);
+			int y2 = static_cast<int>((TLy + m_iViewHeight)/m_iTileSize);
 			//x2++;
 			//y2++;
 
-			int offsetX = TLx%m_iTileSize;
-			int offsetY = TLy%m_iTileSize;
+			int offsetX = static_cast<int>(TLx%m_iTileSize);
+			int offsetY = static_cast<int>(TLy%m_iTileSize);
 
 			mvt::tile::TileSpecArray tileSpecArray;
 
@@ -285,6 +292,10 @@ IMPLEMENT_DYNAMIC(CMapViewerWnd, CWnd)
 CMapViewerWnd::CMapViewerWnd()
 {
 	m_pViewModel = std::unique_ptr<CMapViewerWndViewModel>(new CMapViewerWndViewModel());
+
+	UINT dpi = GetDpiForSystem();
+
+	m_fDpiScale = dpi/96.0f;
 }
 
 CMapViewerWnd::~CMapViewerWnd()
@@ -389,7 +400,7 @@ void CMapViewerWnd::OnSize(UINT nType, int cx, int cy)
 {
 //	CWnd::OnSize(nType, cx, cy);
 
-	m_pViewModel->SetSize(cx, cy);
+	m_pViewModel->SetSize(lround(cx/m_fDpiScale), lround(cy/m_fDpiScale));
 
 	DiscardD2DResources();
 }
@@ -418,7 +429,7 @@ void CMapViewerWnd::OnMouseMove(UINT nFlags, CPoint point)
 
 		if (offX || offY)
 		{
-			m_pViewModel->Pan(offX, offY);
+			m_pViewModel->Pan(lround(offX/m_fDpiScale), lround(offY/m_fDpiScale));
 
 			Invalidate();
 		}
@@ -438,7 +449,7 @@ void CMapViewerWnd::OnLButtonDown(UINT nFlags, CPoint point)
 
 		if (offX || offY)
 		{
-			m_pViewModel->Pan(offX, offY);
+			m_pViewModel->Pan(lround(offX/m_fDpiScale), lround(offY/m_fDpiScale));
 
 			Invalidate();
 		}
@@ -460,7 +471,7 @@ void CMapViewerWnd::OnLButtonUp(UINT nFlags, CPoint point)
 
 		if (offX || offY)
 		{
-			m_pViewModel->Pan(offX, offY);
+			m_pViewModel->Pan(lround(offX/m_fDpiScale), lround(offY/m_fDpiScale));
 
 			Invalidate();
 		}

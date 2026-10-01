@@ -16,7 +16,7 @@ import core.color;
 import core.logger;
 import formats.mvt.debug;
 import formats.mvt.layer;
-//import formats.mvt.symbol;
+import unicode.convert;
 
 //import formats.mvt.tilefetcher;
 import formats.mvt.httptilefetcher;
@@ -315,26 +315,69 @@ namespace mvt::renderer
 		return RenderVectorTileSymbols(symbols, context, wc, placedSymbols, zoom);
 	}
 
+	// https://en.cppreference.com/cpp/utility/hash
+	struct SymbolHash
+	{
+		//std::size_t operator()(std::string_view font, int size) const noexcept
+		std::size_t operator()(const std::pair<std::string, int>& pair) const noexcept
+		{
+			std::size_t h1 = std::hash<int>{}(pair.second);
+			std::size_t h2 = std::hash<std::string_view>{}(pair.first);
+			return h1 ^ (h2 << 1); // or use boost::hash_combine
+		}
+	};
+
+	bool Renderer::PreFetchGlyphs(const std::span<ResolvedSymbol> resolvedSymbols, float zoom)
+	{
+		std::unordered_set<std::pair<std::string, int>, SymbolHash> blocks;
+
+		for (const auto& resolvedSymbol : resolvedSymbols)
+		{
+			if (resolvedSymbol.attribs.textFont.empty()) continue;
+			if (resolvedSymbol.attribs.textField.empty()) continue;
+
+			auto utf32 = unicode::convert::Utf8ToUtf32(resolvedSymbol.attribs.textField);
+
+			const auto& font = resolvedSymbol.attribs.textFont[0];
+
+			for (auto& cp : utf32)
+			{
+				int blockStart = (cp >> 8)*256;
+
+				blocks.insert(std::pair(font, blockStart));
+			}
+
+		}
+
+		return true;
+	}
+
 	bool Renderer::RenderVectorTileSymbols(const FeatureSymbols& symbols, RenderContext& context, const WorldContext& wc, mvt::symbol::PlacedSymbols& placedSymbols, float zoom)
 	{
+		std::vector<ResolvedSymbol> resolvedSymbols;
+		resolvedSymbols.reserve(symbols.size());
+
+		for (const auto& [feature, layer] : symbols)
+		{
+			resolvedSymbols.emplace_back(ResolvedSymbol{ feature, layer, mvt::symbol::SymbolAttribs(layer, *feature, zoom)});
+		}
+
+		PreFetchGlyphs(resolvedSymbols, zoom);
+
 		mvt::symbol::Symbol symbol;
 
-		//placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
-
-		for (const auto& [ feature, layer ] : symbols)
+		for (auto& resolved : resolvedSymbols)
 		{
-			mvt::symbol::SymbolAttribs attribs(layer, *feature, zoom);
-
-			switch (feature->mGeometryType)
+			switch (resolved.feature->mGeometryType)
 			{
 				case geometry::GeometryType::MultiPoint:
-					symbol.Render(context, attribs, TileToWorld(feature->mMultiPoint, wc), placedSymbols);
+					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPoint, wc), placedSymbols);
 					break;
 				case geometry::GeometryType::LineString:
-					symbol.Render(context, attribs, TileToWorld(feature->mLineString, wc), placedSymbols);
+					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mLineString, wc), placedSymbols);
 					break;
 				case geometry::GeometryType::MultiPolygon:
-					symbol.Render(context, attribs, TileToWorld(feature->mMultiPolygon, wc), placedSymbols);
+					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPolygon, wc), placedSymbols);
 					break;
 			}
 		}

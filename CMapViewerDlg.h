@@ -22,6 +22,9 @@ class CMapViewerDlg : public CDialogEx
 
 	CMapViewerWnd m_MapView;
 
+	CRect m_MapViewRect;
+	CSize m_MapPadding;
+
 public:
 	CMapViewerDlg(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CMapViewerDlg();
@@ -37,6 +40,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnBnClickedButtonGo();
-public:
     afx_msg void OnBnClickedOk();
+    afx_msg void OnSize(UINT nType, int cx, int cy);
 };

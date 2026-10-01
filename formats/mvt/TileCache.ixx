@@ -7,6 +7,9 @@ export module formats.mvt.tilecache;
 
 import std;
 
+import <cassert>;
+
+import core.logger;
 import formats.mvt.tilefetcher;
 import formats.mvt.tile;
 
@@ -38,7 +41,14 @@ namespace mvt::tilecache
 			{
 				Entry& entry = mCache[i];
 
-				if (entry.hash == hash && entry.tile->Zoom() == zoom && entry.tile->Y() == y && entry.tile->X() == x)
+				assert(entry.tile.get() != nullptr);
+
+				if (entry.tile.get() == nullptr)
+				{
+					core::logger::Error("Null in TileCache entry!\n");
+				}
+
+				if (entry.tile.get() && entry.hash == hash && entry.tile->Zoom() == zoom && entry.tile->Y() == y && entry.tile->X() == x)
 				{
 					auto tile = std::move(entry);
 					mCache.erase(mCache.begin() + i);

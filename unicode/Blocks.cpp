@@ -33,6 +33,8 @@ namespace unicode::blocks
 
 		if (!supported) supported = IsInAnyBlock<Name::BasicLatin, Name::Latin1Supplement, Name::LatinExtendedA, Name::LatinExtendedB, Name::LatinExtendedC, Name::LatinExtendedD, Name::LatinExtendedE>(cp);
 
+		if (!supported) supported = IsInAnyBlock<Name::IPAExtensions, Name::SpacingModifierLetters, Name::CombiningDiacriticalMarks>(cp);
+
 		if (!supported) supported = IsInAnyBlock<Name::Arabic, Name::ArabicSupplement, Name::ArabicExtendedA, Name::ArabicPresentationFormsA, Name::ArabicPresentationFormsB>(cp);
 
 		if (!supported) supported = IsInAnyBlock<Name::GreekandCoptic, Name::GreekExtended>(cp);

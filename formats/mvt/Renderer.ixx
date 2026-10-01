@@ -41,6 +41,13 @@ namespace mvt::renderer
 			int tileSize { DefaultTileSize };
 		};
 
+		struct ResolvedSymbol
+		{
+			const feature::Feature* feature{};
+			const layer::Layer* layer{};
+			symbol::symbol::SymbolAttribs attribs;
+		};
+
 		using BitmapCache = cache::Cache<std::size_t, bitmap::Bitmap>;
 		BitmapCache mBitmapCache;
 
@@ -69,6 +76,7 @@ namespace mvt::renderer
 		bool RenderVectorTile(const tile::Tile* tile, FeatureSymbols& symbols, RenderContext& context, const WorldContext& wc, float zoom);
 		bool RenderRasterTile(const style::Source& source, RenderContext& context, const WorldContext& wc, float zoom, int x, int y);
 
+		bool PreFetchGlyphs(const std::span<ResolvedSymbol> resolvedSymbols, float zoom);
 		void PrefetchTiles(const tile::TileSpecArray& tileSpecArray, int zoom);
 
 		std::shared_ptr<tilefetcher::ITileFetcher> CreateFetcher(const mvt::style::Source& source);

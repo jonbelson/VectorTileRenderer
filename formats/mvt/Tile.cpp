@@ -488,13 +488,13 @@ namespace mvt::tile
 		return { latitudeDeg, longitudeDeg };
 	}
 
-	geo::latlong::LatLong TileToLatLong(int zoom, float x, float y)
+	geo::latlong::LatLong TileFToLatLong(int zoom, double x, double y)
 	{
 		int n = 1 << zoom;
 
 		double latitudeRad = std::atan(std::sinh(std::numbers::pi * (1.0 - 2.0 * y / n)));
 		double latitudeDeg = latitudeRad * 180.0 / std::numbers::pi;
-		double longitudeDeg = x * 360.0 / n - 180.0f;
+		double longitudeDeg = x * 360.0 / n - 180.0;
 
 		return { latitudeDeg, longitudeDeg };
 	}
@@ -516,19 +516,19 @@ namespace mvt::tile
 		return std::pair(x, y);
 	}
 
-	std::pair<float, float> LatLongToTileF(int zoom, double latitudeDeg, double longitudeDeg)
+	std::pair<double, double> LatLongToTileF(int zoom, double latitudeDeg, double longitudeDeg)
 	{
 		int n = 1 << zoom;
 
 		double latitudeRad = latitudeDeg/180.0f*std::numbers::pi;
 
-		float x = static_cast<float>(n*(longitudeDeg + 180)/360.0);
-		float y = static_cast<float>(((1.0 - asinh(tan(latitudeRad))/std::numbers::pi)/2.0*n));
+		double x = n*(longitudeDeg + 180)/360.0;
+		double y = ((1.0 - asinh(tan(latitudeRad))/std::numbers::pi)/2.0*n);
 
 		return std::pair(x, y);
 	}
 
-	std::pair<float, float> LatLongToTileF(int zoom, const geo::latlong::LatLong& latLong)
+	std::pair<double, double> LatLongToTileF(int zoom, const geo::latlong::LatLong& latLong)
 	{
 		return LatLongToTileF(zoom, latLong.latitude, latLong.longitude);
 	}

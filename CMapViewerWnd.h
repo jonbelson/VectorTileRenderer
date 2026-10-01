@@ -10,6 +10,8 @@ class CMapViewerWnd : public CWnd
 {
 	DECLARE_DYNAMIC(CMapViewerWnd)
 
+	float m_fDpiScale{ 1.0f };
+
 	std::unique_ptr<CMapViewerWndViewModel> m_pViewModel;
 
 	CComPtr<ID2D1Factory> m_pD2DFactory;

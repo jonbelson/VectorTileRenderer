@@ -662,7 +662,7 @@ namespace mvt::symbol
 
 	void Symbol::RenderPoint(renderer::RenderContext& context, const SymbolAttribs& attribs, const Point& point, PlacedSymbols& placedSymbols)
 	{
-		//if (attribs.textField.find("Home Bargains") != std::string::npos)
+		//if (attribs.textField.find("Primaire") != std::string::npos)
 		//{
 		//	int i{};
 		//}
@@ -926,6 +926,16 @@ namespace mvt::symbol
 			{
 				utf32 = unicode::convert::Utf8ToUtf32(attribs.textField);
 
+				if (unicode::blocks::HasSupportedLine(utf32))
+				{
+					if (!unicode::blocks::IsSimple(utf32))
+					{
+						utf32 = unicode::shaping::ShapeScript(utf32);
+					}
+				}
+				else
+					hasText = false;
+
 				if (!textFollowsLine)
 				{
 					formattedText = FormatText(context.glyphs, textFont, attribs, utf32);
@@ -933,7 +943,7 @@ namespace mvt::symbol
 				else
 				{
 					// If the text contains unsupported codepoints, treat as text absent.
-					hasText = unicode::blocks::IsSupported(utf32);
+					///hasText = unicode::blocks::IsSupported(utf32);
 				}
 			}
 		}
