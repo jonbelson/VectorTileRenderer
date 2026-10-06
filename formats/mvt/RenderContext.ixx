@@ -19,6 +19,9 @@ namespace mvt::renderer
 	{
 		int TileSize{ 512 };
 
+		// Scaler between Tile logical coordinates and RenderTarget coordinates, e.g. for dpi scaling.
+		float scaleFactor{ 1.0f };
+
 		rendertarget::RenderTarget& renderTarget;
 
 		const mvt::style::Sprites& sprites;
@@ -43,7 +46,7 @@ namespace mvt::renderer
 			return rendertarget::InvalidHandle;
 		}
 
-		RenderContext(rendertarget::RenderTarget& renderTarget, const mvt::style::Style& style) : renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs)
+		RenderContext(rendertarget::RenderTarget& renderTarget, const mvt::style::Style& style, float scaleFactor=1.0f) : renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs), scaleFactor(scaleFactor)
 		{
 			rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(sprites.GetBitmap());
 			spritesHandle = spriteHandle;

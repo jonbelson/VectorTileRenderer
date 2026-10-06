@@ -58,11 +58,11 @@ namespace mvt::renderer
 
 		style::Style* mStyle = nullptr;
 
-		geometry::MultiPolygon TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc) const;
-		geometry::Polygon TileToWorld(const geometry::Polygon& polygon, const WorldContext& wc) const;
-		geometry::LineString TileToWorld(const geometry::LineString& lineString, const WorldContext& wc) const;
-		geometry::MultiPoint TileToWorld(const geometry::MultiPoint& multiPoint, const WorldContext& wc) const;
-		geometry::PointArray TileToWorld(const geometry::PointArray& pointArray, const WorldContext& wc) const;
+		geometry::MultiPolygon TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc, float scaleFactor) const;
+		geometry::Polygon TileToWorld(const geometry::Polygon& polygon, const WorldContext& wc, float scaleFactor) const;
+		geometry::LineString TileToWorld(const geometry::LineString& lineString, const WorldContext& wc, float scaleFactor) const;
+		geometry::MultiPoint TileToWorld(const geometry::MultiPoint& multiPoint, const WorldContext& wc, float scaleFactor) const;
+		geometry::PointArray TileToWorld(const geometry::PointArray& pointArray, const WorldContext& wc, float scaleFactor) const;
 
 		bool RenderBackground(RenderContext& context, const Renderer::WorldContext& wc, const layer::Layer* layer, const feature::Feature& feature, float zoom) const;
 		bool RenderCircle(RenderContext& context, const Renderer::WorldContext& wc, const layer::Layer* layer, const feature::Feature& feature, float zoom) const;

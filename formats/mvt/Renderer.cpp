@@ -54,65 +54,71 @@ namespace mvt::renderer
 		return LineJoin::Miter;
 	}
 
-	geometry::MultiPolygon Renderer::TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc) const
+	geometry::MultiPolygon Renderer::TileToWorld(const geometry::MultiPolygon& multiPolygon, const WorldContext& wc, float scaleFactor) const
 	{
 		geometry::MultiPolygon transformed;
 		transformed.polygons.reserve(multiPolygon.polygons.size());
 
 		for (const auto& polygon : multiPolygon.polygons)
 		{
-			transformed.polygons.emplace_back(TileToWorld(polygon, wc));
+			transformed.polygons.emplace_back(TileToWorld(polygon, wc, scaleFactor));
 		}
 
 		return transformed;
 	}
 
-	geometry::Polygon Renderer::TileToWorld(const geometry::Polygon& polygon, const WorldContext& wc) const
+	geometry::Polygon Renderer::TileToWorld(const geometry::Polygon& polygon, const WorldContext& wc, float scaleFactor) const
 	{
 		geometry::Polygon transformed;
 		transformed.interiorRings.reserve(polygon.interiorRings.size());
 
-		transformed.exteriorRing = TileToWorld(polygon.exteriorRing, wc);
+		transformed.exteriorRing = TileToWorld(polygon.exteriorRing, wc, scaleFactor);
 
 		for (const auto& inner : polygon.interiorRings)
 		{
 			//const auto& r = ;
-			transformed.interiorRings.emplace_back(TileToWorld(inner, wc));
+			transformed.interiorRings.emplace_back(TileToWorld(inner, wc, scaleFactor));
 		}
 
 		return transformed;
 	}
 
 
-	geometry::LineString Renderer::TileToWorld(const geometry::LineString& lineString, const WorldContext& wc) const
+	geometry::LineString Renderer::TileToWorld(const geometry::LineString& lineString, const WorldContext& wc, float scaleFactor) const
 	{
 		geometry::LineString transformed;
 		transformed.lines.reserve(lineString.lines.size());
 
 		for (const auto& pointArray : lineString.lines)
 		{
-			transformed.lines.emplace_back(TileToWorld(pointArray, wc));
+			transformed.lines.emplace_back(TileToWorld(pointArray, wc, scaleFactor));
 		}
 
 		return transformed;
 	}
 
-	geometry::MultiPoint Renderer::TileToWorld(const geometry::MultiPoint& multiPoint, const WorldContext& wc) const
+	geometry::MultiPoint Renderer::TileToWorld(const geometry::MultiPoint& multiPoint, const WorldContext& wc, float scaleFactor) const
 	{
 		geometry::MultiPoint transformed;
 
-		transformed.points = std::move(TileToWorld(multiPoint.points, wc));
+		transformed.points = std::move(TileToWorld(multiPoint.points, wc, scaleFactor));
 
 		return transformed;
 	}
 
-	geometry::PointArray Renderer::TileToWorld(const geometry::PointArray& pointArray, const WorldContext& wc) const
+	geometry::PointArray Renderer::TileToWorld(const geometry::PointArray& pointArray, const WorldContext& wc, float scaleFactor) const
 	{
 		geometry::PointArray transformed(pointArray.size());
 
 		for (size_t i=0; i<pointArray.size(); i++)
 		{
-			transformed[i] = { pointArray[i].x*wc.tileSize + wc.tileSize*wc.x, pointArray[i].y*wc.tileSize + wc.tileSize*wc.y };
+			//float x = pointArray[i].x*wc.tileSize*scaleFactor + wc.tileSize*wc.x*scaleFactor;
+			//float y = pointArray[i].y*wc.tileSize*scaleFactor + wc.tileSize*wc.y*scaleFactor;
+			float x = pointArray[i].x*wc.tileSize + wc.tileSize*wc.x;
+			float y = pointArray[i].y*wc.tileSize + wc.tileSize*wc.y;
+
+//			transformed[i] = { pointArray[i].x*wc.tileSize + wc.tileSize*wc.x, pointArray[i].y*wc.tileSize + wc.tileSize*wc.y };
+			transformed[i] = { x*scaleFactor, y*scaleFactor };
 		}
 
 		return transformed;
@@ -205,7 +211,7 @@ namespace mvt::renderer
 					float fillOpacity = layer->mFillOpacity.GetValue(feature, zoom);
 					renderTarget.SetFillOpacity(fillOpacity);
 
-					auto transformed = TileToWorld(feature.mMultiPolygon, wc);
+					auto transformed = TileToWorld(feature.mMultiPolygon, wc, context.scaleFactor);
 					renderTarget.FillPolygon(&transformed);
 				}
 					
@@ -226,7 +232,7 @@ namespace mvt::renderer
 				renderTarget.SetLineColor(outlineColor);
 				renderTarget.SetLineWidth(1.0f);		// https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-color
 
-				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
+				auto transformed = TileToWorld(feature.mMultiPolygon, wc, context.scaleFactor);
 				renderTarget.FillPolygon(&transformed);
 				renderTarget.DrawPolygon(&transformed);
 			}
@@ -293,12 +299,12 @@ namespace mvt::renderer
 
 			if (feature.mGeometryType == core::geometry::GeometryType::LineString)
 			{
-				auto transformed = TileToWorld(feature.mLineString, wc);
+				auto transformed = TileToWorld(feature.mLineString, wc, context.scaleFactor);
 				renderTarget.DrawLine(&transformed);
 			}
 			else if (feature.mGeometryType == core::geometry::GeometryType::MultiPolygon)
 			{
-				auto transformed = TileToWorld(feature.mMultiPolygon, wc);
+				auto transformed = TileToWorld(feature.mMultiPolygon, wc, context.scaleFactor);
 				renderTarget.DrawPolygon(&transformed);
 			}
 		}
@@ -371,13 +377,13 @@ namespace mvt::renderer
 			switch (resolved.feature->mGeometryType)
 			{
 				case geometry::GeometryType::MultiPoint:
-					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPoint, wc), placedSymbols);
+					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPoint, wc, context.scaleFactor), placedSymbols);
 					break;
 				case geometry::GeometryType::LineString:
-					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mLineString, wc), placedSymbols);
+					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mLineString, wc, context.scaleFactor), placedSymbols);
 					break;
 				case geometry::GeometryType::MultiPolygon:
-					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPolygon, wc), placedSymbols);
+					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPolygon, wc, context.scaleFactor), placedSymbols);
 					break;
 			}
 		}
@@ -743,6 +749,7 @@ namespace mvt::renderer
 
 		PrefetchTiles(tileSpecArray, static_cast<int>(zoom));
 
+		float targetTileSize = mTileSize*renderContext.scaleFactor; 
 
 		for (size_t i=0; i<tileSpecArray.size(); i++)
 		{
@@ -753,7 +760,7 @@ namespace mvt::renderer
 
 			WorldContext wc { .x = offx, .y = offy };
 
-			renderTarget.SetClipRect(geometry::Rect(static_cast<float>(offx*mTileSize), static_cast<float>(offy*mTileSize), static_cast<float>(mTileSize), static_cast<float>(mTileSize)));
+			renderTarget.SetClipRect(geometry::Rect(static_cast<float>(offx*targetTileSize), static_cast<float>(offy*targetTileSize), static_cast<float>(targetTileSize), static_cast<float>(targetTileSize)));
 
 			for (const auto& [ name, source ] : mStyle->mSources)
 			{
@@ -783,8 +790,8 @@ namespace mvt::renderer
 
 		mvt::symbol::PlacedSymbols placedSymbols;
 
-		float width = mTileSize*(endx - startx + 1.0f);
-		float height = mTileSize*(endy - starty + 1.0f);
+		float width = targetTileSize*(endx - startx + 1.0f);
+		float height = targetTileSize*(endy - starty + 1.0f);
 		placedSymbols.SetBoundary(core::geometry::Rect(0.0f, 0.0f, width, height));
 
 		for (size_t j=0; j<tileSpecArray.size(); j++)

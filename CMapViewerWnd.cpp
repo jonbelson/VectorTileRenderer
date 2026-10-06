@@ -97,7 +97,7 @@ public:
 
 		m_iTileSize = static_cast<int>(m_fDpiScale*TileSize);
 
-		m_pRenderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(m_iTileSize, m_iTileSize);
+		///m_pRenderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(m_iTileSize, m_iTileSize);
 		//m_pRenderTarget->PushScale(m_fDpiScale);
 
 		HRESULT hr {};
@@ -140,7 +140,7 @@ public:
 
 		if (m_pStyle)
 		{
-			m_pRenderContext = std::make_unique<mvt::renderer::RenderContext>(*m_pRenderTarget, *m_pStyle);
+			m_pRenderContext = std::make_unique<mvt::renderer::RenderContext>(*m_pRenderTarget, *m_pStyle, m_fDpiScale);
 		}
 	}
 
@@ -164,7 +164,7 @@ public:
 		m_sServerAddress = s;
 
 		m_pRenderContext = nullptr;
-		m_pRenderContext = std::make_unique<mvt::renderer::RenderContext>(*m_pRenderTarget, *m_pStyle);
+		m_pRenderContext = std::make_unique<mvt::renderer::RenderContext>(*m_pRenderTarget, *m_pStyle, m_fDpiScale);
 
 		m_pRenderer = nullptr;
 		m_pRenderer = std::make_unique<mvt::renderer::Renderer>(m_pStyle.get());
@@ -248,7 +248,7 @@ public:
 			}
 
 			m_pRenderTarget->PushTranslation(static_cast<float>(-offsetX), static_cast<float>(-offsetY));
-			m_pRenderTarget->PushScale(m_fDpiScale);
+			//m_pRenderTarget->PushScale(m_fDpiScale);
 
 			m_pRenderTarget->SetFillColor(core::rendertarget::Color("black"));
 			m_pRenderTarget->FillBackground();
@@ -277,7 +277,7 @@ public:
 				}
 			}
 
-			m_pRenderTarget->PopTransform();
+			//m_pRenderTarget->PopTransform();
 			m_pRenderTarget->PopTransform();
 		}
 	}
