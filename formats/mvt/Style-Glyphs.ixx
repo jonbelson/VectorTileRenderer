@@ -364,6 +364,44 @@ namespace mvt::style
 		Glyphs() {}
 		Glyphs(const std::string& glyphUri) : mGlyphUri(glyphUri) {}
 
+		using GlyphBlock = std::pair<const std::string, int>;
+
+		int PreFetchGlyphs(std::span<const GlyphBlock> glyphBlocks)
+		{
+//			std::vector<GlyphBlock> blocks;
+			std::vector<std::string> urls;
+			urls.reserve(glyphBlocks.size());
+
+			for (const auto& [ font, rangeStart ] : glyphBlocks)
+			{
+				auto uri = MakeUri(font, rangeStart);
+				if (uri)
+				{
+					if (!mUriMap.contains(*uri))
+					{
+//						blocks.emplace_back(std::make_pair<std::string, int>(font, rangeStart));
+						urls.emplace_back(*uri);
+					}
+				}
+			}
+
+			auto blocksData = io::resource::LoadFromHttp(urls);
+			if (blocksData)
+			{
+				for (size_t i=0; i<blocksData->size(); i++)
+				{
+					auto glyphs = DecodeGlyph(blocksData->at(i));
+					if (glyphs)
+					{
+						mUriMap[urls[i]] = std::move(glyphs.value());
+					}
+				}
+
+			}
+
+			return static_cast<int>(urls.size());
+		}
+
 		const GlyphSpec* Lookup(const std::string& font, uint32_t cp, float haloSizePx = 0.0f) const
 		{
 			auto glyphAtlas = Lookup(font, GetGlyphBlockStart(cp), haloSizePx);

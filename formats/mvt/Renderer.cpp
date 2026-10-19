@@ -355,6 +355,9 @@ namespace mvt::renderer
 
 		}
 
+		std::vector<std::pair<const std::string, int>> blocksVec(blocks.begin(), blocks.end());
+		mStyle->mGlyphs.PreFetchGlyphs(blocksVec);
+
 		return true;
 	}
 

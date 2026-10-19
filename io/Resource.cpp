@@ -167,6 +167,11 @@ namespace io::resource
 		{
 			return LoadFromHttp(uri);
 		}
+		else
+		{
+			// No recognised scheme, so try as a plain file path.
+			return LoadFromFile(uri);
+		}
 
 		return std::unexpected(Status::UnknownScheme);
 	}
