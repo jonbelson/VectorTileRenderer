@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -13,7 +13,6 @@
 
 #include <ShlObj.h>
 
-import core.d2drendertarget;
 import core.logger;
 import formats.mvt.style;
 import formats.mvt.tile;
@@ -21,6 +20,7 @@ import formats.mvt.tilecache;
 import formats.mvt.tilefetcher;
 import formats.mvt.renderer;
 import io.resource;
+import rendering.direct2d;
 
 
 class CRenderAreaViewModel
@@ -121,7 +121,7 @@ public:
 
 		constexpr int TileSize = 512;
 		float dpiScale = dpi/96.0f;
-		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(m_iSize*dpiScale*TileSize), static_cast<int>(m_iSize*dpiScale*TileSize));
+		auto renderTarget = new rendering::direct2d::D2DRenderTarget(static_cast<int>(m_iSize*dpiScale*TileSize), static_cast<int>(m_iSize*dpiScale*TileSize));
 		renderTarget->PushScale(dpiScale);
 
 

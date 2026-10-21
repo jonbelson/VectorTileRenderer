@@ -17,14 +17,14 @@ module;
 #include <shlwapi.h>
 #include <d2d1effects.h>
 
-module core.d2drendertarget;
+module rendering.direct2d;
 
 using namespace D2D1;
 using namespace Microsoft::WRL;
 
 
 // https://www.codeproject.com/articles/Direct2D-Tutorial-Part-1-RenderTarget
-namespace core::rendertarget
+namespace rendering::direct2d
 {
 	// Conversion utilities.
 	static D2D1_COLOR_F ToColorF(const Color& c)

@@ -1,19 +1,23 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
-export module core.svgrendertarget;
+export module rendering.svg;
 
 import std;
 
 import core.color;
+import core.geometry;
 import core.rendertarget;
 
-import core.geometry;
 
-namespace core::rendertarget
+namespace rendering::svg
 {
+	using namespace core;
+	using namespace core::rendertarget;
+	using namespace core::geometry;
+
 	struct Transform {
 		core::geometry::Vector v;
 		enum Type { Scale, Translation, Rotation } mType;

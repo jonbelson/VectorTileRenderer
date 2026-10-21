@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -14,8 +14,6 @@
 #include <ShlObj.h>
 
 import core.rendertarget;
-import core.d2drendertarget;
-import core.svgrendertarget;
 import core.logger;
 import formats.mvt.style;
 import formats.mvt.tile;
@@ -23,6 +21,9 @@ import formats.mvt.tilecache;
 import formats.mvt.mbtilesfetcher;
 import formats.mvt.renderer;
 import io.resource;
+import rendering.direct2d;
+import rendering.svg;
+
 
 class CFromMBTilesViewModel
 {
@@ -127,10 +128,10 @@ public:
 		switch (m_Format)
 		{
 			case Format::Direct2d:
-				renderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+				renderTarget = std::make_unique<rendering::direct2d::D2DRenderTarget>(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
 				break;
 			case Format::Svg:
-				renderTarget = std::make_unique<core::rendertarget::SvgRenderTarget>(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
+				renderTarget = std::make_unique<rendering::svg::SvgRenderTarget>(static_cast<int>(dpiScale*TileSize), static_cast<int>(dpiScale*TileSize));
 				break;
 		}
 

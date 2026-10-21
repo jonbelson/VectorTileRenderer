@@ -15,9 +15,6 @@ import geo.projector;
 
 namespace geojson::renderer
 {
-	//using namespace core;
-	//using namespace geo;
-
 	using RenderTarget = core::rendertarget::RenderTarget;
 	using MapContext = geo::projector::MapContext;
 	using Projector = geo::projector::Projector;

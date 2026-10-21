@@ -3,12 +3,17 @@
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
-export module core.d2drendertarget;
+export module rendering.direct2d;
 
+import core.geometry;
 import core.rendertarget;
 
-namespace core::rendertarget
+namespace rendering::direct2d
 {
+	using namespace core;
+	using namespace core::geometry;
+	using namespace core::rendertarget;
+
 	// RenderTarget that renders a bitmap using D2D.
 	export class D2DRenderTarget : public RenderTarget
 	{

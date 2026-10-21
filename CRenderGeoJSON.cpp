@@ -13,11 +13,11 @@
 
 #include <filesystem>
 
-import core.d2drendertarget;
 import core.logger;
 import formats.geojson.parser;
 import formats.geojson.renderer;
 import geo.projector;
+import rendering.direct2d;
 
 
 class CRenderGeoJSONViewModel
@@ -84,7 +84,7 @@ public:
 		float dpiScale = dpi/96.0f;
 
 		constexpr int Size = 2000;
-		auto renderTarget = new core::rendertarget::D2DRenderTarget(static_cast<int>(dpiScale*Size), static_cast<int>(dpiScale*Size));
+		auto renderTarget = new rendering::direct2d::D2DRenderTarget(static_cast<int>(dpiScale*Size), static_cast<int>(dpiScale*Size));
 		renderTarget->PushScale(dpiScale);
 
 		renderTarget->SetLineColor(core::rendertarget::Color("red"));

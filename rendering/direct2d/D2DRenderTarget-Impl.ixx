@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -14,7 +14,7 @@ module;
 #include <wincodec.h>
 #include <shlwapi.h>
 
-export module core.d2drendertarget:impl;
+export module rendering.direct2d:impl;
 
 import std;
 
@@ -27,9 +27,12 @@ using namespace D2D1;
 using namespace Microsoft::WRL;
 
 
-
-namespace core::rendertarget
+namespace rendering::direct2d
 {
+	using namespace core;
+	using namespace core::color;
+	using namespace core::geometry;
+	using namespace core::rendertarget;
 
 	// Conversion utilities.
 	static D2D1_COLOR_F ToColorF(const Color& c)
@@ -42,7 +45,7 @@ namespace core::rendertarget
 		return D2D1::Point2F(x, y);
 	}
 
-	static D2D1_POINT_2F ToPointF(const geometry::Point& p)
+	static D2D1_POINT_2F ToPointF(const Point& p)
 	{
 		return D2D1::Point2F(p.x, p.y);
 	}

@@ -37,6 +37,15 @@
     <Filter Include="Source Files\Formats\GeoJSON">
       <UniqueIdentifier>{91a6ff3e-3a53-478d-bf1e-53f0559ae79b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Renderers">
+      <UniqueIdentifier>{3963be68-48e8-4695-9a02-b70c7adef48f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderers\DirectD2D">
+      <UniqueIdentifier>{6dc39d96-2b6f-46ee-a18b-819dddc9889d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderers\SVG">
+      <UniqueIdentifier>{6e6d2489-7bbb-4ad9-96b9-840c68a6517f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VectorTileRenderer.h">
@@ -149,12 +158,6 @@
     <ClCompile Include="formats\mvt\Renderer.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
-    <ClCompile Include="core\D2DRenderTarget.ixx">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="core\D2DRenderTarget.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
     <ClCompile Include="formats\mvt\MBTilesFetcher.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
@@ -207,12 +210,6 @@
       <Filter>Source Files\Geo</Filter>
     </ClCompile>
     <ClCompile Include="core\Logger.ixx">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="core\SVGRenderTarget.ixx">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="core\SVGRenderTarget.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="CFromServerDlg.cpp">
@@ -394,6 +391,21 @@
     </ClCompile>
     <ClCompile Include="unicode\Shaping.ixx">
       <Filter>Source Files\Unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering\direct2d\D2DRenderTarget.cpp">
+      <Filter>Source Files\Renderers\DirectD2D</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering\direct2d\D2DRenderTarget.ixx">
+      <Filter>Source Files\Renderers\DirectD2D</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering\direct2d\D2DRenderTarget-Impl.ixx">
+      <Filter>Source Files\Renderers\DirectD2D</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering\svg\SVGRenderTarget.cpp">
+      <Filter>Source Files\Renderers\SVG</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering\svg\SVGRenderTarget.ixx">
+      <Filter>Source Files\Renderers\SVG</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

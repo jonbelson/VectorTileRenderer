@@ -128,8 +128,6 @@
     <ClCompile Include="..\core\Bitmap.cpp" />
     <ClCompile Include="..\core\Bitmap.ixx" />
     <ClCompile Include="..\core\Color.ixx" />
-    <ClCompile Include="..\core\D2DRenderTarget.cpp" />
-    <ClCompile Include="..\core\D2DRenderTarget.ixx" />
     <ClCompile Include="..\core\Geometry.ixx" />
     <ClCompile Include="..\core\JSON.ixx" />
     <ClCompile Include="..\core\Logger.ixx" />
@@ -208,6 +206,11 @@
     <ClCompile Include="..\io\Gzip.ixx" />
     <ClCompile Include="..\io\Resource.cpp" />
     <ClCompile Include="..\io\Resource.ixx" />
+    <ClCompile Include="..\rendering\direct2d\D2DRenderTarget-Impl.ixx" />
+    <ClCompile Include="..\rendering\direct2d\D2DRenderTarget.cpp" />
+    <ClCompile Include="..\rendering\direct2d\D2DRenderTarget.ixx" />
+    <ClCompile Include="..\rendering\svg\SVGRenderTarget.cpp" />
+    <ClCompile Include="..\rendering\svg\SVGRenderTarget.ixx" />
     <ClCompile Include="..\unicode\BidiClass.cpp" />
     <ClCompile Include="..\unicode\BidiClass.ixx" />
     <ClCompile Include="..\unicode\Blocks.cpp" />

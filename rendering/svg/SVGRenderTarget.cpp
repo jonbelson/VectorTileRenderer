@@ -1,16 +1,16 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
-module core.svgrendertarget;
+module rendering.svg;
 
 import std;
 
 import core.geometry;
 import core.logger;
 
-namespace core::rendertarget
+namespace rendering::svg
 {
 	constexpr const std::string_view SvgHeader = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
 

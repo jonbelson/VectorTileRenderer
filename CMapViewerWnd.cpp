@@ -8,7 +8,6 @@
 #include <format>
 
 import core.bitmap;
-import core.d2drendertarget;
 import core.logger;
 import formats.mvt.style;
 import formats.mvt.tile;
@@ -17,6 +16,7 @@ import formats.mvt.tilefetcher;
 import formats.mvt.rendercontext;
 import formats.mvt.renderer;
 import io.resource;
+import rendering.direct2d;
 
 
 class CMapViewerWndViewModel
@@ -45,7 +45,7 @@ class CMapViewerWndViewModel
 	uint64_t m_iVisibleCentreY {};
 
 	std::shared_ptr<mvt::style::Style> m_pStyle;
-	std::unique_ptr<core::rendertarget::D2DRenderTarget> m_pRenderTarget;
+	std::unique_ptr<rendering::direct2d::D2DRenderTarget> m_pRenderTarget;
 	std::unique_ptr<mvt::renderer::RenderContext> m_pRenderContext;
 	std::unique_ptr<mvt::renderer::Renderer> m_pRenderer;
 
@@ -136,7 +136,7 @@ public:
 		m_pRenderContext = nullptr;
 		m_pRenderTarget = nullptr;
 
-		m_pRenderTarget = std::make_unique<core::rendertarget::D2DRenderTarget>(iWidth, iHeight);
+		m_pRenderTarget = std::make_unique<rendering::direct2d::D2DRenderTarget>(iWidth, iHeight);
 
 		if (m_pStyle)
 		{

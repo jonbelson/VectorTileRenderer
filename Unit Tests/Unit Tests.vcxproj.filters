@@ -12,12 +12,6 @@
     <ClCompile Include="..\core\Color.ixx">
       <Filter>Project Modules\core</Filter>
     </ClCompile>
-    <ClCompile Include="..\core\D2DRenderTarget.cpp">
-      <Filter>Project Modules\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\D2DRenderTarget.ixx">
-      <Filter>Project Modules\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\core\Geometry.ixx">
       <Filter>Project Modules\core</Filter>
     </ClCompile>
@@ -276,6 +270,21 @@
     <ClCompile Include="..\unicode\Shaping.ixx">
       <Filter>Project Modules\Unicode</Filter>
     </ClCompile>
+    <ClCompile Include="..\rendering\direct2d\D2DRenderTarget.cpp">
+      <Filter>Project Modules\Rendering\Direct2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\direct2d\D2DRenderTarget.ixx">
+      <Filter>Project Modules\Rendering\Direct2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\direct2d\D2DRenderTarget-Impl.ixx">
+      <Filter>Project Modules\Rendering\Direct2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\svg\SVGRenderTarget.cpp">
+      <Filter>Project Modules\Rendering\SVG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rendering\svg\SVGRenderTarget.ixx">
+      <Filter>Project Modules\Rendering\SVG</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -310,6 +319,15 @@
     </Filter>
     <Filter Include="Project Modules\formats\geojson">
       <UniqueIdentifier>{48377687-0c05-41b3-ac14-e186a7d8cfec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\Rendering">
+      <UniqueIdentifier>{f36d42ae-0289-4e67-897b-d8156f043050}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\Rendering\Direct2D">
+      <UniqueIdentifier>{1f9f7672-b087-49ac-913e-a1131fd39a62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\Rendering\SVG">
+      <UniqueIdentifier>{cdd94b8f-2188-4f89-96f1-5de7a426c8a3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

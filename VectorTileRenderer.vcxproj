@@ -228,14 +228,10 @@
     <ClCompile Include="core\Bitmap.cpp" />
     <ClCompile Include="core\Bitmap.ixx" />
     <ClCompile Include="Core\Color.ixx" />
-    <ClCompile Include="core\D2DRenderTarget.cpp" />
-    <ClCompile Include="core\D2DRenderTarget.ixx" />
     <ClCompile Include="Core\Geometry.ixx" />
     <ClCompile Include="core\JSON.ixx" />
     <ClCompile Include="core\Logger.ixx" />
     <ClCompile Include="core\RenderTarget.ixx" />
-    <ClCompile Include="core\SVGRenderTarget.cpp" />
-    <ClCompile Include="core\SVGRenderTarget.ixx" />
     <ClCompile Include="CRenderAreaDlg.cpp" />
     <ClCompile Include="CRenderGeoJSON.cpp" />
     <ClCompile Include="formats\geojson\Feature.ixx">
@@ -332,6 +328,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="rendering\direct2d\D2DRenderTarget-Impl.ixx" />
+    <ClCompile Include="rendering\direct2d\D2DRenderTarget.cpp" />
+    <ClCompile Include="rendering\direct2d\D2DRenderTarget.ixx" />
+    <ClCompile Include="rendering\svg\SVGRenderTarget.cpp" />
+    <ClCompile Include="rendering\svg\SVGRenderTarget.ixx" />
     <ClCompile Include="unicode\BidiClass.cpp" />
     <ClCompile Include="unicode\BidiClass.ixx" />
     <ClCompile Include="unicode\Blocks.cpp" />

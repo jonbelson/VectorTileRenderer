@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Jonathan Belson
-// Licensed under the MIT License — use freely, keep this notice.
+// Licensed under the MIT License â€” use freely, keep this notice.
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
@@ -29,8 +29,6 @@
 
 import core.bitmap;
 import core.color;
-import core.d2drendertarget;
-import core.svgrendertarget;
 import core.geometry;
 import core.logger;
 import formats.mvt.tilecache;
@@ -42,6 +40,8 @@ import formats.mvt.style;
 import formats.mvt.tile;
 import geo.latlong;
 import io.resource;
+import rendering.direct2d;
+import rendering.svg;
 
 
 class VSLoggerImpl : public core::logger::LoggerImpl
@@ -104,7 +104,7 @@ static void RenderGlyphsToBitmap()
 			auto atlas = mvt::style::CreateAtlas(glyphs->stacks[0], 0.0f);
 			if (atlas)
 			{
-				auto renderTarget = new core::rendertarget::D2DRenderTarget(1000, 1000);
+				auto renderTarget = new rendering::direct2d::D2DRenderTarget(1000, 1000);
 
 				auto handle = renderTarget->RegisterBitmap(atlas->bitmap);
 				renderTarget->SetActiveBitmap(handle);
@@ -135,7 +135,7 @@ static void RenderTileFromMBTiles()
 
 	if (style)
 	{
-		auto renderTarget = new core::rendertarget::D2DRenderTarget(1024, 1024);
+		auto renderTarget = new rendering::direct2d::D2DRenderTarget(1024, 1024);
 		mvt::renderer::Renderer tileRenderer(style.get());
 
 		auto renderContext = std::make_unique<mvt::renderer::RenderContext>(*renderTarget, *style);
