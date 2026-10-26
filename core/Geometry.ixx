@@ -7,7 +7,7 @@ export module core.geometry;
 
 import std;
 
-export namespace core::geometry
+namespace core::geometry
 {
 	export struct Vector
 	{

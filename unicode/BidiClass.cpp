@@ -5,6 +5,7 @@
 
 module;
 
+#include <cassert>
 #include <cstdint>
 
 module unicode.bidiclass;
@@ -1644,17 +1645,17 @@ namespace unicode::bidiclass
 	});
 
 	template<typename T>
-	constexpr static bool IsInBlock(uint32_t codePoint, uint32_t start, uint32_t end)
+	constexpr static bool IsInBlock(std::uint32_t codePoint, std::uint32_t start, std::uint32_t end)
 	{
 		static_assert(start <= end);
 
 		return codePoint >= start && codePoint <= end;
 	}
 
-	BidiClass GetBidiClass(uint32_t codePoint)
+	BidiClass GetBidiClass(std::uint32_t codePoint)
 	{
 		// Find first entry whose .end is not < codePoint.
-		auto it = std::lower_bound(BidiRanges.begin(), BidiRanges.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+		auto it = std::lower_bound(BidiRanges.begin(), BidiRanges.end(), codePoint, [](const Entry& entry, std::uint32_t cp) {
 			return entry.end < cp;
 		});
 
@@ -1664,7 +1665,7 @@ namespace unicode::bidiclass
 		}
 
 		// Search the '@missing' blocks.
-		auto it2 = std::lower_bound(MissingEntries.begin(), MissingEntries.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+		auto it2 = std::lower_bound(MissingEntries.begin(), MissingEntries.end(), codePoint, [](const Entry& entry, std::uint32_t cp) {
 			return entry.end < cp;
 		});
 

@@ -34,7 +34,7 @@ namespace core::bitmap
 	export constexpr std::uint32_t MakeRGBA(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a)
 	{
 //		return (std::uint32_t(r) << 24) | (uint32_t(g) << 16) | (std::uint32_t(b) << 8) | std::uint32_t(a);
-		return (std::uint32_t(a) << 24) | (uint32_t(b) << 16) | (std::uint32_t(g) << 8) | std::uint32_t(r);
+		return (std::uint32_t(a) << 24) | (std::uint32_t(b) << 16) | (std::uint32_t(g) << 8) | std::uint32_t(r);
 	}
 
 	// Simple wrapper class for 32-bit bitmap data.
