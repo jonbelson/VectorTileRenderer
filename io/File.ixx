@@ -94,7 +94,7 @@ namespace io::file
 	{
 		std::ifstream mFile;
 
-		size_t mFileSize{};
+		std::size_t mFileSize{};
 
 		FileReader()
 		{
@@ -109,7 +109,7 @@ namespace io::file
 			mFile.seekg(0, std::ios::end);
 
 			auto fileSize = mFile.tellg();
-			mFileSize = static_cast<size_t>(fileSize);
+			mFileSize = static_cast<std::size_t>(fileSize);
 
 			mFile.seekg(0, std::ios::beg);
 
@@ -118,7 +118,7 @@ namespace io::file
 
 	public:
 
-		Data Read(size_t start, size_t size)
+		Data Read(std::size_t start, std::size_t size)
 		{
 			assert(mFile.is_open());
 
@@ -127,7 +127,7 @@ namespace io::file
 
 			mFile.seekg(static_cast<std::streampos>(start));
 
-			size_t bytesToRead = size;
+			std::size_t bytesToRead = size;
 			if (start + bytesToRead > mFileSize)
 			{
 				bytesToRead = mFileSize - start;
@@ -168,7 +168,7 @@ namespace io::file
 
 		std::int64_t mOffset{};
 
-		//bool WouldOverflow(size_t size)
+		//bool WouldOverflow(std::size_t size)
 		//{
 		//	return mOffset + size > mSpan.size();
 		//}
@@ -224,7 +224,7 @@ namespace io::file
 			return false;
 		}
 
-		bool Read(std::string& s, size_t length)
+		bool Read(std::string& s, std::size_t length)
 		{
 			if (mOffset + length > mSpan.size()) return false;
 

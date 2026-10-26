@@ -81,7 +81,7 @@ namespace core::bitmap
 		void Fill(std::uint32_t rgba)
 		{
 			auto it = mData.data();
-			for (size_t i = 0; i < mWidth * mHeight; i++)
+			for (std::size_t i = 0; i < mWidth * mHeight; i++)
 			{
 				*it++ = rgba;
 			}
@@ -105,6 +105,9 @@ namespace core::bitmap
 			switch (format)
 			{
 				case Format::RGBA:
+					break;
+
+				default:
 					break;
 			};
 

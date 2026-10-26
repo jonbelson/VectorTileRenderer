@@ -14,6 +14,8 @@ import std;
 
 namespace unicode::blocks
 {
+	using std::uint32_t;
+
 	//using Entry = unicode::blocks::Entry;
 
 	//bool IsBasicLatin(uint32_t cp) { return cp >= GetBlock(Name::BasicLatin).start && cp <= GetBlock(Name::BasicLatin).end; }

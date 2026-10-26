@@ -5,6 +5,8 @@
 
 module;
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
@@ -12,7 +14,6 @@ module;
 export module core.color;
 
 import std;
-
 
 
 namespace core::color
@@ -97,11 +98,12 @@ namespace core::color
 	{
 		int result{};
 		auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result, 16);
-		if (ec == std::errc{})
+
+		if (ec == std::errc{} && ptr == sv.data() + sv.size())
 		{
 			return result;
 		}
-		return false;
+		return std::nullopt;
 	}
 
 	// #RRGGBB
@@ -156,7 +158,8 @@ namespace core::color
 		{
 			int r{}, g{}, b{};
 			float a{};
-			if (sscanf_s(s.data(), "rgba(%d,%d,%d,%f)", &r, &g, &b, &a) == 4)
+			//if (sscanf_s(s.data(), "rgba(%d,%d,%d,%f)", &r, &g, &b, &a) == 4)
+			if (sscanf(s.data(), "rgba(%d,%d,%d,%f)", &r, &g, &b, &a) == 4)
 			{
 				Color c;
 				c.Red = r / 255.0f;
@@ -176,7 +179,8 @@ namespace core::color
 		if (s.size() > 3 && s.find("rgb(") != std::string::npos)
 		{
 			int r{}, g{}, b{};
-			if (sscanf_s(s.data(), "rgb(%d,%d,%d)", &r, &g, &b) == 3)
+			//if (sscanf_s(s.data(), "rgb(%d,%d,%d)", &r, &g, &b) == 3)
+			if (sscanf(s.data(), "rgb(%d,%d,%d)", &r, &g, &b) == 3)
 			{
 				Color c;
 				c.Red = r / 255.0f;
@@ -218,7 +222,8 @@ namespace core::color
 			int hue{}, saturation{}, lightness{};
 			float a{};
 
-			if (sscanf_s(s.data(), "hsla(%d,%d%%,%d%%,%f)", &hue, &saturation, &lightness, &a) == 4)
+			//if (sscanf_s(s.data(), "hsla(%d,%d%%,%d%%,%f)", &hue, &saturation, &lightness, &a) == 4)
+			if (sscanf(s.data(), "hsla(%d,%d%%,%d%%,%f)", &hue, &saturation, &lightness, &a) == 4)
 			{
 				Color c = HslToRgb(hue, static_cast<float>(saturation), static_cast<float>(lightness));
 				c.Alpha = a;
@@ -236,7 +241,8 @@ namespace core::color
 		{
 			int hue{}, saturation{}, lightness{};
 
-			if (sscanf_s(s.data(), "hsl(%d,%d%%,%d%%)", &hue, &saturation, &lightness) == 3)
+			//if (sscanf_s(s.data(), "hsl(%d,%d%%,%d%%)", &hue, &saturation, &lightness) == 3)
+			if (sscanf(s.data(), "hsl(%d,%d%%,%d%%)", &hue, &saturation, &lightness) == 3)
 			{
 				Color c = HslToRgb(hue, static_cast<float>(saturation), static_cast<float>(lightness));
 				return c;

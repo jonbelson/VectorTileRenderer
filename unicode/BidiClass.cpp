@@ -1647,7 +1647,7 @@ namespace unicode::bidiclass
 	template<typename T>
 	constexpr static bool IsInBlock(std::uint32_t codePoint, std::uint32_t start, std::uint32_t end)
 	{
-		static_assert(start <= end);
+		//static_assert(start <= end);
 
 		return codePoint >= start && codePoint <= end;
 	}
