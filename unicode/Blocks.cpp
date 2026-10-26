@@ -14,6 +14,7 @@ import std;
 
 namespace unicode::blocks
 {
+	using std::size_t;
 	using std::uint32_t;
 
 	//using Entry = unicode::blocks::Entry;

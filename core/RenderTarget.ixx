@@ -106,10 +106,10 @@ namespace core::rendertarget
 
 	public:
 		virtual void SetLineColor(const Color& color) override { mLineColour = color; }
-		virtual void SetLineOpacity(float opacity) { mLineOpacity = opacity; }
+		virtual void SetLineOpacity(float opacity) override { mLineOpacity = opacity; }
 		virtual void SetFillColor(const Color& color) override { mFillColour = color; }
 		virtual void SetFillOutlineColor(const Color& color) override { mFillOutlineColor = color; }
-		virtual void SetFillOpacity(float opacity) { mFillOpacity = opacity; }
+		virtual void SetFillOpacity(float opacity) override { mFillOpacity = opacity; }
 		virtual void SetLineWidth(float lineWidth) override { mLineWidth = lineWidth; }
 		virtual void SetCircleRadius(float circleRadius) override { mCircleRadius = circleRadius; }
 
