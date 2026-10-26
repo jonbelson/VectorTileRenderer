@@ -80,7 +80,7 @@ namespace io::file
 		return true;
 	}
 
-	//export bool ReadVarInt(std::span<const std::byte> bytes, uint64_t& val)
+	//export bool ReadVarInt(std::span<const std::byte> bytes, std::uint64_t& val)
 	//{
 	//	if (bytes.size() != sizeof(T)) return false;
 
@@ -237,10 +237,10 @@ namespace io::file
 			return false;
 		}
 
-		bool ReadVarIntLE(uint64_t& val)
+		bool ReadVarIntLE(std::uint64_t& val)
 		{
-			uint8_t byte{};
-			uint64_t result{};
+			std::uint8_t byte{};
+			std::uint64_t result{};
 
 			int count{};
 			int shift{};
@@ -248,7 +248,7 @@ namespace io::file
 			{
 				if (!ReadLE(byte)) return false;
 
-				result |= static_cast<uint64_t>(byte&0x7f)<<shift;
+				result |= static_cast<std::uint64_t>(byte&0x7f)<<shift;
 				shift += 7;
 
 			} while (byte&0x80 && ++count<10);
@@ -258,7 +258,7 @@ namespace io::file
 			return true;
 		}
 
-		//bool ReadVarIntBE(uint64_t& val)
+		//bool ReadVarIntBE(std:uint64_t& val)
 		//{
 		//	if (ReadVarIntLE(val))
 		//	{

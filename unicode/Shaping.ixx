@@ -18,7 +18,7 @@ namespace unicode::shaping
 {
 	// https://www.unicode.org/Public/UCD/latest/ucd/extracted/DerivedJoiningType.txt
 
-	using Utf32Text = std::vector<uint32_t>;
+	using Utf32Text = std::vector<std::uint32_t>;
 
 	export enum struct JoinForm
 	{
@@ -40,9 +40,9 @@ namespace unicode::shaping
 
 	struct Form
 	{
-		uint32_t codePoint{};
+		std::uint32_t codePoint{};
 		JoinForm joinForm{};
-		uint32_t presentationForm{};
+		std::uint32_t presentationForm{};
 	};
 
 	static constexpr auto PresentationForms = std::to_array<Form>(
@@ -306,8 +306,8 @@ namespace unicode::shaping
 
 	export struct Entry
 	{
-		uint32_t start;
-		uint32_t end;
+		std::uint32_t start;
+		std::uint32_t end;
 		JoiningType joiningType;
 	};
 
@@ -385,9 +385,9 @@ namespace unicode::shaping
 	});
 
 
-	export constexpr JoiningType GetJoiningType(uint32_t codePoint)
+	export constexpr JoiningType GetJoiningType(std::uint32_t codePoint)
 	{
-		const auto it = std::lower_bound(JoiningTypes.begin(), JoiningTypes.end(), codePoint, [](const Entry& entry, uint32_t cp) {
+		const auto it = std::lower_bound(JoiningTypes.begin(), JoiningTypes.end(), codePoint, [](const Entry& entry, std::uint32_t cp) {
 			return entry.end < cp;
 		});
 
@@ -399,7 +399,7 @@ namespace unicode::shaping
 		return JoiningType::NonJoining;
 	}
 
-	export constexpr std::optional<uint32_t> GetPresentationForm(uint32_t codePoint, JoinForm joinForm)
+	export constexpr std::optional<std::uint32_t> GetPresentationForm(std::uint32_t codePoint, JoinForm joinForm)
 	{
 		const auto it = std::lower_bound(PresentationForms.begin(), PresentationForms.end(), std::make_pair(codePoint, joinForm), [](const Form& form, const auto& key) {
 			if (form.codePoint != key.first)
@@ -415,7 +415,7 @@ namespace unicode::shaping
 		return std::nullopt;
 	}
 
-	export constexpr std::optional<uint32_t> GetLamAlefLigature(uint32_t codePoint, JoinForm joinForm)
+	export constexpr std::optional<std::uint32_t> GetLamAlefLigature(std::uint32_t codePoint, JoinForm joinForm)
 	{
 		const auto it = std::lower_bound(LamAlefLigature.begin(), LamAlefLigature.end(), std::make_pair(codePoint, joinForm), [](const Form& form, const auto& key) {
 			if (form.codePoint != key.first)
@@ -432,7 +432,7 @@ namespace unicode::shaping
 	}
 
 	// Return true if the given code point is an Alef variant that can be combined with Lam to form a ligature.
-	static bool IsAlefVariant(uint32_t codePoint)
+	static bool IsAlefVariant(std::uint32_t codePoint)
 	{
 		for (auto alef : LamAlefLigature)
 		{
@@ -443,7 +443,7 @@ namespace unicode::shaping
 	}
 
 	// Asummes logical order, i.e. left-to-right. Output will require reversing for right-to-left display.
-	export Utf32Text ShapeArabicText(const std::span<const uint32_t> codePoints)
+	export Utf32Text ShapeArabicText(const std::span<const std::uint32_t> codePoints)
 	{
 		Utf32Text shapedText;
 		shapedText.reserve(codePoints.size());
@@ -457,14 +457,14 @@ namespace unicode::shaping
 		};
 
 
-		constexpr uint32_t LamCodePoint = 0x0644;	// U'ل'
+		constexpr std::uint32_t LamCodePoint = 0x0644;	// U'ل'
 
 		JoiningType lastJt{ JoiningType::NonJoining };
 		bool havePrev = false;
 
-		for (uint32_t i = 0; i<codePoints.size(); i++)
+		for (std::uint32_t i = 0; i<codePoints.size(); i++)
 		{
-			uint32_t cp = codePoints[i];
+			std::uint32_t cp = codePoints[i];
 
 			JoiningType jt = GetJoiningType(cp);
 
@@ -493,7 +493,7 @@ namespace unicode::shaping
 			bool haveNext = false;
 
 			// Scan ahead to find the next non-transparent JoiningType
-			for (uint32_t j = i + 1; j<codePoints.size(); j++)
+			for (std::uint32_t j = i + 1; j<codePoints.size(); j++)
 			{
 				nextJt = GetJoiningType(codePoints[j]);
 				if (nextJt != JoiningType::Transparent)
@@ -523,7 +523,7 @@ namespace unicode::shaping
 	}
 
 	// In-place shaping of Arabic script code points in the given span.
-	//export bool ShapeArabicScript(std::span<uint32_t> codePoints)
+	//export bool ShapeArabicScript(std::span<std::uint32_t> codePoints)
 	//{
 	//	return false;
 	//}
@@ -531,10 +531,10 @@ namespace unicode::shaping
 	export struct Segment
 	{
 		bidiclass::BidiClass bidiClass;
-		std::span<uint32_t> codePoints;
+		std::span<std::uint32_t> codePoints;
 	};
 
-	export std::vector<Segment> SplitIntoSegments(std::span<uint32_t> codePoints)
+	export std::vector<Segment> SplitIntoSegments(std::span<std::uint32_t> codePoints)
 	{
 		using namespace unicode;
 
@@ -542,10 +542,10 @@ namespace unicode::shaping
 
 		bidiclass::BidiClass lastBc = bidiclass::BidiClass::Unknown;
 
-		std::span<uint32_t> segment;
-		size_t start = 0;
+		std::span<std::uint32_t> segment;
+		std::size_t start = 0;
 
-		for (size_t i = 0; i<codePoints.size(); i++)
+		for (std::size_t i = 0; i<codePoints.size(); i++)
 		{
 			bidiclass::BidiClass bc = bidiclass::GetBidiClass(codePoints[i]);
 			if (bc != lastBc)
@@ -574,7 +574,7 @@ namespace unicode::shaping
 		return segments;
 	}
 
-	export Utf32Text ShapeScript(std::span<uint32_t> codePoints)
+	export Utf32Text ShapeScript(std::span<std::uint32_t> codePoints)
 	{
 		Utf32Text shapedText;
 		shapedText.reserve(codePoints.size());
