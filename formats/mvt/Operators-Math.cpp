@@ -7,7 +7,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:math;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -16,10 +16,9 @@ import core.geometry;
 import core.json;
 
 import :common;
+import :math;
 
 using namespace core::json;
-
-
 
 
 template<Arity arity>

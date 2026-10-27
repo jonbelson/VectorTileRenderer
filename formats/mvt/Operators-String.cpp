@@ -2,7 +2,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:string;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -16,6 +16,7 @@ import unicode.convert;
 import unicode.script;
 
 import :common;
+import :string;
 
 using namespace core::json;
 

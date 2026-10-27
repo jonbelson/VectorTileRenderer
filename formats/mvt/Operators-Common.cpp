@@ -7,7 +7,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:common;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -16,7 +16,7 @@ import core.geometry;
 import core.json;
 import core.logger;
 
-//import formats.mvt.operators;
+import :common;
 import :factory;
 
 using namespace core::color;

@@ -7,7 +7,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:interpolate;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -16,6 +16,7 @@ import core.geometry;
 import core.json;
 
 import :common;
+import :interpolate;
 
 using namespace core::json;
 

@@ -7,13 +7,14 @@ module;
 
 //#include "json.hpp"
 
-module formats.mvt.operators:feature;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
 import core.geometry;
 import core.json;
 
+import :feature;
 
 //using json = nlohmann::json;
 using namespace core::json;

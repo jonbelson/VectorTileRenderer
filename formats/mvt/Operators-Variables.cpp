@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
-module formats.mvt.operators:variables;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -12,6 +12,7 @@ import core.geometry;
 import core.json;
 
 import :common;
+import :variables;
 
 using namespace core::json;
 

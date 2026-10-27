@@ -7,13 +7,14 @@ module;
 
 #include <vector>
 
-module formats.mvt.symbol:placedsymbols;
+module formats.mvt.symbol;
 
 import core.color;
 import core.geometry;
 import core.rendertarget;
 import formats.mvt.debug;
 
+import :placedsymbols;
 
 namespace mvt::symbol
 {

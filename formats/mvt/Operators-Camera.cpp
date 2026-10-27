@@ -7,13 +7,14 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:camera;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
 import formats.mvt.parser;
 import core.json;
 
+import :camera;
 import :common;
 
 using namespace core::json;

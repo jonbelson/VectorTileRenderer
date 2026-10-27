@@ -7,7 +7,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:decision;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -15,6 +15,7 @@ import core.geometry;
 import core.json;
 
 import :common;
+import :decision;
 
 using namespace core::json;
 

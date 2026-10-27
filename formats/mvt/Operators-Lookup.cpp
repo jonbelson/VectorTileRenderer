@@ -7,7 +7,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:lookup;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -15,6 +15,7 @@ import core.geometry;
 import core.json;
 
 import :common;
+import :lookup;
 
 using namespace core::json;
 

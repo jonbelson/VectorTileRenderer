@@ -7,7 +7,7 @@ module;
 
 #include <cassert>
 
-module formats.mvt.operators:types;
+module formats.mvt.operators;
 
 import std;
 import formats.mvt.feature;
@@ -17,6 +17,7 @@ import unicode.casemapping;
 import unicode.convert;
 
 import :common;
+import :types;
 
 using namespace core::json;
 
