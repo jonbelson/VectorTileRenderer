@@ -4,7 +4,7 @@ import std;
 
 import formats.geojson.geometry;
 
-export namespace geojson::feature
+namespace geojson::feature
 {
 	using namespace geojson;
 
