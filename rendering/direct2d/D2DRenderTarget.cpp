@@ -26,6 +26,9 @@ using namespace Microsoft::WRL;
 // https://www.codeproject.com/articles/Direct2D-Tutorial-Part-1-RenderTarget
 namespace rendering::direct2d
 {
+	using std::size_t;
+	using std::uint32_t;
+
 	// Conversion utilities.
 	static D2D1_COLOR_F ToColorF(const Color& c)
 	{

@@ -18,6 +18,8 @@ import :common;
 
 using namespace core::json;
 
+using std::size_t;
+
 template<Arity arity>
 bool _OperatorDecision<arity>::ParseFromJson(const json& data)
 {

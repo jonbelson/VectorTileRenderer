@@ -14,15 +14,15 @@ import std;
 
 namespace unicode::casemapping
 {
-	using Utf32Text = std::vector<uint32_t>;
+	using Utf32Text = std::vector<std::uint32_t>;
 
 	// Perform simple 1:1 case mapping between Unicode code points.
 
 	// Returns the uppercase code point for the specified code point, else the original if no mapping exists.
-	export uint32_t ToUpper(uint32_t codePoint);
+	export std::uint32_t ToUpper(std::uint32_t codePoint);
 
 	// Returns the lowercase code point for the specified code point, else the original if no mapping exists.
-	export uint32_t ToLower(uint32_t codePoint);
+	export std::uint32_t ToLower(std::uint32_t codePoint);
 
 	export Utf32Text ToUpper(const Utf32Text& utf32);
 

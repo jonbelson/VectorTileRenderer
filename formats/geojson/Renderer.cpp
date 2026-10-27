@@ -105,7 +105,7 @@ namespace geojson::renderer
 		{
 			core::geometry::Polygon polygon;
 			
-			size_t i = 0;
+			std::size_t i = 0;
 			for (const auto& line : lines.View(geometry.lineArray))
 			{
 				/*

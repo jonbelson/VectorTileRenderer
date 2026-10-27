@@ -13,7 +13,7 @@ import std;
 
 namespace unicode::script
 {
-	using Utf32Text = std::vector<uint32_t>;
+	using Utf32Text = std::vector<std::uint32_t>;
 
 	export enum class Script
 	{
@@ -192,6 +192,6 @@ namespace unicode::script
 	};
 
 	// Find script of specified character.
-	export Script GetScript(uint32_t codePoint);
+	export Script GetScript(std::uint32_t codePoint);
 
 };

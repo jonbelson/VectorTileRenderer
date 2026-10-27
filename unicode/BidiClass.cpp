@@ -16,6 +16,8 @@ namespace unicode::bidiclass
 {
 	// https://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
 
+	using std::uint32_t;
+
 	constexpr uint32_t UnicodeEnd = 0x10ffff;
 
 	struct Entry

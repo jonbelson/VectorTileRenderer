@@ -20,7 +20,7 @@ using json = nlohmann::json;
 using namespace core::color;
 using namespace mvt::feature;
 
-
+using std::size_t;
 
 
 // Figure out the JSON is an Expression or a Function or just raw data.

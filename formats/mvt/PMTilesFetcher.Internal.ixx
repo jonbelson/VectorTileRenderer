@@ -22,16 +22,16 @@ namespace mvt::tilefetcher
 
 	using TileSpec = mvt::tile::TileSpec;
 
-	export size_t CountForZoom(uint64_t zoom)
+	export std::size_t CountForZoom(uint64_t zoom)
 	{
-		size_t n = 1ULL<<zoom;
-		size_t count = n*n;
+		std::size_t n = 1ULL<<zoom;
+		std::size_t count = n*n;
 		return count;
 	}
 
-	export size_t BaseForZoom(uint64_t zoom)
+	export std::size_t BaseForZoom(uint64_t zoom)
 	{
-		size_t total{};
+		std::size_t total{};
 		for (uint64_t i = 0; i<zoom; i++)
 		{
 			total += CountForZoom(i);
@@ -59,15 +59,15 @@ namespace mvt::tilefetcher
 	template<size_t N>
 	using Indices = std::make_index_sequence<N>;
 
-	template<size_t... Is>
-	constexpr size_t TotalForZoom(std::index_sequence<Is...>)
+	template<std::size_t... Is>
+	constexpr std::size_t TotalForZoom(std::index_sequence<Is...>)
 	{
 		return (CountForZoom<Is>() + ...);
 	}
 
-	constexpr size_t Count1 = TotalForZoom(Indices<1>{});
-	constexpr size_t Count2 = TotalForZoom(Indices<2>{});
-	constexpr size_t Count3 = TotalForZoom(Indices<3>{});
+	constexpr std::size_t Count1 = TotalForZoom(Indices<1>{});
+	constexpr std::size_t Count2 = TotalForZoom(Indices<2>{});
+	constexpr std::size_t Count3 = TotalForZoom(Indices<3>{});
 	*/
 
 	static void Rotate(uint64_t s, uint64_t rx, uint64_t ry, uint64_t& x, uint64_t& y)
@@ -122,7 +122,7 @@ namespace mvt::tilefetcher
 		uint64_t y = static_cast<uint64_t>(tileSpec.y);
 		uint64_t x = static_cast<uint64_t>(tileSpec.x);
 
-		size_t base = (zoom) ? BaseForZoom(zoom) : 0;
+		std::size_t base = (zoom) ? BaseForZoom(zoom) : 0;
 
 		uint64_t d{};
 

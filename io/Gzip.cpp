@@ -46,7 +46,7 @@ namespace io::gzip
 				}
 
 				// Need more space to continue decompressing.
-				size_t outputSize = output.size();
+				std::size_t outputSize = output.size();
 
 				output.resize(outputSize*2);
 

@@ -218,9 +218,9 @@ bool ArrayHasSize(const T& array, Sizes... size)
 	return ((array.size() == size) || ...);
 }
 
-//export bool IsArrayOfSize(const ValueArray& array, std::initializer_list<size_t> sizes)
+//export bool IsArrayOfSize(const ValueArray& array, std::initializer_list<std::size_t> sizes)
 //{
-//	for (size_t size : sizes)
+//	for (std::size_t size : sizes)
 //	{
 //		if (array.size() == size) return true;
 //	}
@@ -431,7 +431,7 @@ export struct ExponentialOperator
 		if (array1.size() != array2.size()) return Value{};
 
 		std::vector<float> array;
-		for (size_t i = 0; i < array1.size(); i++)
+		for (std::size_t i = 0; i < array1.size(); i++)
 		{
 			array.push_back(std::lerp(array1[i], array2[i], mRatio));
 		}

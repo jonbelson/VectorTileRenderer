@@ -15,55 +15,55 @@ import std;
 
 namespace unicode::convert
 {
-	export using Utf32Text = std::vector<uint32_t>;
+	export using Utf32Text = std::vector<std::uint32_t>;
 
-	constexpr uint32_t TwoByte		= 0b1100'0000;	//0xc0;
-	constexpr uint32_t ThreeByte	= 0b1110'0000;	//0xe0;
-	constexpr uint32_t FourByte		= 0b1111'0000;	//0xf0;
+	constexpr std::uint32_t TwoByte		= 0b1100'0000;	//0xc0;
+	constexpr std::uint32_t ThreeByte	= 0b1110'0000;	//0xe0;
+	constexpr std::uint32_t FourByte		= 0b1111'0000;	//0xf0;
 
-	constexpr uint32_t TwoByteMask		= 0b1110'0000;	//0xe0;
-	constexpr uint32_t ThreeByteMask	= 0b1111'0000;	//0xf0;
-	constexpr uint32_t FourByteMask		= 0b1111'1000;	//0xf8;
+	constexpr std::uint32_t TwoByteMask		= 0b1110'0000;	//0xe0;
+	constexpr std::uint32_t ThreeByteMask	= 0b1111'0000;	//0xf0;
+	constexpr std::uint32_t FourByteMask		= 0b1111'1000;	//0xf8;
 
-	constexpr uint32_t Continuation		= 0b1000'0000;	//0x80
-	constexpr uint32_t ContinuationMask = 0b0011'1111;	//0x3f
+	constexpr std::uint32_t Continuation		= 0b1000'0000;	//0x80
+	constexpr std::uint32_t ContinuationMask = 0b0011'1111;	//0x3f
 
-	bool IsOneByte(uint8_t ch)
+	bool IsOneByte(std::uint8_t ch)
 	{
 		return (ch & 0x80) == 0;
 	}
 
-	bool IsTwoByte(uint8_t ch)
+	bool IsTwoByte(std::uint8_t ch)
 	{
 		return (ch & TwoByteMask) == TwoByte;
 	}
 
-	bool IsThreeByte(uint8_t ch)
+	bool IsThreeByte(std::uint8_t ch)
 	{
 		return (ch & ThreeByteMask) == ThreeByte;
 	}
 
-	bool IsFourByte(uint8_t ch)
+	bool IsFourByte(std::uint8_t ch)
 	{
 		return (ch & FourByteMask) == FourByte;
 	}
 
 	// Convert a UTF-8 string into an array of UTF-32 code points.
-	export std::vector<uint32_t> Utf8ToUtf32(std::string_view sv)
+	export std::vector<std::uint32_t> Utf8ToUtf32(std::string_view sv)
 	{
-		std::vector<uint32_t> utf32;
+		std::vector<std::uint32_t> utf32;
 
-		uint32_t i {};
+		std::uint32_t i {};
 
 		bool decodeError { false };
 
 		while (i < sv.size())
 		{
-			uint8_t ch = sv[i];
+			std::uint8_t ch = sv[i];
 
 			if (IsOneByte(ch))
 			{
-				utf32.emplace_back(static_cast<uint32_t>(ch));
+				utf32.emplace_back(static_cast<std::uint32_t>(ch));
 				i += 1;
 			}
 			else if (IsTwoByte(ch))
@@ -71,10 +71,10 @@ namespace unicode::convert
 				// Two byte sequence.
 				if (i + 1 < sv.size())
 				{
-					uint8_t byte1 = ch&~TwoByteMask;
-					uint8_t byte2 = sv[i + 1]&ContinuationMask;
+					std::uint8_t byte1 = ch&~TwoByteMask;
+					std::uint8_t byte2 = sv[i + 1]&ContinuationMask;
 
-					uint32_t codePoint = (byte1 << 6)|(byte2 << 0);
+					std::uint32_t codePoint = (byte1 << 6)|(byte2 << 0);
 
 					utf32.emplace_back(codePoint);
 				}
@@ -85,11 +85,11 @@ namespace unicode::convert
 				// Three byte sequence.
 				if (i + 2 < sv.size())
 				{
-					uint8_t byte1 = ch&~ThreeByteMask;
-					uint8_t byte2 = sv[i + 1]&ContinuationMask; 
-					uint8_t byte3 = sv[i + 2]&ContinuationMask;
+					std::uint8_t byte1 = ch&~ThreeByteMask;
+					std::uint8_t byte2 = sv[i + 1]&ContinuationMask; 
+					std::uint8_t byte3 = sv[i + 2]&ContinuationMask;
 
-					uint32_t codePoint = (byte1 << 12)|(byte2 << 6)|(byte3 << 0);
+					std::uint32_t codePoint = (byte1 << 12)|(byte2 << 6)|(byte3 << 0);
 
 					utf32.emplace_back(codePoint);
 				}
@@ -100,12 +100,12 @@ namespace unicode::convert
 				// Four byte sequence.
 				if (i + 3 < sv.size())
 				{
-					uint8_t byte1 = ch&~FourByteMask;
-					uint8_t byte2 = sv[i + 1]&ContinuationMask; 
-					uint8_t byte3 = sv[i + 2]&ContinuationMask;
-					uint8_t byte4 = sv[i + 3]&ContinuationMask;
+					std::uint8_t byte1 = ch&~FourByteMask;
+					std::uint8_t byte2 = sv[i + 1]&ContinuationMask; 
+					std::uint8_t byte3 = sv[i + 2]&ContinuationMask;
+					std::uint8_t byte4 = sv[i + 3]&ContinuationMask;
 
-					uint32_t codePoint = (byte1 << 18)|(byte2 << 12)|(byte3 << 6)|byte4;
+					std::uint32_t codePoint = (byte1 << 18)|(byte2 << 12)|(byte3 << 6)|byte4;
 
 					utf32.emplace_back(codePoint);
 				}
@@ -134,9 +134,9 @@ namespace unicode::convert
 
 		bool decodeError { false };
 
-		for (uint32_t i=0; i < utf32.size(); i++)
+		for (std::uint32_t i=0; i < utf32.size(); i++)
 		{
-			uint32_t cp = utf32[i];
+			std::uint32_t cp = utf32[i];
 
 			if (cp <= 0x7f)
 			{
@@ -176,7 +176,7 @@ namespace unicode::convert
 
 	export std::string u32stringToUtf8(const std::u32string& u32str)
 	{
-		return Utf32ToUtf8(std::vector<uint32_t>(u32str.begin(), u32str.end()));
+		return Utf32ToUtf8(std::vector<std::uint32_t>(u32str.begin(), u32str.end()));
 	}
 
 };

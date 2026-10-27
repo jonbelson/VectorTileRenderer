@@ -18,6 +18,8 @@ import :common;
 
 using namespace core::json;
 
+using std::size_t;
+
 
 // ["at", number, array]: value
 bool OperatorAt::ParseFromJson(const json& data)

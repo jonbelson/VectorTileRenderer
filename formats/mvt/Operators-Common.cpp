@@ -18,10 +18,10 @@ import core.logger;
 
 import formats.mvt.operators;
 
+using namespace core::color;
 using namespace core::json;
 
-using namespace core::color;
-
+using std::size_t;
 
 const std::map<std::string, ExpressionType> ExpressionNameToTypeMap = {
 

@@ -32,6 +32,8 @@ namespace mvt::renderer
 	using namespace mvt::tile;
 	using namespace mvt::tilefetcher;
 
+	using std::size_t;
+
 	using LineCap = core::rendertarget::LineCap;
 	using LineJoin = core::rendertarget::LineJoin;
 

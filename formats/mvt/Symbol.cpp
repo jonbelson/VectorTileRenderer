@@ -32,6 +32,8 @@ namespace mvt::symbol
 	using namespace mvt;
 	using namespace mvt::layer;
 
+	using std::size_t;
+	using std::uint32_t;
 
 	// Utility class for interpolating along a line geometry.
 	class LineWalker

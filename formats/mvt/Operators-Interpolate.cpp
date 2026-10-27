@@ -19,6 +19,7 @@ import :common;
 
 using namespace core::json;
 
+using std::size_t;
 
 
 // [ "interpolate", interpolation, input, stop_input_1, stop_output_1, stop_input_n, stop_output_n ]: OutputType

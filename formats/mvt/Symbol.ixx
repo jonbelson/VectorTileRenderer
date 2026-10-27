@@ -99,7 +99,7 @@ export namespace mvt::symbol
 		{
 			if (!value.empty())
 			{
-				size_t start{}, end{};
+				std::size_t start{}, end{};
 				while ((start = value.find('{')) != std::string::npos)
 				{
 					if ((end = value.find('}', start)) != std::string::npos)
@@ -225,7 +225,7 @@ export namespace mvt::symbol
 		}
 	};
 
-	export int GetGlyphBlockStart(uint32_t codePoint)
+	export int GetGlyphBlockStart(std::uint32_t codePoint)
 	{
 		return (codePoint >> 8)*256;
 	}
@@ -236,7 +236,7 @@ export namespace mvt::symbol
 	// Represents a Symbol from a Feature.
 	export class Symbol
 	{
-		using Utf32Text = std::vector<uint32_t>;
+		using Utf32Text = std::vector<std::uint32_t>;
 
 		float RadiansToDegrees(float angleRadians)
 		{
@@ -246,7 +246,7 @@ export namespace mvt::symbol
 
 		struct Line
 		{
-			std::vector<uint32_t> text;	// utf32
+			std::vector<std::uint32_t> text;	// utf32
 			float widthPx { 0.0f };		// Ink width of line.
 		};
 
@@ -265,7 +265,7 @@ export namespace mvt::symbol
 		{
 			float smallestTop { -99990.0f };
 
-			for (size_t i=0; i<line.text.size(); i++)
+			for (std::size_t i=0; i<line.text.size(); i++)
 			{
 				const auto cp = line.text[i];
 
@@ -291,7 +291,7 @@ export namespace mvt::symbol
 			float padding = textLetterSpacing*style::GlyphSize;
 
 			//for (const auto& cp : text)
-			for (size_t i=0; i<text.size(); i++)
+			for (std::size_t i=0; i<text.size(); i++)
 			{
 				const auto cp = text[i];
 
@@ -347,7 +347,7 @@ export namespace mvt::symbol
 		std::vector<Word> SplitToWords(const mvt::style::GlyphAtlas* glyphAtlas, std::string_view textField)
 		{
 			std::vector<Word> words;
-			size_t start{}, end{};
+			std::size_t start{}, end{};
 			float lengthPx { 0.0f };
 
 			while ((end = textField.find(' ', start)) != std::string::npos)
@@ -389,7 +389,7 @@ export namespace mvt::symbol
 		}
 
 		// Adjust Point x coordinate relative to starting reference based on TextJustify.
-		Point AdjustForTextJustify(const FormattedText& formattedText, size_t lineNum, const SymbolAttribs& attribs, const Point& p)
+		Point AdjustForTextJustify(const FormattedText& formattedText, std::size_t lineNum, const SymbolAttribs& attribs, const Point& p)
 		{
 			Point point { p };
 

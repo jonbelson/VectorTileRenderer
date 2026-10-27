@@ -30,6 +30,8 @@ using namespace io;
 
 namespace mvt::tile
 {
+	using std::size_t;
+	using std::uint32_t;
 
 	struct VariantPrint
 	{
@@ -44,10 +46,10 @@ namespace mvt::tile
 
 	static float GetArea(const std::vector<geometry::Point>& points)
 	{
-		size_t numPoints = points.size();
+		std::size_t numPoints = points.size();
 
 		float area{};
-		for (size_t i = 0; i < numPoints; i++)
+		for (std::size_t i = 0; i < numPoints; i++)
 		{
 			const auto& p1 = points[i];
 			const auto& p2 = points[(i + 1)%numPoints];

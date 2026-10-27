@@ -14,7 +14,7 @@ import std;
 
 namespace unicode::bidiclass
 {
-	using Utf32Text = std::vector<uint32_t>;
+	using Utf32Text = std::vector<std::uint32_t>;
 
 	export enum class BidiClass
 	{
@@ -45,14 +45,14 @@ namespace unicode::bidiclass
 		WhiteSpace,
 	};
 
-	export BidiClass GetBidiClass(uint32_t corePoint);
+	export BidiClass GetBidiClass(std::uint32_t corePoint);
 
 
 	// Returns the uppercase code point for the specified code point, else the original if no mapping exists.
-	export uint32_t ToUpper(uint32_t codePoint);
+	export std::uint32_t ToUpper(std::uint32_t codePoint);
 
 	// Returns the lowercase code point for the specified code point, else the original if no mapping exists.
-	export uint32_t ToLower(uint32_t codePoint);
+	export std::uint32_t ToLower(std::uint32_t codePoint);
 
 	export Utf32Text ToUpper(const Utf32Text& utf32);
 

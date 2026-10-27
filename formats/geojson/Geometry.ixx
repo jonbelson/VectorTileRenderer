@@ -34,11 +34,11 @@ export namespace geojson::geometry
 	export template<typename T>
 	struct Range
 	{
-		size_t start{};
-		size_t count{};
+		std::size_t start{};
+		std::size_t count{};
 
 		Range() = default;
-		Range(size_t start, size_t count) : start(start), count(count) {}
+		Range(std::size_t start, std::size_t count) : start(start), count(count) {}
 
 		std::span<const T> View(std::span<const T> data) const
 		{

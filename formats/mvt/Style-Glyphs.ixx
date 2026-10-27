@@ -35,14 +35,14 @@ namespace mvt::style
 		// Raw SDF for glyphs in a block.
 		export struct Glyph
 		{
-			uint32_t id{};
+			std::uint32_t id{};
 
 			int left{};
 			int top{};
 
-			uint32_t width{};
-			uint32_t height{};
-			uint32_t advance{};
+			std::uint32_t width{};
+			std::uint32_t height{};
+			std::uint32_t advance{};
 
 			std::vector<std::uint8_t> field;
 		};
@@ -63,28 +63,28 @@ namespace mvt::style
 	// Represents a single glyph in a glyph atlas.
 	export struct GlyphSpec
 	{
-		uint32_t id{};
-		uint32_t x{};
-		uint32_t y{};
+		std::uint32_t id{};
+		std::uint32_t x{};
+		std::uint32_t y{};
 
 		int left{};
 		int top{};
 
-		uint32_t height{};
-		uint32_t width{};
+		std::uint32_t height{};
+		std::uint32_t width{};
 
-		uint32_t advance{};
+		std::uint32_t advance{};
 	};
 
 	// Represent a decoded glyph PBF.
 	export struct GlyphAtlas
 	{
-		std::map<uint32_t, GlyphSpec> glyphs;	// Map of glyph id to spec.
+		std::map<std::uint32_t, GlyphSpec> glyphs;	// Map of glyph id to spec.
 
 		/////int start{};	// Index of first glyph in block.
 
-		//uint32_t threshold{ 192 };
-		uint32_t haloSize;	// Halo size as lround(text-halo-width*10.0f)
+		//std::uint32_t threshold{ 192 };
+		std::uint32_t haloSize;	// Halo size as lround(text-halo-width*10.0f)
 
 		std::shared_ptr<core::bitmap::Bitmap> bitmap;
 	};
@@ -131,7 +131,7 @@ namespace mvt::style
 						const auto& bitmap = mvtGlyph.bitmap();
 						if (!bitmap.empty())
 						{
-							size_t size = bitmap.size();//protoGlyph.width* protoGlyph.height;
+							std::size_t size = bitmap.size();//protoGlyph.width* protoGlyph.height;
 							protoGlyph.field.resize(size /*protoGlyph.width * protoGlyph.height*/);
 
 							std::memcpy(&protoGlyph.field[0], bitmap.data(), size);
@@ -179,7 +179,7 @@ namespace mvt::style
 
 		float aa = 2.0f;
 
-		uint32_t haloSize10 = lround(haloSizePx*10.0f);
+		std::uint32_t haloSize10 = lround(haloSizePx*10.0f);
 
 		GlyphAtlas glyphAtlas;
 		glyphAtlas.haloSize = haloSize10;
@@ -191,14 +191,14 @@ namespace mvt::style
 		auto& bitmapData = glyphAtlas.bitmap->GetBitmapData();
 		std::uint32_t* pixelData = bitmapData.data();
 
-		uint32_t currX{};
-		uint32_t currY{};
-		uint32_t tallestGlyph{};
+		std::uint32_t currX{};
+		std::uint32_t currY{};
+		std::uint32_t tallestGlyph{};
 
 		for (const auto& glyph : fontStack.glyphs)
 		{
-			uint32_t glyphWidth = glyph.width;
-			uint32_t glyphHeight = glyph.height;
+			std::uint32_t glyphWidth = glyph.width;
+			std::uint32_t glyphHeight = glyph.height;
 
 			if (glyphWidth) glyphWidth += 2*GlyphPbfPadding;
 			if (glyphHeight) glyphHeight += 2*GlyphPbfPadding;
@@ -232,11 +232,11 @@ namespace mvt::style
 			//std::byte* dest = &pixelData[currY*size*4 + currX];
 
 			int offset{};
-			for (uint32_t y = 0; y < glyphHeight; y++)
+			for (std::uint32_t y = 0; y < glyphHeight; y++)
 			{
 				std::uint32_t* row = dest;
 
-				for (uint32_t x = 0; x < glyphWidth; x++)
+				for (std::uint32_t x = 0; x < glyphWidth; x++)
 				{
 					std::uint8_t val = glyph.field[y*glyphWidth + x];
 
@@ -294,7 +294,7 @@ namespace mvt::style
 		return std::move(glyphAtlas);
 	}
 
-	int GetGlyphBlockStart(uint32_t codePoint)
+	int GetGlyphBlockStart(std::uint32_t codePoint)
 	{
 		return (codePoint >> 8)*256;
 	}
@@ -342,7 +342,7 @@ namespace mvt::style
 				}
 			}
 
-			size_t pos = uri.find("{fontstack}", 0);
+			std::size_t pos = uri.find("{fontstack}", 0);
 			if (pos != std::string::npos)
 			{
 				uri.replace(pos, 11, font);
@@ -388,7 +388,7 @@ namespace mvt::style
 			auto blocksData = io::resource::LoadFromHttp(urls);
 			if (blocksData)
 			{
-				for (size_t i=0; i<blocksData->size(); i++)
+				for (std::size_t i=0; i<blocksData->size(); i++)
 				{
 					auto glyphs = DecodeGlyph(blocksData->at(i));
 					if (glyphs)
@@ -402,7 +402,7 @@ namespace mvt::style
 			return static_cast<int>(urls.size());
 		}
 
-		const GlyphSpec* Lookup(const std::string& font, uint32_t cp, float haloSizePx = 0.0f) const
+		const GlyphSpec* Lookup(const std::string& font, std::uint32_t cp, float haloSizePx = 0.0f) const
 		{
 			auto glyphAtlas = Lookup(font, GetGlyphBlockStart(cp), haloSizePx);
 			if (glyphAtlas)
@@ -423,7 +423,7 @@ namespace mvt::style
 		// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
 		std::shared_ptr<const GlyphAtlas> Lookup(const std::string& font, int rangeStart, float haloSizePx = 0.0f) const
 		{
-			uint32_t haloSize10 = lround(haloSizePx*10.0f);
+			std::uint32_t haloSize10 = lround(haloSizePx*10.0f);
 
 			auto result = _Lookup(font, haloSize10, rangeStart);
 			if (result) return result;

@@ -20,6 +20,8 @@ namespace mvt::symbol
 	using namespace core::color;
 	using namespace core::geometry;
 
+	using std::size_t;
+
 	static void DrawOutline(core::rendertarget::RenderTarget* renderTarget, const Rect& r, Color c= Color("#0000ff"))
 	{
 		LineString lineString;

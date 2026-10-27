@@ -7,7 +7,7 @@ export module formats.mvt.tilecache;
 
 import std;
 
-import <cassert>;
+#include <cassert>
 
 import core.logger;
 import formats.mvt.tilefetcher;
@@ -21,7 +21,7 @@ namespace mvt::tilecache
 	{
 		struct Entry
 		{
-			size_t hash{};	// Hash from associated TileFetcher.
+			std::size_t hash{};	// Hash from associated TileFetcher.
 			std::unique_ptr<const tile::Tile> tile;
 		};
 
@@ -37,7 +37,7 @@ namespace mvt::tilecache
 
 			std::size_t hash = mTileFetcher->GetHash();
 
-			for (size_t i = mCache.size(); i-- > 0; )
+			for (std::size_t i = mCache.size(); i-- > 0; )
 			{
 				Entry& entry = mCache[i];
 
@@ -117,7 +117,7 @@ namespace mvt::tilecache
 
 					// XXX Decode in parallel?
 
-					for (size_t i = 0; i<tilesData.size(); i++)
+					for (std::size_t i = 0; i<tilesData.size(); i++)
 					{
 						auto& tileData = tilesData[i];
 						if (!tileData.empty())

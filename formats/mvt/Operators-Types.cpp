@@ -20,6 +20,8 @@ import :common;
 
 using namespace core::json;
 
+using std::size_t;
+
 
 // [ "format", string|image, {}, string|image, {} ]
 bool OperatorFormat::ParseFromJson(const json& data)

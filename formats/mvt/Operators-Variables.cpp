@@ -15,6 +15,7 @@ import :common;
 
 using namespace core::json;
 
+using std::size_t;
 
 using VarFrame = std::unordered_map<std::string, Value>;
 

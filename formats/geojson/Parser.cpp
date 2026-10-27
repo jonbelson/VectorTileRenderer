@@ -17,6 +17,7 @@ namespace geojson::parser
 	using namespace core::json;
 	using namespace geojson;
 
+	using std::size_t;
 
 	static bool TryGetString(const json& data, const std::string& key, std::string& value)
 	{

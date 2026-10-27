@@ -13,8 +13,8 @@ import unicode.convert;
 
 namespace unicode::casemapping
 {
-	using std::uint32_t;
 	using std::size_t;
+	using std::uint32_t;
 
 	using Entry = std::pair<uint32_t, uint32_t>;
 

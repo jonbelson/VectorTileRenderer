@@ -15,6 +15,9 @@ namespace unicode::category
 {
 	// https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt
 
+	using std::size_t;
+	using std::uint32_t;
+
 	constexpr uint32_t UnicodeEnd = 0x10ffff;
 
 	struct Entry

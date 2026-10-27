@@ -323,8 +323,8 @@ namespace unicode::blocks
 
 	export struct Entry
 	{
-		uint32_t start;
-		uint32_t end;
+		std::uint32_t start;
+		std::uint32_t end;
 		Name name;
 	};
 
@@ -651,25 +651,25 @@ namespace unicode::blocks
 
 	// Check if a codepoint is within the block for 'name'.
 	export template<Name name>
-	constexpr bool IsInBlock(uint32_t codePoint)
+	constexpr bool IsInBlock(std::uint32_t codePoint)
 	{
 		constexpr auto block = GetBlock(name);
 		return codePoint >= block.start && codePoint <= block.end;
 	}
 
 	export template<Name... names>
-	constexpr bool IsInAnyBlock(uint32_t codePoint)
+	constexpr bool IsInAnyBlock(std::uint32_t codePoint)
 	{
 		return (IsInBlock<names>(codePoint) || ...);
 	}
 
-	export bool IsSupported(uint32_t codePoint);
-	export bool IsSupported(std::span<uint32_t> utf32);
+	export bool IsSupported(std::uint32_t codePoint);
+	export bool IsSupported(std::span<std::uint32_t> utf32);
 
-	export bool HasSupportedLine(std::span<uint32_t> utf32);
+	export bool HasSupportedLine(std::span<std::uint32_t> utf32);
 
-	export constexpr bool IsSimple(uint32_t codePoint);
-	export constexpr bool IsSimple(std::span<uint32_t> utf32);
+	export constexpr bool IsSimple(std::uint32_t codePoint);
+	export constexpr bool IsSimple(std::span<std::uint32_t> utf32);
 
 	static_assert(GetBlock(Name::Adlam).start == 0x1E900);
 	static_assert(GetBlock(Name::AegeanNumbers).end   == 0x1013F);

@@ -12,6 +12,8 @@ import core.logger;
 
 namespace rendering::svg
 {
+	using std::size_t;
+
 	constexpr const std::string_view SvgHeader = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
 
 	void Transform::Apply(geometry::Point& p) const

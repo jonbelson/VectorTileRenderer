@@ -13,7 +13,7 @@ import std;
 
 namespace unicode::category
 {
-	using Utf32Text = std::vector<uint32_t>;
+	using Utf32Text = std::vector<std::uint32_t>;
 
 	export enum class Category
 	{
@@ -59,5 +59,5 @@ namespace unicode::category
 		UppercaseLetter,
 	};
 
-	export Category GetCategory(uint32_t codePoint);
+	export Category GetCategory(std::uint32_t codePoint);
 };

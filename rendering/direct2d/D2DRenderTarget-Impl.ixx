@@ -140,7 +140,7 @@ namespace rendering::direct2d
 
 			const float* dashes = hasDashes ? mDashes.data() : nullptr;
 
-			mFactory->CreateStrokeStyle(props, dashes, static_cast<uint32_t>(mDashes.size()), strokeStyle.GetAddressOf());
+			mFactory->CreateStrokeStyle(props, dashes, static_cast<std::uint32_t>(mDashes.size()), strokeStyle.GetAddressOf());
 
 			return strokeStyle;
 		}
@@ -154,7 +154,7 @@ namespace rendering::direct2d
 			{
 				sink->BeginFigure(ToPointF(pointArray[0]), filled ? D2D1_FIGURE_BEGIN_FILLED : D2D1_FIGURE_BEGIN_HOLLOW);
 
-				for (size_t i = 1; i<pointArray.size(); i++)
+				for (std::size_t i = 1; i<pointArray.size(); i++)
 				{
 					sink->AddLine(ToPointF(pointArray[i]));
 				}
@@ -299,7 +299,7 @@ namespace rendering::direct2d
 			hr = frame->Initialize(props.Get());
 
 			// Set frame size.
-			uint32_t width{}, height{};
+			std::uint32_t width{}, height{};
 			mTargetBitmap->GetSize(&width, &height);
 
 			hr = frame->SetSize(width, height);

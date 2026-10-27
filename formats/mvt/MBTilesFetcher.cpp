@@ -18,6 +18,8 @@ using namespace io;
 
 namespace mvt::tilefetcher
 {
+	using std::size_t;
+
 	std::size_t MbTilesFetcher::GetHash(void) const
 	{
 		return std::hash<std::string>{}(mFilePath);

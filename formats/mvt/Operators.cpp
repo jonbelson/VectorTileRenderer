@@ -442,9 +442,9 @@ std::shared_ptr<IOperator> CreateFunctionOperatorFromJson(const json& data)
 //}
 
 
-//static bool IsArrayOfSize(const ValueArray& array, std::initializer_list<size_t> sizes)
+//static bool IsArrayOfSize(const ValueArray& array, std::initializer_list<std::size_t> sizes)
 //{
-//	for (size_t size : sizes)
+//	for (std::size_t size : sizes)
 //	{
 //		if (array.size() == size) return true;
 //	}

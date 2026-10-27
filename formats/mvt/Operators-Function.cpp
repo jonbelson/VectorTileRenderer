@@ -15,7 +15,7 @@ import :common;
 
 using namespace core::json;
 
-
+using std::size_t;
 
 // https://docs.mapbox.com/style-spec/reference/other/
 bool OperatorFunction::ParseFromJson(const json& data)
