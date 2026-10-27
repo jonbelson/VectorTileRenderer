@@ -110,3 +110,11 @@ To set up a temporary web server for serving data files:
 ```shell
 python -m http.server 8000
 ```
+
+
+To build under Linux with CMake and Ninja:
+
+```shell
+cmake -G "Ninja" -B build
+cmake --build build
+```
