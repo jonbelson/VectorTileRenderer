@@ -6,6 +6,7 @@
 module;
 
 #include <cassert>
+#include <cmath>
 
 #pragma warning(push)
 #pragma warning(disable : 4018 4244 4251 4267)
@@ -84,7 +85,7 @@ namespace mvt::style
 		/////int start{};	// Index of first glyph in block.
 
 		//std::uint32_t threshold{ 192 };
-		std::uint32_t haloSize;	// Halo size as lround(text-halo-width*10.0f)
+		std::uint32_t haloSize;	// Halo size as std::lround(text-halo-width*10.0f)
 
 		std::shared_ptr<core::bitmap::Bitmap> bitmap;
 	};
@@ -179,7 +180,7 @@ namespace mvt::style
 
 		float aa = 2.0f;
 
-		std::uint32_t haloSize10 = lround(haloSizePx*10.0f);
+		std::uint32_t haloSize10 = std::lround(haloSizePx*10.0f);
 
 		GlyphAtlas glyphAtlas;
 		glyphAtlas.haloSize = haloSize10;
@@ -423,7 +424,7 @@ namespace mvt::style
 		// haloSize		Pixel size of halo based on default MVT 24-pixel glyph.
 		std::shared_ptr<const GlyphAtlas> Lookup(const std::string& font, int rangeStart, float haloSizePx = 0.0f) const
 		{
-			std::uint32_t haloSize10 = lround(haloSizePx*10.0f);
+			std::uint32_t haloSize10 = std::lround(haloSizePx*10.0f);
 
 			auto result = _Lookup(font, haloSize10, rangeStart);
 			if (result) return result;

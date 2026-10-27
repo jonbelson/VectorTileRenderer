@@ -14,7 +14,7 @@ import std;
 import core.json;
 import formats.geojson.feature;
 
-export namespace geojson::parser
+namespace geojson::parser
 {
 	using namespace geojson;
 	using namespace core::json;

@@ -21,7 +21,7 @@ using namespace mvt;
 
 
 // https://docs.mapbox.com/style-spec/reference/layers/
-export namespace mvt::layer
+namespace mvt::layer
 {
 
 	export enum struct LayerType

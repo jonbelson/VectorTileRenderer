@@ -31,7 +31,7 @@ import unicode.casemapping;
 
 export import :placedsymbols;
 
-export namespace mvt::symbol
+namespace mvt::symbol
 {
 	using namespace core::geometry;
 	using namespace core::rendertarget;

@@ -45,7 +45,7 @@ namespace mvt::renderer
 		{
 			const feature::Feature* feature{};
 			const layer::Layer* layer{};
-			symbol::symbol::SymbolAttribs attribs;
+			symbol::SymbolAttribs attribs;
 		};
 
 		using BitmapCache = cache::Cache<std::size_t, bitmap::Bitmap>;

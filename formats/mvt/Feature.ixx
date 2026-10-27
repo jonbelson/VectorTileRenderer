@@ -16,7 +16,7 @@ export module formats.mvt.feature;
 
 import core.geometry;
 
-export namespace mvt::feature
+namespace mvt::feature
 {
 	export using ValueField = std::variant<std::monostate, std::string, float, uint64_t, int64_t, bool>;
 
