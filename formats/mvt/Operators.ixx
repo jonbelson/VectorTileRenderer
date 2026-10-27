@@ -10,8 +10,10 @@ module;
 //export module formats.mvt.expressions:operators;
 export module formats.mvt.operators;
 
-export import :camera;
 export import :common;
+export import :factory;
+
+export import :camera;
 export import :decision;
 export import :feature;
 export import :function;
@@ -40,10 +42,10 @@ using namespace core::json;
 
 
 
-// Recursively parse the JSON expression and create the appropriate Operator tree.
-export std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data);
-
-// Create an Operator that performs the task of a Function.
-export std::shared_ptr<IOperator> CreateFunctionOperatorFromJson(const json& data);
+//// Recursively parse the JSON expression and create the appropriate Operator tree.
+//export std::shared_ptr<IOperator> CreateOperatorFromJson(const json& data);
+//
+//// Create an Operator that performs the task of a Function.
+//export std::shared_ptr<IOperator> CreateFunctionOperatorFromJson(const json& data);
 
 

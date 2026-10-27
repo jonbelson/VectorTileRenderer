@@ -16,7 +16,8 @@ import core.geometry;
 import core.json;
 import core.logger;
 
-import formats.mvt.operators;
+//import formats.mvt.operators;
+import :factory;
 
 using namespace core::color;
 using namespace core::json;

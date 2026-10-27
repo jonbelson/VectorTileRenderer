@@ -158,6 +158,7 @@
     <ClCompile Include="..\formats\mvt\Operators-Common.ixx" />
     <ClCompile Include="..\formats\mvt\Operators-Decision.cpp" />
     <ClCompile Include="..\formats\mvt\Operators-Decision.ixx" />
+    <ClCompile Include="..\formats\mvt\Operators-Factory.ixx" />
     <ClCompile Include="..\formats\mvt\Operators-Feature.cpp" />
     <ClCompile Include="..\formats\mvt\Operators-Feature.ixx" />
     <ClCompile Include="..\formats\mvt\Operators-Function.cpp" />

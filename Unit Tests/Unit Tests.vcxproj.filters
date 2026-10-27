@@ -285,6 +285,9 @@
     <ClCompile Include="..\rendering\svg\SVGRenderTarget.ixx">
       <Filter>Project Modules\Rendering\SVG</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\Operators-Factory.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

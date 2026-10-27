@@ -407,6 +407,9 @@
     <ClCompile Include="rendering\svg\SVGRenderTarget.ixx">
       <Filter>Source Files\Renderers\SVG</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\Operators-Factory.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

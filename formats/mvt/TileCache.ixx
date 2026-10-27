@@ -3,11 +3,13 @@
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
+module;
+
+#include <cassert>
+
 export module formats.mvt.tilecache;
 
 import std;
-
-#include <cassert>
 
 import core.logger;
 import formats.mvt.tilefetcher;
