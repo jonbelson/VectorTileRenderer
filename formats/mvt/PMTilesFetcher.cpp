@@ -53,14 +53,14 @@ namespace mvt::tilefetcher
 
 	std::vector<std::byte> PmTilesFetcher::FetchTile(const mvt::tile::TileSpec& tileSpec)
 	{
-		uint64_t TileID = TileSpecToTileID(tileSpec);
+		std::uint64_t TileID = TileSpecToTileID(tileSpec);
 
 		return mPmTiles->FetchTile(*mFileReader, TileID);
 	}
 
 	std::vector<std::byte> PmTilesFetcher::FetchTile(int zoom, int x, int y)
 	{
-		uint64_t TileID = TileSpecToTileID({ zoom, y, x });
+		std::uint64_t TileID = TileSpecToTileID({ zoom, y, x });
 
 		return mPmTiles->FetchTile(*mFileReader, TileID);
 	}

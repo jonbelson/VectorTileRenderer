@@ -28,6 +28,9 @@ using namespace mvt::feature;
 
 using namespace std::literals;
 
+using std::int64_t;
+using std::uint64_t;
+
 struct VariantPrint
 {
 	std::string operator()(int i) const { return std::string("int: ") + std::to_string(i); }

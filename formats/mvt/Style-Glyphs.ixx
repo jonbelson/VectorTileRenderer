@@ -246,7 +246,7 @@ namespace mvt::style
 					/*
 					//float distPx = (sdf - Edge)*PixelsPerUnit;
 
-					//uint8_t alpha = static_cast<uint8_t>(smoothstep(-0.5f, 0.5f, distPx + haloSize)*255.0f);
+					//std::uint8_t alpha = static_cast<std::uint8_t>(smoothstep(-0.5f, 0.5f, distPx + haloSize)*255.0f);
 					*/
 
 					/*
@@ -265,7 +265,7 @@ namespace mvt::style
 						int i{};
 					}
 
-					uint8_t a = static_cast<uint8_t>(alpha*255.0f);
+					std::uint8_t a = static_cast<std::uint8_t>(alpha*255.0f);
 					*row++ = MakeRGBA(0, 0, 255, a);
 
 
@@ -278,7 +278,7 @@ namespace mvt::style
 					float distance = 1.0f*((thresh - val)/32.0f);
 					float alpha = std::min(std::max(0.0f, 0.5f - distance), 1.0f);
 
-					*row++ = MakeRGBA(255, 0, 0, static_cast<uint8_t>(alpha*255.0f));
+					*row++ = MakeRGBA(255, 0, 0, static_cast<std::uint8_t>(alpha*255.0f));
 */
 				}
 

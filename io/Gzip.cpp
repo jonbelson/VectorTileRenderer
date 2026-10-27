@@ -13,6 +13,7 @@ module io.gzip;
 
 namespace io::gzip
 {
+	using std::uint8_t;
 
 	std::vector<std::byte> Decompress(std::span<std::byte> input)
 	{

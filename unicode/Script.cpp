@@ -16,6 +16,7 @@ namespace unicode::script
 	// https://www.unicode.org/Public/16.0.0/ucd/Scripts.txt
 
 	using std::int32_t;
+	using std::uint32_t;
 
 	constexpr uint32_t UnicodeEnd = 0x10ffff;
 

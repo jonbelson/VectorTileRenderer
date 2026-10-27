@@ -13,7 +13,7 @@ import std;
 
 namespace core::logger
 {
-	export enum struct Level : uint8_t
+	export enum struct Level : std::uint8_t
 	{
 		Debug = 0, Info, Warning, Error
 	};

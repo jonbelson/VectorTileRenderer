@@ -18,7 +18,7 @@ import core.geometry;
 
 namespace mvt::feature
 {
-	export using ValueField = std::variant<std::monostate, std::string, float, uint64_t, int64_t, bool>;
+	export using ValueField = std::variant<std::monostate, std::string, float, std::uint64_t, std::int64_t, bool>;
 
 	export class Feature
 	{
@@ -27,7 +27,7 @@ namespace mvt::feature
 
 		std::map<std::string, ValueField> mValues;
 
-		uint64_t mId{};
+		std::uint64_t mId{};
 		std::string mLayer;
 		core::geometry::GeometryType mGeometryType { core::geometry::GeometryType::None };
 

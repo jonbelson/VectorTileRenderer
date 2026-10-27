@@ -292,8 +292,8 @@ struct ToValueCallable
 	Value operator()(const std::string& s) { return s; }
 	Value operator()(float f) { return f; }
 	Value operator()(bool b) { return b; }
-	Value operator()(uint64_t ui64) { return static_cast<float>(ui64); }
-	Value operator()(int64_t i64) { return static_cast<float>(i64); }
+	Value operator()(std::uint64_t ui64) { return static_cast<float>(ui64); }
+	Value operator()(std::int64_t i64) { return static_cast<float>(i64); }
 	Value operator()(auto) { return Value{}; }
 };
 
@@ -306,8 +306,8 @@ export Value ValueFieldToValue(ValueField valueField)
 	//if (std::holds_alternative<float>(valueField)) return std::get<float>(valueField);
 	//if (std::holds_alternative<bool>(valueField)) return std::get<bool>(valueField);
 
-	//if (std::holds_alternative<uint64_t>(valueField)) return static_cast<float>(std::get<uint64_t>(valueField));
-	//if (std::holds_alternative<int64_t>(valueField)) return static_cast<float>(std::get<int64_t>(valueField));
+	//if (std::holds_alternative<std::uint64_t>(valueField)) return static_cast<float>(std::get<std::uint64_t>(valueField));
+	//if (std::holds_alternative<std::int64_t>(valueField)) return static_cast<float>(std::get<std::int64_t>(valueField));
 
 	return Value{};
 }
@@ -406,7 +406,7 @@ export struct ToStringCallable
 {
 	Value operator()(bool b) const { return b ? "true" : "false"; }
 	Value operator()(float f) const { return std::format("{}", f); }
-	Value operator()(const Color& c) const { return std::format("rgba({},{},{},{})", static_cast<uint8_t>(c.Red*255), static_cast<uint8_t>(c.Green*255), static_cast<uint8_t>(c.Blue*255), c.Alpha ); }
+	Value operator()(const Color& c) const { return std::format("rgba({},{},{},{})", static_cast<std::uint8_t>(c.Red*255), static_cast<std::uint8_t>(c.Green*255), static_cast<std::uint8_t>(c.Blue*255), c.Alpha ); }
 	Value operator()(const std::string& s) const { return s; }
 
 	Value operator()(const std::monostate& m) const { return ""; }

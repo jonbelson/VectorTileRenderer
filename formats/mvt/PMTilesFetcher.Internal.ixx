@@ -19,6 +19,7 @@ namespace mvt::tilefetcher
 	using uint8_t = std::uint8_t;
 	using uint32_t = std::uint32_t;
 	using uint64_t = std::uint64_t;
+	
 
 	using TileSpec = mvt::tile::TileSpec;
 

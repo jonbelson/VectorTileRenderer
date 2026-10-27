@@ -42,8 +42,8 @@ namespace mvt::symbol
 	{
 		std::string operator()(const std::string& s) const { return s; }
 		std::string operator()(float f) const { return std::format("{}", f); }
-		std::string operator()(uint64_t ui64) const { return std::format("{}", ui64); }
-		std::string operator()(int64_t i64) const { return std::format("{}", i64); }
+		std::string operator()(std::uint64_t ui64) const { return std::format("{}", ui64); }
+		std::string operator()(std::int64_t i64) const { return std::format("{}", i64); }
 		std::string operator()(bool b) const { return std::format("{}", b); }
 		std::string operator()(auto) const { return ""; }
 	};

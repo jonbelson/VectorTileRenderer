@@ -32,6 +32,7 @@ namespace mvt::tile
 {
 	using std::size_t;
 	using std::uint32_t;
+	using std::uint64_t;
 
 	struct VariantPrint
 	{

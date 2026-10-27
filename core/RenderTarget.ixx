@@ -28,7 +28,7 @@ namespace core::rendertarget
 		Bevel, Round, Miter, None
 	};
 
-	export using BitmapHandle = uint32_t;
+	export using BitmapHandle = std::uint32_t;
 	export constexpr BitmapHandle InvalidHandle = 0;
 
 	export using Color = core::color::Color;
