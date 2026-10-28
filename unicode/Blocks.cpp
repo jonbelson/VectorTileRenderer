@@ -91,6 +91,7 @@ namespace unicode::blocks
 		return false;
 	}
 
+/*
 	// Check if a codepoint is 7-bit ASCII.
 	constexpr bool IsSimple(uint32_t codePoint)
 	{
@@ -98,7 +99,7 @@ namespace unicode::blocks
 	}
 
 	// Check if there are any non-'simple' codepoints in the passed UTF-32 array.
-	constexpr bool IsSimple(std::span<uint32_t> utf32)
+	constexpr bool IsSimple(std::span<std::uint32_t> utf32)
 	{
 		for (auto cp : utf32)
 		{
@@ -106,5 +107,5 @@ namespace unicode::blocks
 		}
 		
 		return true;
-	}
+	}*/
 };

@@ -668,8 +668,25 @@ namespace unicode::blocks
 
 	export bool HasSupportedLine(std::span<std::uint32_t> utf32);
 
-	export constexpr bool IsSimple(std::uint32_t codePoint);
-	export constexpr bool IsSimple(std::span<std::uint32_t> utf32);
+	//export constexpr bool IsSimple(std::uint32_t codePoint);
+	//export constexpr bool IsSimple(std::span<std::uint32_t> utf32);
+
+	// Check if a codepoint is 7-bit ASCII.
+	constexpr bool IsSimple(uint32_t codePoint)
+	{
+		return IsInBlock<Name::BasicLatin>(codePoint);
+	}
+
+	// Check if there are any non-'simple' codepoints in the passed UTF-32 array.
+	export constexpr bool IsSimple(std::span<std::uint32_t> utf32)
+	{
+		for (auto cp : utf32)
+		{
+			if (!IsSimple(cp)) return false;
+		}
+		
+		return true;
+	}
 
 	static_assert(GetBlock(Name::Adlam).start == 0x1E900);
 	static_assert(GetBlock(Name::AegeanNumbers).end   == 0x1013F);

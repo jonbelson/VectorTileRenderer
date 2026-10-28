@@ -284,7 +284,7 @@ namespace mvt::renderer
 					const auto& spec = spriteSpec.value();
 
 					renderTarget.SetActiveBitmap(context.spritesHandle);
-					renderTarget.SetDashArray(FloatArray{});
+					renderTarget.SetDashArray({});
 					renderTarget.SetLinePattern(spec->rect);
 					renderTarget.SetLineOpacity(lineOpacity);
 				}
@@ -389,6 +389,8 @@ namespace mvt::renderer
 					break;
 				case geometry::GeometryType::MultiPolygon:
 					symbol.Render(context, resolved.attribs, TileToWorld(resolved.feature->mMultiPolygon, wc, context.scaleFactor), placedSymbols);
+					break;
+				case geometry::GeometryType::None:
 					break;
 			}
 		}

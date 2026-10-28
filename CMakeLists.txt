@@ -8,7 +8,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD d0edc3af-4c50-42ea-a356-e2862fe7a444)
 
-project(vtr CXX)
+project(vtr C CXX)
 
 find_package(CURL 8.12.0 REQUIRED)
 find_package(PROJ REQUIRED CONFIG)
@@ -29,6 +29,7 @@ file(GLOB VTR_MODULES CONFIGURE_DEPENDS
 file(GLOB VTR_SOURCES CONFIGURE_DEPENDS
 	core/*.cpp
 	external/json.hpp
+	external/sqlite3.c
 	formats/mvt/*.cpp
 	formats/geojson/*.cpp
 	geo/*.cpp
