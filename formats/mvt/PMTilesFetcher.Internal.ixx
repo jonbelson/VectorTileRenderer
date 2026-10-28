@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Full terms: see LICENSE in the project root.
 
-export module formats.mvt.pmtilesfetcher.internal;
+export module formats.mvt.pmtilesfetcher:internal;
 
 import std;
 
@@ -16,11 +16,11 @@ import io.gzip;
 
 namespace mvt::tilefetcher
 {
+	using int32_t = std::int32_t;
 	using uint8_t = std::uint8_t;
 	using uint32_t = std::uint32_t;
 	using uint64_t = std::uint64_t;
 	
-
 	using TileSpec = mvt::tile::TileSpec;
 
 	export std::size_t CountForZoom(uint64_t zoom)

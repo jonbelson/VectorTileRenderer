@@ -37,11 +37,11 @@ namespace mvt::tilefetcher
 			InvalidUrl, MissingTemplates
 		};
 
-		virtual std::size_t GetHash(void) const;
+		virtual std::size_t GetHash(void) const override;
 
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
-		virtual std::vector<TileData> FetchTiles(const std::vector<mvt::tile::TileSpec>& tileSpecs);
+		virtual std::vector<TileData> FetchTiles(const std::vector<mvt::tile::TileSpec>& tileSpecs) override;
 
 		// url	Url of tile source, with {z}, {y}, {x} templates.
 		static std::expected<HttpTileFetcherPtr, Error> Create(std::string_view url);

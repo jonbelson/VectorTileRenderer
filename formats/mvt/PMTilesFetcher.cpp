@@ -9,7 +9,8 @@ import std;
 
 import formats.mvt.tile;
 import formats.mvt.tilefetcher;
-import formats.mvt.pmtilesfetcher.internal;
+//import formats.mvt.pmtilesfetcher.internal;
+import :internal;
 
 import io.gzip;
 
@@ -22,6 +23,8 @@ namespace mvt::tilefetcher
 	{
 		mPmTiles = { std::make_unique<PmTiles>() };
 	}
+	
+	PmTilesFetcher::~PmTilesFetcher() = default;
 
 	std::size_t PmTilesFetcher::GetHash(void) const
 	{

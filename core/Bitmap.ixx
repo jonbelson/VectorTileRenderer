@@ -54,6 +54,8 @@ namespace core::bitmap
 				case Format::RGBA:
 					mData.resize(mWidth*mHeight*4);
 					break;
+				default:
+					break;
 			}
 		}
 

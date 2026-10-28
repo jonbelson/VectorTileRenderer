@@ -16,7 +16,7 @@ module;
 
 module formats.mvt.tile;
 
-//import std;
+import std;
 
 import core.geometry;
 import formats.mvt.feature;
@@ -439,6 +439,8 @@ namespace mvt::tile
 									}
 								}
 								break;
+							case vector_tile::Tile_GeomType_UNKNOWN:
+								break;
 
 						}
 
@@ -514,7 +516,7 @@ namespace mvt::tile
 		double latitudeRad = latitudeDeg/180.0f*std::numbers::pi;
 
 		int x = (int)(n*(longitudeDeg + 180)/360.0);
-		int y = (int)(floor((1.0 - asinh(tan(latitudeRad))/std::numbers::pi)/2.0*n));
+		int y = (int)(std::floor((1.0 - std::asinh(std::tan(latitudeRad))/std::numbers::pi)/2.0*n));
 
 		return std::pair(x, y);
 	}
@@ -526,7 +528,7 @@ namespace mvt::tile
 		double latitudeRad = latitudeDeg/180.0f*std::numbers::pi;
 
 		double x = n*(longitudeDeg + 180)/360.0;
-		double y = ((1.0 - asinh(tan(latitudeRad))/std::numbers::pi)/2.0*n);
+		double y = ((1.0 - std::asinh(std::tan(latitudeRad))/std::numbers::pi)/2.0*n);
 
 		return std::pair(x, y);
 	}
@@ -560,7 +562,7 @@ namespace mvt::tile
 	{
 		int n = 1 << zoom;
 
-		double x = floor(n * (longitudeDeg + 180) / 360.0);
+		double x = std::floor(n * (longitudeDeg + 180) / 360.0);
 
 		return static_cast<int>(x);
 	}
@@ -571,7 +573,7 @@ namespace mvt::tile
 
 		double latitudeRad = latitudeDeg / 180.0f * std::numbers::pi;
 
-		double y = floor((1.0 - asinh(tan(latitudeRad)) / std::numbers::pi) / 2.0 * n);
+		double y = std::floor((1.0 - std::asinh(std::tan(latitudeRad)) / std::numbers::pi) / 2.0 * n);
 
 		return static_cast<int>(y);
 	}

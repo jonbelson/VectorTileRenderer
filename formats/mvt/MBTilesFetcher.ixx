@@ -44,7 +44,7 @@ namespace mvt::tilefetcher
 			FileNotFound, IncorrectFormat
 		};
 
-		virtual std::size_t GetHash(void) const;
+		virtual std::size_t GetHash(void) const override;
 
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;

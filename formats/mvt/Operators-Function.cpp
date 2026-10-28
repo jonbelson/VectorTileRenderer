@@ -41,9 +41,9 @@ bool OperatorFunction::ParseFromJson(const json& data)
 		mDefault = JsonTypeToValue(data.at("default"));
 	}
 
-	if (data.contains("colorSpace"))
+	if (std::string colorSpace; TryReadString(data, "colorSpace", colorSpace))
 	{
-		mColorSpace = ColorSpaceStringToColorSpace(data.at("colorSpace"));
+		mColorSpace = ColorSpaceStringToColorSpace(colorSpace);
 	}
 
 	if (data.contains("stops"))
@@ -234,6 +234,7 @@ static std::optional<std::string> GetFeatureType(core::geometry::GeometryType ge
 		case core::geometry::GeometryType::MultiPoint:		return { "Point" };
 		case core::geometry::GeometryType::MultiPolygon:	return { "Polygon" };
 		case core::geometry::GeometryType::LineString:		return { "LineString" };
+		case core::geometry::GeometryType::None:		return { "None" };
 	}
 
 	return {};

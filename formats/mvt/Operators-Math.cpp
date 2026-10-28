@@ -167,7 +167,7 @@ Value OperatorDivision::Evaluate(const mvt::feature::Feature& feature, float zoo
 
 Value OperatorRemainder::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return fmod(x, y); });
+	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return std::fmod(x, y); });
 
 	return value;
 
@@ -195,7 +195,7 @@ Value OperatorRemainder::Evaluate(const mvt::feature::Feature& feature, float zo
 
 Value OperatorPow::Evaluate(const mvt::feature::Feature& feature, float zoom)
 {
-	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return pow(x, y); });
+	auto value = _EvaluateBinary(mValues, feature, zoom, [](float x, float y) { return std::pow(x, y); });
 
 	return value;
 }

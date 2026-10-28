@@ -11,12 +11,14 @@ import formats.mvt.tile;
 import formats.mvt.tilefetcher;
 import io.file;
 
+import :internal;
+
 namespace mvt::tilefetcher
 {
 	export class PmTilesFetcher;
 	using PmTilesFetcherPtr = std::unique_ptr<PmTilesFetcher>;
 
-	struct PmTiles;
+	export struct PmTiles;
 
 	export class PmTilesFetcher : public ITileFetcher
 	{
@@ -30,14 +32,14 @@ namespace mvt::tilefetcher
 		bool Parse(std::string_view filePath);
 
 	public:
-		virtual ~PmTilesFetcher() = default;
+		virtual ~PmTilesFetcher();
 
 		enum Error
 		{
 			FileNotFound, CouldNotOpenFile, IncorrectFormat
 		};
 
-		virtual std::size_t GetHash(void) const;
+		virtual std::size_t GetHash(void) const override;
 
 		virtual std::vector<std::byte> FetchTile(const mvt::tile::TileSpec& tileSpec) override;
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override;

@@ -66,7 +66,7 @@ namespace mvt::tilefetcher
 			FileNotFound
 		};
 
-		virtual std::size_t GetHash() const { return std::hash<std::string>{}(mFilePath); };
+		virtual std::size_t GetHash() const override { return std::hash<std::string>{}(mFilePath); };
 
 		virtual std::vector<std::byte> FetchTile(int zoom, int x, int y) override
 		{

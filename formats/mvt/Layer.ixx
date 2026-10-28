@@ -15,6 +15,7 @@ import core.color;
 import core.rendertarget;
 import formats.mvt.expressions;
 import formats.mvt.feature;
+import formats.mvt.operators;
 
 using namespace core;
 using namespace mvt;
@@ -242,7 +243,7 @@ namespace mvt::layer
 		StringExpression mTextAnchor{ "center" };
 		ColorExpression mTextColor{ "#000000" };
 		StringExpression mTextField;
-		StringArrayExpression mTextFont{ StringArray({"Open Sans Regular", "Arial Unicode MS"}) };
+		StringArrayExpression mTextFont{ StringArray{"Open Sans Regular", "Arial Unicode MS"} };
 		FloatExpression mTextHaloBlur{ 0.0f };
 		ColorExpression mTextHaloColor{ "rgba(0, 0, 0, 0)" };
 		FloatExpression mTextHaloWidth{ 0 };
@@ -262,7 +263,7 @@ namespace mvt::layer
 		StringExpression mTextRotationAlignment{ "auto" };
 		FloatExpression mTextSize{ 16.0f };
 		StringExpression mTextTransform{ "none" };
-		StringArrayExpression mTextTranslate{ FloatArray({0, 0}) };
+		FloatArrayExpression mTextTranslate{ FloatArray({0, 0}) };
 		StringExpression mTextTranslateAnchor{ "map" };
 		StringArrayExpression mTextVariableAnchor;
 		StringExpression mSymbolVisibility;

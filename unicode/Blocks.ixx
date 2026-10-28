@@ -637,7 +637,7 @@ namespace unicode::blocks
 
 
 	// Fetch the codepoint range for the specified block name.
-	constexpr static Entry GetBlock(Name name)
+	constexpr Entry GetBlock(Name name)
 	{
 		const auto it = std::lower_bound(BlockRanges.begin(), BlockRanges.end(), name,
 								   [](const Entry& e, Name n) constexpr { return e.name < n; });

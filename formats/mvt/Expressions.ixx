@@ -127,8 +127,9 @@ export class StringArrayExpression : public Expression
 	StringArray mDefault;
 
 public:
-	StringArrayExpression(const nlohmann::json& data);
-	StringArrayExpression(const StringArray& array) : mDefault(array) {}
+	explicit StringArrayExpression(const nlohmann::json& data);
+	explicit StringArrayExpression(const StringArray& array) : mDefault(array) {}
+	explicit StringArrayExpression(StringArray&& array) : mDefault(std::move(array)) {}
 	StringArrayExpression(void) {}
 
 	StringArray GetValue(const mvt::feature::Feature& feature, float zoom) const;
