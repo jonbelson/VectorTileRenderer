@@ -132,6 +132,7 @@
     <ClCompile Include="..\core\JSON.ixx" />
     <ClCompile Include="..\core\Logger.ixx" />
     <ClCompile Include="..\core\RenderTarget.ixx" />
+    <ClCompile Include="..\external\sqlite3.c" />
     <ClCompile Include="..\formats\geojson\Feature.ixx" />
     <ClCompile Include="..\formats\geojson\Geometry.ixx" />
     <ClCompile Include="..\formats\geojson\Parser.cpp" />
@@ -184,7 +185,6 @@
     <ClCompile Include="..\formats\mvt\RenderContext.ixx" />
     <ClCompile Include="..\formats\mvt\Renderer.cpp" />
     <ClCompile Include="..\formats\mvt\Renderer.ixx" />
-    <ClCompile Include="..\formats\mvt\sqlite3.c" />
     <ClCompile Include="..\formats\mvt\Style-Glyphs.ixx" />
     <ClCompile Include="..\formats\mvt\Style.cpp" />
     <ClCompile Include="..\formats\mvt\Style.ixx" />

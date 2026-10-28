@@ -234,6 +234,7 @@
     <ClCompile Include="core\RenderTarget.ixx" />
     <ClCompile Include="CRenderAreaDlg.cpp" />
     <ClCompile Include="CRenderGeoJSON.cpp" />
+    <ClCompile Include="external\sqlite3.c" />
     <ClCompile Include="formats\geojson\Feature.ixx">
       <ModuleOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleOutputFile>
       <ModuleDependenciesFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(RelativeDir)</ModuleDependenciesFile>
@@ -298,7 +299,6 @@
     <ClCompile Include="formats\mvt\RenderContext.ixx" />
     <ClCompile Include="formats\mvt\Renderer.cpp" />
     <ClCompile Include="formats\mvt\Renderer.ixx" />
-    <ClCompile Include="formats\mvt\sqlite3.c" />
     <ClCompile Include="formats\mvt\Style-Glyphs.ixx" />
     <ClCompile Include="formats\mvt\Style.cpp" />
     <ClCompile Include="formats\mvt\Style.ixx" />

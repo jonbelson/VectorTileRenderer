@@ -75,9 +75,6 @@
     <ClCompile Include="..\formats\mvt\Tile.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
-    <ClCompile Include="..\formats\mvt\sqlite3.c">
-      <Filter>Project Modules\formats\mvt</Filter>
-    </ClCompile>
     <ClCompile Include="..\formats\mvt\vector_tile.pb.cc">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
@@ -288,6 +285,9 @@
     <ClCompile Include="..\formats\mvt\Operators-Factory.ixx">
       <Filter>Project Modules\formats\mvt</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\sqlite3.c">
+      <Filter>Project Modules\external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -331,6 +331,9 @@
     </Filter>
     <Filter Include="Project Modules\Rendering\SVG">
       <UniqueIdentifier>{cdd94b8f-2188-4f89-96f1-5de7a426c8a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Project Modules\external">
+      <UniqueIdentifier>{9f814f0f-6859-4661-b3a6-5bc247a7037b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

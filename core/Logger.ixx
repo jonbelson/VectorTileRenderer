@@ -23,6 +23,7 @@ namespace core::logger
 	{
 	public:
 		virtual void Write(std::string_view sv) = 0;
+		virtual ~LoggerImpl() = default;
 	};
 
 

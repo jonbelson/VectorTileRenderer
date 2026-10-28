@@ -164,9 +164,6 @@
     <ClCompile Include="formats\mvt\MBTilesFetcher.cpp">
       <Filter>Source Files\Formats\Mvt</Filter>
     </ClCompile>
-    <ClCompile Include="formats\mvt\sqlite3.c">
-      <Filter>Source Files\Formats\Mvt</Filter>
-    </ClCompile>
     <ClCompile Include="io\Gzip.ixx">
       <Filter>Source Files\IO</Filter>
     </ClCompile>
@@ -409,6 +406,9 @@
     </ClCompile>
     <ClCompile Include="formats\mvt\Operators-Factory.ixx">
       <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
+    <ClCompile Include="external\sqlite3.c">
+      <Filter>Source Files\External</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

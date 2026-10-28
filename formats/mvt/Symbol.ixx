@@ -216,6 +216,8 @@ namespace mvt::symbol
 				case TextTransform::Lowercase:
 					textField = unicode::casemapping::ToLower(textField);
 					break;
+				default:
+					break;
 			}
 
 			for (const auto& anchor : layer->mTextVariableAnchor.GetValue(feature, zoom))
@@ -409,6 +411,9 @@ namespace mvt::symbol
 					case TextJustify::Right:
 						point.x += textWidth - lineWidth;
 						break;
+					case TextJustify::Auto:
+						core::logger::Debug("TextJustify::Auto not implemented");
+						break;
 				}
 			}
 
@@ -562,6 +567,8 @@ namespace mvt::symbol
 					case TextAnchor::Bottom:
 						offY -= axialOffset;
 						break;
+					default:
+						break;
 				}
 
 				switch (textAnchor)
@@ -579,6 +586,8 @@ namespace mvt::symbol
 						break;
 					case TextAnchor::Right:
 						offX -= axialOffset;
+						break;
+					default:
 						break;
 				}
 

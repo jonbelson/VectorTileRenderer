@@ -34,6 +34,7 @@ Value OperatorGeometryType::Evaluate(const mvt::feature::Feature& feature, float
 		case GeometryType::MultiPoint:		return "Point";
 		case GeometryType::LineString:		return "LineString";
 		case GeometryType::MultiPolygon:	return "Polygon";
+		case GeometryType::None:			return "None";
 	}
 
 	return {};
