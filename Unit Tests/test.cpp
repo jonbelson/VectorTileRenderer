@@ -15,8 +15,8 @@ import core.geometry;
 import formats.mvt.expressions;
 import formats.mvt.operators;
 import formats.mvt.feature;
-//import formats.mvt.pmtilesfetcher;
-import formats.mvt.pmtilesfetcher.internal;
+import formats.mvt.tilefetcher;
+import formats.mvt.pmtilesfetcher;
 import formats.mvt.symbol;
 import formats.mvt.tile;
 

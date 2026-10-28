@@ -11,7 +11,7 @@ import formats.mvt.tile;
 import formats.mvt.tilefetcher;
 import io.file;
 
-import :internal;
+export import :internal;
 
 namespace mvt::tilefetcher
 {
