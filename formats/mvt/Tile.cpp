@@ -141,6 +141,8 @@ namespace mvt::tile
 		uint32_t Count{};
 		int32_t dx{};
 		int32_t dy{};
+		int32_t cx{};
+		int32_t cy{};
 
 		multiPoint.points.clear();
 
@@ -155,7 +157,10 @@ namespace mvt::tile
 			ok = decoder.GetParameters(dx, dy);
 			if (!ok) return false;
 
-			multiPoint.points.emplace_back(geometry::Point(dx*scaler, dy*scaler));
+			cx += dx;
+			cy += dy;
+
+			multiPoint.points.emplace_back(geometry::Point(cx*scaler, cy*scaler));
 		}
 
 		return true;

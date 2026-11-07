@@ -20,6 +20,18 @@ import formats.mvt.renderer;
 import io.resource;
 import rendering.qt;
 
+import std;
+
+class VSCodeLoggerImpl : public core::logger::LoggerImpl
+{
+public:
+	VSCodeLoggerImpl() {}
+
+	virtual void Write(std::string_view sv) override
+	{
+		std::cout << sv;
+	}
+};
 
 class MapWidgetViewModel
 {
@@ -48,6 +60,8 @@ public:
 	MapWidgetViewModel(float dpi = 1.0f)
 	{
 		SetSize(100, 100);
+
+		core::logger::Logger::Get().SetImpl(new VSCodeLoggerImpl());
 
 		mDpiScale = dpi;
 		mTileSize = lround(dpi*mTileSize);
@@ -204,7 +218,7 @@ MapWidget::MapWidget(QWidget* parent)
 	///setAutoFillBackground(false);
 
 	mDpiScale = window()->devicePixelRatio();
-	mViewModel = std::make_unique<MapWidgetViewModel>(1.0f /*mDpiScale*/);
+	mViewModel = std::make_unique<MapWidgetViewModel>(mDpiScale);
 
 	setMouseTracking(true);
 }

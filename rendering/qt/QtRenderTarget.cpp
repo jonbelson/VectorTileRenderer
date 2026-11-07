@@ -48,6 +48,10 @@ namespace rendering::qt
 		return QRectF(rect.x, rect.y, rect.width, rect.height);
 	}
 
+	QRect ToRect(const core::geometry::Rect& rect)
+	{
+		return QRect(std::lround(rect.x), std::lround(rect.y), std::lround(rect.width), std::lround(rect.height));
+	}
 
 	class QtImpl
 	{
@@ -61,9 +65,9 @@ namespace rendering::qt
 		QColor mFillOutlineColor;
 
 		QPen mLinePen;
-		//QPen mFillPen;
 		QBrush mFillBrush{Qt::SolidPattern};
-		//QPen mFillOutlinePen;
+
+		QPixmap mFillPattern;
 
 		float mLineOpacity{1.0f};
 		float mFillOpacity{1.0f};
@@ -76,7 +80,10 @@ namespace rendering::qt
 		QList<qreal> mDashPattern;
 
 		enum struct LineMode { Colour, Pattern };
-		LineMode mLineMode{LineMode::Colour};
+		LineMode mLineMode{ LineMode::Colour };
+
+		enum struct FillMode { Solid, Pattern };
+		FillMode mFillMode{ FillMode::Solid };
 
 		core::rendertarget::BitmapHandle mNextBitmapHandle = InvalidHandle;
 		core::rendertarget::BitmapHandle mBitmapHandle = InvalidHandle;
@@ -172,10 +179,18 @@ namespace rendering::qt
 	
 		void ApplyBrushStyle(QBrush& brush)
 		{
-			QColor color(mFillColor);
-			color.setAlphaF(mFillOpacity);
+			if (mFillMode == FillMode::Solid)
+			{
+				QColor color(mFillColor);
+				color.setAlphaF(mFillOpacity);
 
-			brush.setColor(color);
+				brush.setColor(color);
+				brush.setStyle(Qt::BrushStyle::SolidPattern);
+			}
+			else
+			{
+				brush.setTexture(mFillPattern);
+			}
 		}
 
 		void ApplyPenStyle(QPen& pen)
@@ -228,13 +243,30 @@ namespace rendering::qt
 
 		void SetLineWidth(float lineWidth) { mLineWidth = lineWidth; }
 
-		void SetFillColor(const Color& color) { mFillColor = ToQColor(color); }
+		void SetFillColor(const Color& color)
+		{
+			mFillColor = ToQColor(color);
+			mFillMode = FillMode::Solid;
+		}
+
 		void SetFillOutlineColor(const Color& color) { mFillOutlineColor = ToQColor(color); }
 		void SetFillOpacity(float opacity) { mFillOpacity = opacity; }
 
 		void SetFillPattern(const Rect& src)
 		{
-	
+			if (!mPainter) return;
+
+			if (mBitmapHandle == rendertarget::InvalidHandle) return;
+
+			auto it = mPixmaps.find(mBitmapHandle);
+			if (it == mPixmaps.end()) return;
+
+			auto pixmap = it->second.get();
+			if (!pixmap) return;
+			{
+				mFillPattern = pixmap->copy(ToRect(src));
+				mFillMode = FillMode::Pattern;
+			}
 		}
 
 		Qt::PenCapStyle ToPenCapStyle(LineCap lineCap)
