@@ -1,7 +1,9 @@
 
-#include <QWidget>
-#include <QVBoxLayout>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QTextEdit>
+#include <QVBoxLayout>
+#include <QWidget>
 
 #include "Window.h"
 
@@ -12,12 +14,33 @@ Window::Window()
 {
 	setWindowTitle("Map Viewer");
 
-	
+	QVBoxLayout* mainBox = new QVBoxLayout();
 
-	QVBoxLayout* mMainBox = new QVBoxLayout();
-	mMainBox->addWidget(new MapWidget(this));
-	//mMainBox->addWidget(new QTextEdit(this));
+	QHBoxLayout* controlBox = new QHBoxLayout();
 
-	setLayout(mMainBox);
+	mEditUri = new QLineEdit();
+	mButtonGo = new QPushButton("Go");
+	mMapWidget = new MapWidget(this);
+
+	connect(mButtonGo, &QPushButton::clicked, this, &Window::Go);
+
+	controlBox->addWidget(mEditUri);
+	controlBox->addWidget(mButtonGo);
+
+	mainBox->addLayout(controlBox);
+
+	mainBox->addWidget(mMapWidget);
+
+	setLayout(mainBox);
+}
+
+void Window::Go(void)
+{
+	QString uri = mEditUri->text();
+	if (!uri.isEmpty())
+	{
+		mMapWidget->SetUri(uri);
+	}
+
 }
 

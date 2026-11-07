@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QGroupBox>
 
+class MapWidget;
+class QLineEdit;
+class QPushButton;
 
 class Window : public QWidget
 {
@@ -14,6 +17,12 @@ public:
 
 private:
 	//QVBoxLayout* mMainBox{};
+
+	QLineEdit* mEditUri{};
+	QPushButton* mButtonGo{};
+	MapWidget* mMapWidget{};
+
+	void Go(void);
 };
 
 #endif	// WINDOW_H

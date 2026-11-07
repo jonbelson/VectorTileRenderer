@@ -62,7 +62,7 @@ namespace rendering::qt
 
 		QPen mLinePen;
 		//QPen mFillPen;
-		QBrush mFillBrush;
+		QBrush mFillBrush{Qt::SolidPattern};
 		//QPen mFillOutlinePen;
 
 		float mLineOpacity{1.0f};
@@ -82,6 +82,19 @@ namespace rendering::qt
 		core::rendertarget::BitmapHandle mBitmapHandle = InvalidHandle;
 
 		std::map<BitmapHandle, std::unique_ptr<QPixmap>> mPixmaps;
+
+		std::stack<QTransform> mTransforms;
+
+		void PushTransform(const QTransform& transform)
+		{
+			if (mPainter)
+			{
+				// Push current transforms.
+				mTransforms.push(mPainter->transform());
+
+				mPainter->setTransform(transform, true);
+			}
+		}
 
 		std::vector<QPointF> CreatePointArray(const core::geometry::PointArray& line)
 		{
@@ -108,9 +121,15 @@ namespace rendering::qt
 
 		QPolygonF CreatePolygonF(const geometry::PointArray& outline)
 		{
-			QPolygonF polygon(CreateQList(outline));
+			if (!outline.empty())
+			{
+				auto list = CreateQList(outline);
+				list.append(list.front());
+				QPolygonF polygon(list);
+				return polygon;
+			}
 
-			return polygon;
+			return QPolygonF();
 		}
 
 		QPainterPath CreatePainterPath(const geometry::Polygon& polygon)
@@ -125,6 +144,9 @@ namespace rendering::qt
 				path.addPolygon(CreatePolygonF(ring));
 				path.closeSubpath();
 			}
+
+			path.setFillRule(Qt::FillRule::OddEvenFill);
+			//path.setFillRule(Qt::FillRule::WindingFill);
 
 			return path;
 
@@ -150,7 +172,10 @@ namespace rendering::qt
 	
 		void ApplyBrushStyle(QBrush& brush)
 		{
-			brush.setColor(mFillColor);
+			QColor color(mFillColor);
+			color.setAlphaF(mFillOpacity);
+
+			brush.setColor(color);
 		}
 
 		void ApplyPenStyle(QPen& pen)
@@ -165,6 +190,10 @@ namespace rendering::qt
 			}
 
 			pen.setWidth(mLineWidth);
+
+			QColor color(mLineColor);
+			color.setAlphaF(mLineOpacity);
+			pen.setColor(color);
 		}
 
 	public:
@@ -191,15 +220,18 @@ namespace rendering::qt
 
 		void SetLineColor(const Color& color) { mLineColor = ToQColor(color); }
 		void SetLineOpacity(float opacity) { mLineOpacity = opacity; }
+
 		void SetLinePattern(const geometry::Rect& src)
 		{
 
 		}
+
 		void SetLineWidth(float lineWidth) { mLineWidth = lineWidth; }
 
 		void SetFillColor(const Color& color) { mFillColor = ToQColor(color); }
 		void SetFillOutlineColor(const Color& color) { mFillOutlineColor = ToQColor(color); }
 		void SetFillOpacity(float opacity) { mFillOpacity = opacity; }
+
 		void SetFillPattern(const Rect& src)
 		{
 	
@@ -259,7 +291,6 @@ namespace rendering::qt
 				mPixmaps[handle] = std::make_unique<QPixmap>(pixmap);
 				SetActiveBitmap(handle);
 				return handle;
-
 			}
 
 			return InvalidHandle;
@@ -283,7 +314,14 @@ namespace rendering::qt
 
 		void FillBackground(void)
 		{
-			if (mPainter) mPainter->fillRect(mPainter->window(), mFillColor);
+			//if (mPainter) mPainter->fillRect(mPainter->window(), mFillColor);
+			if (mPainter)
+			{
+				mPainter->save();
+				mPainter->resetTransform();
+				mPainter->fillRect(0, 0, mWidth, mHeight, mFillColor);
+				mPainter->restore();
+			}
 		}
 
 		void DrawLine(const geometry::LineString* lineString)
@@ -294,27 +332,21 @@ namespace rendering::qt
 			{
 				for (const auto& line : lineString->lines)
 				{
-					//auto strokeStyle = CreateStroke();
-					//if (strokeStyle)
+					if (mLineMode == LineMode::Pattern)
 					{
-						if (mLineMode == LineMode::Pattern)
-						{
 
-
-						}
-						else if (mLineMode == LineMode::Colour)
-						{
-							ApplyPenStyle(mLinePen);
-
-							mLinePen.setColor(mLineColor);
-							mPainter->setPen(mLinePen);
-
-							auto points = CreatePointArray(line);
-							mPainter->drawPolyline(points.data(), static_cast<int>(points.size()));
-						}
 
 					}
+					else if (mLineMode == LineMode::Colour)
+					{
+						ApplyPenStyle(mLinePen);
 
+						mLinePen.setColor(mLineColor);
+						mPainter->setPen(mLinePen);
+
+						auto points = CreatePointArray(line);
+						mPainter->drawPolyline(points.data(), static_cast<int>(points.size()));
+					}
 				}
 			}
 		}
@@ -340,7 +372,6 @@ namespace rendering::qt
 
 				}
 			}
-
 		}
 
 		void FillPolygon(const geometry::Polygon& polygon)
@@ -348,8 +379,6 @@ namespace rendering::qt
 			if (mPainter)
 			{
 				ApplyBrushStyle(mFillBrush);
-
-				mFillBrush.setColor(mFillColor);
 
 				auto path = CreatePainterPath(polygon);
 				mPainter->fillPath(path, mFillBrush);
@@ -380,36 +409,53 @@ namespace rendering::qt
 			}
 		}
 
-
-
 		void PushScale(float scale)
 		{
+			PushTransform(QTransform::fromScale(scale, scale));
 		}
 
 		void PushTranslation(float x, float y)
 		{
+			PushTransform(QTransform::fromTranslate(x, y));
 		}
 
-		void PushRotation(float angleRad)
+		void PushRotation(float angleDeg)
 		{
+			QTransform transform;
+			transform.rotate(angleDeg);
+
+			PushTransform(transform);
 		}
 
 		void PopTransform(void)
 		{
+			if (mPainter)
+			{
+				if (!mTransforms.empty())
+				{
+					mPainter->setTransform(mTransforms.top());
+
+					mTransforms.pop();
+				}
+			}
 		}
 
 		void ClearTransforms(void)
 		{
+			if (mPainter)
+			{
+				mPainter->setTransform(QTransform());
+			}
 		}
 
 		void SetClipRect(const geometry::Rect& clip)
 		{
-
+			if (mPainter) mPainter->setClipRect(ToRectF(clip));
 		}
 
 		void ClearClipRect(void)
 		{
-
+			if (mPainter) mPainter->setClipping(false);
 		}
 
 		void Save(const std::string& outputName)
@@ -571,7 +617,7 @@ namespace rendering::qt
 	}
 	void QtRenderTarget::DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour)
 	{
-
+		if (mImpl) mImpl->DrawBitmap(src, dest);
 	}
 
 	void QtRenderTarget::PushScale(float scale)
@@ -584,9 +630,9 @@ namespace rendering::qt
 		if (mImpl) mImpl->PushTranslation(x, y);
 	}
 
-	void QtRenderTarget::PushRotation(float angleRad)
+	void QtRenderTarget::PushRotation(float angleDeg)
 	{
-		if (mImpl) mImpl->PushRotation(angleRad);
+		if (mImpl) mImpl->PushRotation(angleDeg);
 	}
 
 	void QtRenderTarget::PopTransform(void)
