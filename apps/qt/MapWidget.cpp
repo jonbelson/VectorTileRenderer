@@ -231,6 +231,8 @@ MapWidget::~MapWidget()
 void MapWidget::SetUri(QString uri)
 {
 	mViewModel->SetServerAddress(uri.toStdString());
+
+	update();
 }
 
 void MapWidget::paintEvent(QPaintEvent* event)
@@ -239,20 +241,6 @@ void MapWidget::paintEvent(QPaintEvent* event)
 
 	painter.begin(this);
 	painter.setRenderHint(QPainter::Antialiasing);
-
-painter.fillRect(event->rect(), QColor("Pink"));
-
-	QPainterPath path;
-	QList<QPointF> points = { {50.0f, 60.0f}, {150.0f, 100.0f}, {120.0f, 150.0f}, {40.0f, 80.0f} };
-	QPolygonF polygon(points);
-	path.addPolygon(polygon);
-
-	path.closeSubpath();
-
-//	path.setFillRule(Qt::FillRule::OddEvenFill);
-//	path.setFillRule(Qt::FillRule::WindingFill);
-
-//	painter.fillPath(path, QBrush(QColor("Red")));
 
 	mViewModel->Render(&painter);
 

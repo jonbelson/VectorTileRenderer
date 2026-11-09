@@ -31,11 +31,12 @@ namespace rendering::qt
 
 	QColor ToQColor(const Color& color)
 	{
-		int red = static_cast<int>(color.Red*255);
-		int green = static_cast<int>(color.Green*255);
-		int blue = static_cast<int>(color.Blue*255);
+		int red = lround(color.Red*255);
+		int green = lround(color.Green*255);
+		int blue = lround(color.Blue*255);
+		int alpha = lround(color.Alpha*255.0f);
 
-		return QColor(red, green, blue);
+		return QColor(red, green, blue, alpha);
 	}
 
 	QPointF ToPointF(const core::geometry::Point& point)
@@ -68,6 +69,7 @@ namespace rendering::qt
 		QBrush mFillBrush{Qt::SolidPattern};
 
 		QPixmap mFillPattern;
+		QPixmap mLinePattern;
 
 		float mLineOpacity{1.0f};
 		float mFillOpacity{1.0f};
@@ -175,7 +177,6 @@ namespace rendering::qt
 
 			return QPixmap();
 		}
-
 	
 		void ApplyBrushStyle(QBrush& brush)
 		{
@@ -206,9 +207,17 @@ namespace rendering::qt
 
 			pen.setWidth(mLineWidth);
 
-			QColor color(mLineColor);
-			color.setAlphaF(mLineOpacity);
-			pen.setColor(color);
+			if (mLineMode == LineMode::Colour)
+			{
+				QColor color(mLineColor);
+				//color.setAlphaF(mLineOpacity);
+				pen.setColor(color);
+			}
+			else
+			{
+				QBrush brush(mLinePattern);
+				pen.setBrush(brush);
+			}
 		}
 
 	public:
@@ -233,15 +242,31 @@ namespace rendering::qt
 			return valid;
 		}
 
-		void SetLineColor(const Color& color) { mLineColor = ToQColor(color); }
+		void SetLineColor(const Color& color)
+		{
+			mLineColor = ToQColor(color);
+			mLineMode = LineMode::Colour;
+		}
+	
 		void SetLineOpacity(float opacity) { mLineOpacity = opacity; }
+		void SetLineWidth(float lineWidth) { mLineWidth = lineWidth; }
 
 		void SetLinePattern(const geometry::Rect& src)
 		{
+			if (!mPainter) return;
 
+			if (mBitmapHandle == rendertarget::InvalidHandle) return;
+
+			auto it = mPixmaps.find(mBitmapHandle);
+			if (it == mPixmaps.end()) return;
+
+			auto pixmap = it->second.get();
+			if (!pixmap) return;
+			{
+				mLinePattern = pixmap->copy(ToRect(src));
+				mLineMode = LineMode::Pattern;
+			}
 		}
-
-		void SetLineWidth(float lineWidth) { mLineWidth = lineWidth; }
 
 		void SetFillColor(const Color& color)
 		{
@@ -346,7 +371,6 @@ namespace rendering::qt
 
 		void FillBackground(void)
 		{
-			//if (mPainter) mPainter->fillRect(mPainter->window(), mFillColor);
 			if (mPainter)
 			{
 				mPainter->save();
@@ -364,12 +388,12 @@ namespace rendering::qt
 			{
 				for (const auto& line : lineString->lines)
 				{
-					if (mLineMode == LineMode::Pattern)
-					{
+					//if (mLineMode == LineMode::Pattern)
+					//{
 
 
-					}
-					else if (mLineMode == LineMode::Colour)
+					//}
+					//else if (mLineMode == LineMode::Colour)
 					{
 						ApplyPenStyle(mLinePen);
 
@@ -419,9 +443,17 @@ namespace rendering::qt
 
 		void DrawBitmap(const geometry::Rect& dest)
 		{
+			if (mBitmapHandle == rendertarget::InvalidHandle) return;
+
+			auto it = mPixmaps.find(mBitmapHandle);
+			if (it == mPixmaps.end()) return;
+
+			auto pixmap = it->second.get();
+			if (!pixmap) return;
+
 			if (mPainter)
 			{
-				//mPainter->drawPixmap(src, dest);
+				mPainter->drawPixmap(ToRect(dest), *pixmap);
 			}
 		}
 
@@ -439,6 +471,41 @@ namespace rendering::qt
 			{
 				mPainter->drawPixmap(ToRectF(dest), *pixmap, ToRectF(src));
 			}
+		}
+
+		void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour)
+		{
+			if (src.IsEmpty() || dest.IsEmpty()) return;
+
+			if (mBitmapHandle == rendertarget::InvalidHandle) return;
+
+			auto it = mPixmaps.find(mBitmapHandle);
+			if (it == mPixmaps.end()) return;
+
+			auto pixmap = it->second.get();
+			if (!pixmap) return;
+
+			if (mPainter)
+			{
+				QPixmap buffer(src.width, src.height);
+				buffer.fill(Qt::transparent);
+
+				{
+					QPainter p;
+					bool b = p.begin(&buffer);
+					if (b)
+					{
+						p.fillRect(buffer.rect(), ToQColor(colour));
+
+						p.setCompositionMode(QPainter::CompositionMode::CompositionMode_DestinationIn);
+
+						p.drawPixmap(buffer.rect(), *pixmap, ToRect(src));
+						p.end();
+					}
+				}
+
+				mPainter->drawPixmap(ToRectF(dest), buffer, buffer.rect());
+			}	
 		}
 
 		void PushScale(float scale)
@@ -647,9 +714,10 @@ namespace rendering::qt
 	{
 		if (mImpl) mImpl->DrawBitmap(src, dest);
 	}
+
 	void QtRenderTarget::DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour)
 	{
-		if (mImpl) mImpl->DrawBitmap(src, dest);
+		if (mImpl) mImpl->DrawSymbolWithRGB(src, dest, colour);
 	}
 
 	void QtRenderTarget::PushScale(float scale)

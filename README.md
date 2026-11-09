@@ -10,7 +10,7 @@ Please use Issues for bug reports.
 ## Purpose
 
 This project is an implementation of MapBox vector tile renderer. It's written
-in C++23 in Visual Studio, but it should be quite portable to other platforms.
+in C++23 and has been tested under Windows (Visual Studio) and linux (VS Code/clang-22).
 
 It supports MapBox Function syntax and the majority of Expression operations
 relating to 2D tiles.
@@ -20,11 +20,11 @@ I've tested it with MVT mapping from ESRI (Basemap service), Ordnance Survey
 
 ## Features
 
-- Support for loading vector tiles from from web servers or local MBTILE files.
+- Support for loading vector tiles from from web servers or local MBTILE/PMTILES files.
 - Support for MapBox glyphs and sprites.
 - Flexible rendering output via abstract RenderTarget interface. Current
-implementations are a raster renderer (using Direct2D) and a SVG renderer
-(geometry only at this stage).
+implementations are a raster renderer (using Direct2D), a QPainter renderer and
+an SVG renderer (geometry only at this stage).
 - Basic support for importing and rendering GeoJSON.
 
 ## Samples
@@ -59,12 +59,17 @@ OpenFreeMap (https://openfreemap.org/) © OpenMapTiles (https://www.openmaptiles
 There are also platform-agnostic utility classes like Color, Bitmap, Geometry
 and Logger.
 
+`Apps` contains platform-specific demo code, currently Qt only.
+
 `Formats` contains implementations of the MVT and GeoJSON formats.
 
 `Geo` has classes for LatLong and a wrapper for PROJ to handle coordinate
 transformations.
 
 `IO` is concerned with loading data from a web server or from a file.
+
+`Rendering` contains platform-specific implementations of RenderTarget, currently Direct2D,
+Qt QPainter and SVG.
 
 `Unicode` contains functions for converting between UTF-8 and UTF-32 and
 for performing upper/lowercase conversions.
@@ -89,6 +94,14 @@ I use AI clients for research and reference, but the project contains very
 little AI-generated code (mostly Direct2D boilerplate for setup and saving
 the image).
 
+To set up a temporary web server for serving data files:
+
+```shell
+python -m http.server 8000
+```
+
+# Windows
+
 protoc installed with 'winget install protoc'
 
 `protoc --cpp_out=. vector_tile.proto`
@@ -104,17 +117,13 @@ zlib
 protobuf
 proj
 
-
-To set up a temporary web server for serving data files:
-
-```shell
-python -m http.server 8000
-```
-
+# Linux/Unix
 
 To build under Linux with CMake and Ninja:
 
 ```shell
+export CC=`which clang-22`
+export CXX=`which clang++-22'
 cmake -G "Ninja" -B build
 cmake --build build
 ```
