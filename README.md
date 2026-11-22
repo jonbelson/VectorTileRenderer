@@ -16,7 +16,8 @@ It supports MapBox Function syntax and the majority of Expression operations
 relating to 2D tiles.
 
 I've tested it with MVT mapping from ESRI (Basemap service), Ordnance Survey
-(Open Zoomstack) and OpenFreeMap (https://openfreemap.org/).
+(Open Zoomstack) and OpenFreeMap (https://openfreemap.org/) among others. It also supports
+MBTiles and PMTiles formats, though currently from local files only.
 
 ## Features
 
@@ -26,6 +27,7 @@ I've tested it with MVT mapping from ESRI (Basemap service), Ordnance Survey
 implementations are a raster renderer (using Direct2D), a QPainter renderer and
 an SVG renderer (geometry only at this stage).
 - Basic support for importing and rendering GeoJSON.
+- Basic support for Arabic text shaping.
 
 ## Samples
 
@@ -52,6 +54,12 @@ Contains OS data © Crown copyright and database right 2026 (http://www.national
 ![OpenFreeMap](images/OpenFreeMap-Liberty-4.png)
 
 OpenFreeMap (https://openfreemap.org/) © OpenMapTiles (https://www.openmaptiles.org/) Data from OpenStreetMap (https://www.openstreetmap.org/copyright)
+
+#### Protomaps/PMTiles
+
+![Protomaps](images/Protomaps-Basemap-1.png)
+
+Protomaps https://github.com/protomaps/basemaps © OpenStreetMap https://openstreetmap.org
 
 ## Code Structure
 
