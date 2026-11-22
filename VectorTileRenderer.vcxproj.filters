@@ -410,6 +410,9 @@
     <ClCompile Include="external\sqlite3.c">
       <Filter>Source Files\External</Filter>
     </ClCompile>
+    <ClCompile Include="formats\mvt\Interpolate.ixx">
+      <Filter>Source Files\Formats\Mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VectorTileRenderer.rc">

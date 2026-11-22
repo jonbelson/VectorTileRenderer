@@ -175,6 +175,7 @@ namespace mvt::renderer
 			fillColor.Alpha = fillOpacity;
 
 			float lineWidth = layer->mCircleStrokeWidth.GetValue(feature, zoom);
+			lineWidth *= context.scaleFactor;
 
 			renderTarget.SetFillColor(fillColor);
 			renderTarget.SetLineColor(lineColor);
@@ -232,7 +233,7 @@ namespace mvt::renderer
 
 				renderTarget.SetFillColor(fillColor);
 				renderTarget.SetLineColor(outlineColor);
-				renderTarget.SetLineWidth(1.0f);		// https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-color
+				renderTarget.SetLineWidth(1.0f*context.scaleFactor);		// https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-color
 
 				auto transformed = TileToWorld(feature.mMultiPolygon, wc, context.scaleFactor);
 				renderTarget.FillPolygon(&transformed);
@@ -262,6 +263,7 @@ namespace mvt::renderer
 			lineColor.Alpha *= lineOpacity;
 
 			float lineWidth = layer->mLineWidth.GetValue(feature, zoom);
+			lineWidth *= context.scaleFactor;
 
 			auto dashArray = layer->mLineDashArray.GetValue(feature, zoom);
 
@@ -370,7 +372,7 @@ namespace mvt::renderer
 
 		for (const auto& [feature, layer] : symbols)
 		{
-			resolvedSymbols.emplace_back(ResolvedSymbol{ feature, layer, mvt::symbol::SymbolAttribs(layer, *feature, zoom)});
+			resolvedSymbols.emplace_back(ResolvedSymbol{ feature, layer, mvt::symbol::SymbolAttribs(layer, *feature, zoom, context.scaleFactor)});
 		}
 
 		PreFetchGlyphs(resolvedSymbols, zoom);
@@ -552,11 +554,14 @@ namespace mvt::renderer
 			{
 				renderTarget.SetActiveBitmap(bitmapHandle);
 
-				float destX = static_cast<float>(wc.x*wc.tileSize);
-				float destY = static_cast<float>(wc.y*wc.tileSize);
+				float targetTileSize = mTileSize*context.scaleFactor; 
+
+				float destX = static_cast<float>(wc.x*targetTileSize);
+				float destY = static_cast<float>(wc.y*targetTileSize);
 
 				geometry::Rect src(0.0f, 0.0f, static_cast<float>(bitmap->GetWidth()), static_cast<float>(bitmap->GetHeight()));
-				geometry::Rect dest(destX, destY, static_cast<float>(mTileSize), static_cast<float>(mTileSize));
+//				geometry::Rect dest(destX, destY, static_cast<float>(context.scaleFactor*wc.tileSize), static_cast<float>(context.scaleFactor*wc.tileSize));
+				geometry::Rect dest(destX, destY, static_cast<float>(targetTileSize), static_cast<float>(targetTileSize));
 				renderTarget.DrawBitmap(src, dest);
 
 				renderTarget.UnregisterBitmap(bitmapHandle);

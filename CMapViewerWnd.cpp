@@ -91,6 +91,7 @@ public:
 	{
 		//UINT dpi = ::GetDpiForWindow(::GetDesktopWindow());
 		UINT dpi = GetDpiForSystem();
+		//UINT dpi = 96.0f;
 
 		constexpr int TileSize = 512;
 		m_fDpiScale = dpi/96.0f;
@@ -268,7 +269,7 @@ public:
 						auto dest = D2D1::RectF(0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height));
 						pRenderTarget->DrawBitmap(bitmap, dest);
 
-						//m_pRenderTarget->Save("c:\\temp\\tile.png");
+						////m_pRenderTarget->Save("c:\\temp\\tile.png");
 					}
 				}
 				else
@@ -295,7 +296,7 @@ CMapViewerWnd::CMapViewerWnd()
 
 	UINT dpi = GetDpiForSystem();
 
-	m_fDpiScale = dpi/96.0f;
+	m_fDpiScale = 1.0f;///dpi/96.0f;
 }
 
 CMapViewerWnd::~CMapViewerWnd()
@@ -375,6 +376,8 @@ void CMapViewerWnd::OnPaint()
 	}
 
 	HRESULT hr {};
+
+	m_pRenderTarget->SetDpi(96.0f, 96.0f);
 
 	m_pRenderTarget->BeginDraw();
 	m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));

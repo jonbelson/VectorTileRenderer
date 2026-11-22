@@ -106,7 +106,7 @@ namespace rendering::direct2d
 
 
 	// Implementation of Direct2D rendering interface.
-	class /*D2DRenderTarget::*/ D2DImpl
+	class /*D2DRenderTarget::*/ xxxD2DImpl
 	{
 		//ComPtr<ID3D11Device> mDevice;
 		ComPtr<ID2D1RenderTarget> mRenderTarget;
@@ -224,7 +224,7 @@ namespace rendering::direct2d
 
 	public:
 		// Constructor.
-		D2DImpl(int width, int height)
+		xxxD2DImpl(int width, int height)
 		{
 			CoInitialize(0);
 
@@ -256,7 +256,7 @@ namespace rendering::direct2d
 			}
 		}
 
-		~D2DImpl()
+		~xxxD2DImpl()
 		{
 			CoUninitialize();
 		}

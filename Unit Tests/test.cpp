@@ -15,6 +15,7 @@ import core.geometry;
 import formats.mvt.expressions;
 import formats.mvt.operators;
 import formats.mvt.feature;
+import formats.mvt.interpolate;
 import formats.mvt.tilefetcher;
 import formats.mvt.pmtilesfetcher;
 import formats.mvt.symbol;
@@ -1348,6 +1349,117 @@ namespace MVT
 			auto tileID = TileSpecToTileID(test.tileSpec);
 			EXPECT_EQ(tileID, test.tileID) << "TileSpec: " << Format(test.tileSpec) << " Expected: " << test.tileID << " " << "Got: " << tileID;
 		}
+	}
+
+	void DumpTable(const std::span<std::uint8_t>& table, int width, int height)
+	{
+		for (size_t i = 0; i < table.size(); i++)
+		{
+			if (i % width == 0)
+				std::cout << std::endl;
+
+			std::cout << std::setw(3) << static_cast<int>(table[i]) << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	TEST(Interpolate, ScaleGrid)
+	{
+		struct Test
+		{
+			std::vector<std::uint8_t> input;
+			int inputWidth;
+			int inputHeight;
+			int outputWidth;
+			int outputHeight;
+		} tests[] =
+		{
+			{
+				{
+					0, 0, 0,
+					0, 255, 0,
+					0, 0, 0,
+				},
+				3, 3,
+				6, 6
+			},
+			{
+				{
+					0, 0, 0,
+					0, 255, 0,
+					0, 0, 0,
+				},
+				3, 3,
+				9, 9
+			},
+			{
+				{
+					0, 0,   0,   0, 0, 0,
+					0, 0,   0,   0, 0, 0,
+					0, 0, 255, 255, 0, 0,
+					0, 0, 255, 255, 0, 0,
+					0, 0,   0,   0, 0, 0,
+					0, 0,   0,   0, 0, 0
+				},
+				6,
+				6,
+				4,
+				4
+			},
+			{
+				{
+					0, 0,   0,   0, 0, 0,
+					0, 0,   0,   0, 0, 0,
+					0, 0, 255, 255, 0, 0,
+					0, 0, 255, 255, 0, 0,
+					0, 0, 255, 255, 0, 0,
+					0, 0,   0,   0, 0, 0,
+					0, 0,   0,   0, 0, 0
+				},
+				6,
+				7,
+				6,
+				7
+			},
+
+		};
+
+		//std::vector<std::uint8_t> input = {
+		//	0, 0,   0,   0, 0, 0,
+		//	0, 0,   0,   0, 0, 0,
+		//	0, 0, 255, 255, 0, 0,
+		//	0, 0, 255, 255, 0, 0,
+		//	0, 0, 255, 255, 0, 0,
+		//	0, 0,   0,   0, 0, 0,
+		//	0, 0,   0,   0, 0, 0
+		//};
+
+		for (/*const*/ auto& test : tests)
+		{
+			SCOPED_TRACE("inputWidth: " + std::to_string(test.inputWidth) + " inputHeight: " + std::to_string(test.inputHeight) + " outputWidth: " + std::to_string(test.outputWidth) + " outputHeight: " + std::to_string(test.outputHeight));
+
+			auto output = mvt::interpolate::ScaleGrid<std::uint8_t>(test.input, test.inputWidth, test.inputHeight, test.outputWidth, test.outputHeight);
+
+
+			/*
+			mvt::interpolate::Interpolator<std::uint8_t> interpolator(test.input, test.inputWidth, test.inputHeight, test.outputWidth, test.outputHeight);
+
+			std::vector<std::uint8_t> output(test.outputWidth * test.outputHeight);
+
+			for (int y = 0; y<test.outputHeight; y++)
+			{
+				for (int x = 0; x<test.outputWidth; x++)
+				{
+					output[y * test.outputWidth + x] = interpolator.GetValue(x, y);
+				}
+			}
+			*/
+
+			DumpTable(test.input, test.inputWidth, test.inputHeight);
+			std::cout << std::endl;
+			DumpTable(output, test.outputWidth, test.outputHeight);
+		}
+
 	}
 
 }

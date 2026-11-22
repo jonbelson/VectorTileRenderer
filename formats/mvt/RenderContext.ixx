@@ -32,21 +32,78 @@ namespace mvt::renderer
 		// Map font names to BitmapHandles.
 
 		using StartMap = std::unordered_map<int /*start*/, rendertarget::BitmapHandle>;
-		using SizeMap = std::unordered_map<float /*size*/, StartMap>;
-		using FontMap = std::unordered_map<std::string /*font*/, SizeMap>;
+		using HaloSizeMap = std::unordered_map</*float*/ int /*haloSize10*/, StartMap>;
+		using FontMap = std::unordered_map<std::string /*font*/, HaloSizeMap>;
 
 		// Map of font BitmapHandles.
 		FontMap glyphHandles;
 
-		rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, int start, float size) const
+		using StartMap = std::unordered_map<int /*start*/, rendertarget::BitmapHandle>;
+		using HaloSizeMap = std::unordered_map</*float*/ int /*haloSize10*/, StartMap>;
+		using FontMap = std::unordered_map<std::string /*font*/, HaloSizeMap>;
+
+		using AlphaMaskStartMap = std::unordered_map<int /*start*/, rendertarget::AlphaMaskHandle>;
+		using AlphaMaskHaloSizeMap = std::unordered_map</*float*/ int /*haloSize10*/, AlphaMaskStartMap>;
+		using AlphaMaskHandleMap = std::unordered_map<std::string /*font*/, AlphaMaskHaloSizeMap>;
+
+		// Map of font AlphaMaskHandles.
+		AlphaMaskHandleMap alphaMaskHandles;
+
+
+		rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, int start, float haloSize) const
 		{
-			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(size) && glyphHandles.at(font).at(size).contains(start))
-				return glyphHandles.at(font).at(size).at(start);
+			int haloSize10 = lround(haloSize*10.0f);
+
+			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(haloSize10) && glyphHandles.at(font).at(haloSize10).contains(start))
+				return glyphHandles.at(font).at(haloSize10).at(start);
 
 			return rendertarget::InvalidHandle;
 		}
 
-		RenderContext(rendertarget::RenderTarget& renderTarget, const mvt::style::Style& style, float scaleFactor=1.0f) : renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs), scaleFactor(scaleFactor)
+		bool SetBitmapHandle(const std::string& font, int start, float haloSize, rendertarget::BitmapHandle handle) 
+		{
+			int haloSize10 = lround(haloSize*10.0f);
+
+			glyphHandles[font][haloSize10][start] = handle;
+
+			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(haloSize10) && glyphHandles.at(font).at(haloSize10).contains(start))
+			{
+				handle = glyphHandles.at(font).at(haloSize10).at(start);
+				return true;
+			}
+
+			return false;
+		}
+
+
+		rendertarget::AlphaMaskHandle GetAlphaMaskHandle(const std::string& font, int start, float haloSize) const
+		{
+			int haloSize10 = lround(haloSize*10.0f);
+
+			if (alphaMaskHandles.contains(font) && alphaMaskHandles.at(font).contains(haloSize10) && alphaMaskHandles.at(font).at(haloSize10).contains(start))
+				return alphaMaskHandles.at(font).at(haloSize10).at(start);
+
+			return rendertarget::InvalidHandle;
+		}
+
+		bool SetAlphaMaskHandle(const std::string& font, int start, float haloSize, rendertarget::AlphaMaskHandle handle) 
+		{
+			int haloSize10 = lround(haloSize*10.0f);
+
+			alphaMaskHandles[font][haloSize10][start] = handle;
+
+			if (alphaMaskHandles.contains(font) && alphaMaskHandles.at(font).contains(haloSize10) && alphaMaskHandles.at(font).at(haloSize10).contains(start))
+			{
+				handle = alphaMaskHandles.at(font).at(haloSize10).at(start);
+				return true;
+			}
+
+			return false;
+		}
+
+
+		RenderContext(rendertarget::RenderTarget& renderTarget, const mvt::style::Style& style, float scaleFactor=1.0f)
+			: renderTarget(renderTarget), sprites(style.mSprites), glyphs(style.mGlyphs), scaleFactor(scaleFactor)
 		{
 			rendertarget::BitmapHandle spriteHandle = renderTarget.RegisterBitmap(sprites.GetBitmap());
 			spritesHandle = spriteHandle;

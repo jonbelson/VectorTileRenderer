@@ -56,8 +56,10 @@ namespace rendering::qt
 		virtual bool UnregisterBitmap(BitmapHandle handle) override;
 		virtual void SetActiveBitmap(BitmapHandle handle) override;
 
-		//virtual void SetBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap) override;
-	
+		virtual AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap) override {}
+		virtual bool UnregisterAlphaMask(AlphaMaskHandle handle) override {}
+		virtual void SetActiveAlphaMask(AlphaMaskHandle handle) override {}
+
 		virtual void FillBackground(void) override;
 
 		//virtual void DrawLine(float x1, float y1, float x2, float y2) override;

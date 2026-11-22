@@ -31,6 +31,9 @@ namespace core::rendertarget
 	export using BitmapHandle = std::uint32_t;
 	export constexpr BitmapHandle InvalidHandle = 0;
 
+	export using AlphaMaskHandle = std::uint32_t;
+	export constexpr AlphaMaskHandle InvalidAlphaMaskHandle = 0;
+
 	export using Color = core::color::Color;
 
 	// Interface for an abstract render target.
@@ -62,6 +65,10 @@ namespace core::rendertarget
 		virtual bool UnregisterBitmap(BitmapHandle handle) = 0;
 		virtual void SetActiveBitmap(BitmapHandle handle) = 0;
 
+		virtual AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap) = 0;
+		virtual bool UnregisterAlphaMask(AlphaMaskHandle handle) = 0;
+		virtual void SetActiveAlphaMask(AlphaMaskHandle handle) = 0;
+
 		virtual void FillBackground(void) = 0;
 
 		//virtual void DrawLine(float x1, float y1, float x2, float y2) = 0;
@@ -73,6 +80,7 @@ namespace core::rendertarget
 		virtual void DrawBitmap(const geometry::Rect& dest) = 0;
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) = 0;
 		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) = 0;
+		virtual void FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask) = 0;
 
 		virtual void PushScale(float scale) = 0;
 		virtual void PushTranslation(float x, float y) = 0;

@@ -134,7 +134,7 @@ namespace mvt::symbol
 		}
 
 		// Constructor.
-		SymbolAttribs(const layer::Layer* layer, const feature::Feature& feature, float zoom)
+		SymbolAttribs(const layer::Layer* layer, const feature::Feature& feature, float zoom, float scaleFactor=1.0f)
 		{
 			iconAllowOverlap = layer->mIconAllowOverlap.GetValue(feature, zoom);
 			iconAnchor = IconAnchorToEnum(layer->mIconAnchor.GetValue(feature, zoom));
@@ -172,12 +172,26 @@ namespace mvt::symbol
 			textSize = layer->mTextSize.GetValue(feature, zoom);
 			textTransform = TextTransformToEnum(layer->mTextTransform.GetValue(feature, zoom));
 
+			for (float& f : iconOffset) { f *= scaleFactor; }
+
+			iconPadding *= scaleFactor;
+			iconSize *= scaleFactor;
+			textHaloWidth *= scaleFactor;
+			textPadding *= scaleFactor;
+			textSize *= scaleFactor;
+			symbolSpacing *= scaleFactor;
+
+			//iconHaloWidth *= scaleFactor;
+			//iconTextFitPadding *= scaleFactor;
+			//iconTranslate *= scaleFactor;
+			//textHaloBlur *= scaleFactor;
+			//textTranslate *= scaleFactor;
+
 			// icon-image and text-field can use '{}' substitution for Feature fields.
 			ReplaceTokens(feature, iconImage);
 			ReplaceTokens(feature, textField);
 
 			textScale = textSize/style::GlyphSize;
-			////textScale *= 2.0f;	// XXX debugging purposes.
 
 			// Determine values of properies for 'auto'.
 			if (iconRotationAlignment == IconRotationAlignment::Auto)
@@ -383,7 +397,30 @@ namespace mvt::symbol
 				}
 				if (glyphHandle != InvalidHandle)
 				{
-					context.glyphHandles[font][haloWidth][start] = glyphHandle;
+					//context.glyphHandles[font][haloWidth][start] = glyphHandle;
+					context.SetBitmapHandle(font, start, haloWidth, glyphHandle);
+				}
+			}
+
+			return glyphHandle;
+		}
+
+		// Get the AlphaMaskHandle for specified glyph block. Bitmap is registered if not already done.
+		AlphaMaskHandle GetGlyphAlphaMaskHandle(renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
+		{
+			AlphaMaskHandle glyphHandle = context.GetAlphaMaskHandle(font, start, haloWidth);
+
+			if (glyphHandle == InvalidAlphaMaskHandle)
+			{
+				auto atlas = context.glyphs.Lookup(font, start, haloWidth);
+				if (atlas)
+				{
+					glyphHandle = context.renderTarget.RegisterAlphaMask(atlas->alphaMask);
+				}
+				if (glyphHandle != InvalidAlphaMaskHandle)
+				{
+					//context.glyphHandles[font][haloWidth][start] = glyphHandle;
+					context.SetAlphaMaskHandle(font, start, haloWidth, glyphHandle);
 				}
 			}
 

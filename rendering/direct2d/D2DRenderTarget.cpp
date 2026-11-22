@@ -149,7 +149,11 @@ namespace rendering::direct2d
 		core::rendertarget::BitmapHandle mNextBitmapHandle = InvalidHandle;
 		core::rendertarget::BitmapHandle mBitmapHandle = InvalidHandle;
 
+		core::rendertarget::AlphaMaskHandle mNextAlphaMaskHandle = InvalidAlphaMaskHandle;
+		core::rendertarget::AlphaMaskHandle mAlphaMaskHandle = InvalidAlphaMaskHandle;
+
 		std::map<BitmapHandle, ComPtr<ID2D1Bitmap> > mBitmaps;
+		std::map<AlphaMaskHandle, ComPtr<ID2D1Bitmap> > mAlphaMasks;
 
 		//ComPtr<ID2D1Bitmap> mBitmap;
 		ComPtr<ID2D1BitmapBrush> mBitmapBrush;
@@ -194,7 +198,8 @@ namespace rendering::direct2d
 
 				if (SUCCEEDED(hr))
 				{
-					hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, /*fo,*/ mFactory.GetAddressOf());
+					D2D1_FACTORY_OPTIONS fo{ /*D2D1_DEBUG_LEVEL_INFORMATION*/ };
+					hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, fo, mFactory.GetAddressOf());
 
 					if (SUCCEEDED(hr))
 					{
@@ -595,11 +600,65 @@ namespace rendering::direct2d
 			return false;
 		}
 
+		void SetActiveAlphaMask(AlphaMaskHandle handle)
+		{
+			mAlphaMaskHandle = handle;
+		}
+
+		AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap)
+		{
+			auto d2dAlphaMask = CreateAlphaMask(bitmap);
+			if (d2dAlphaMask)
+			{
+				AlphaMaskHandle handle = ++mNextAlphaMaskHandle;
+				mAlphaMasks[handle] = d2dAlphaMask;
+				SetActiveAlphaMask(handle);
+				return handle;
+			}
+
+			return InvalidHandle;
+		}
+
+		bool UnregisterAlphaMask(AlphaMaskHandle handle)
+		{
+			auto it = mAlphaMasks.find(handle);
+			if (it != mAlphaMasks.end())
+			{
+				mAlphaMasks.erase(it);
+				return true;
+			}
+			return false;
+		}
+
 		void SetActiveBitmap(BitmapHandle handle)
 		{
 			mBitmapHandle = handle;
 		}
 
+
+		ComPtr<ID2D1Bitmap> CreateAlphaMask(std::shared_ptr<const core::bitmap::AlphaMask> alphaMask)
+		{
+			if (!alphaMask) return nullptr;
+			if (alphaMask->GetAlphaMaskData().empty()) return nullptr;
+
+			ComPtr<ID2D1Bitmap1> d2dAlphaMask;
+
+			D2D1_PIXEL_FORMAT pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED /*D2D1_ALPHA_MODE_STRAIGHT*/);
+			D2D1_BITMAP_PROPERTIES1 props = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, pixelFormat, 96.0f, 96.0f);
+
+			auto data = alphaMask->GetAlphaMaskData();
+			std::uint32_t width = alphaMask->GetWidth();
+			std::uint32_t height = alphaMask->GetHeight();
+
+			if (width == 0 || height == 0) return nullptr;
+			if (data.size() != width*height) return nullptr;
+
+			HRESULT hr = mRenderTarget->CreateBitmap(D2D1::SizeU(width, height),
+														data.data(), width, &props, &d2dAlphaMask);
+			if (FAILED(hr)) return nullptr;
+			
+			return d2dAlphaMask;
+		}
 
 		ComPtr<ID2D1Bitmap> CreateBitmap(std::shared_ptr<core::bitmap::Bitmap> bitmap)
 		{
@@ -960,6 +1019,43 @@ namespace rendering::direct2d
 			}
 		}
 
+		void FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask)
+		{
+			if (mAlphaMaskHandle == InvalidHandle) return;
+
+			auto it = mAlphaMasks.find(mAlphaMaskHandle);
+			if (it == mAlphaMasks.end()) return;
+
+			auto alphaMask = it->second;
+			if (!alphaMask) return;
+
+			if (mRenderTarget)
+			{
+				ComPtr<ID2D1SolidColorBrush> solidBrush;
+				HRESULT hr = mRenderTarget->CreateSolidColorBrush(ToColorF(colour), solidBrush.GetAddressOf());
+				if (SUCCEEDED(hr))
+				{
+					///solidBrush->SetColor(D2D1::ColorF(colour.Red, colour.Green, colour.Blue, 1.0f));
+//					solidBrush->SetColor(D2D1::ColorF(0.0f, 0.0f, 1.0f, 1.0f));
+
+					auto oldMode = mRenderTarget->GetAntialiasMode();
+					mRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+
+					auto rectF = ToRectF(dest);
+					//auto w = round(rectF.right - rectF.left);
+					//auto h = round(rectF.bottom - rectF.top);
+					//rectF.left = round(rectF.left);
+					//rectF.top = round(rectF.top);
+					//rectF.right = rectF.left + w;
+					//rectF.bottom = rectF.top + h;
+					mRenderTarget->FillOpacityMask(alphaMask.Get(), solidBrush.Get(), rectF, ToRectF(src));
+					//mRenderTarget->FillRectangle(ToRectF(dest), solidBrush.Get());
+
+					mRenderTarget->SetAntialiasMode(oldMode);
+				}
+			}
+		}
+
 		void PushScale(float scale)
 		{
 			mScale = scale;
@@ -1230,6 +1326,25 @@ namespace rendering::direct2d
 		if (mImpl) mImpl->SetActiveBitmap(handle);
 	}
 
+	AlphaMaskHandle D2DRenderTarget::RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap)
+	{
+		if (mImpl) return mImpl->RegisterAlphaMask(bitmap);
+
+		return InvalidHandle;
+	}
+
+	bool D2DRenderTarget::UnregisterAlphaMask(AlphaMaskHandle handle)
+	{
+		if (mImpl) return mImpl->UnregisterAlphaMask(handle);
+
+		return false;
+	}
+
+	void D2DRenderTarget::SetActiveAlphaMask(AlphaMaskHandle handle)
+	{
+		if (mImpl) mImpl->SetActiveAlphaMask(handle);
+	}
+
 	void D2DRenderTarget::FillBackground(void)
 	{
 		if (mImpl) mImpl->FillBackground();
@@ -1305,6 +1420,11 @@ namespace rendering::direct2d
 		{
 			mImpl->DrawSymbolWithRGB(src, dest, colour);
 		}
+	}
+
+	void D2DRenderTarget::FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask)
+	{
+		if (mImpl) mImpl->FillWithAlphaMask(src, dest, colour, mask);
 	}
 
 	void D2DRenderTarget::PushScale(float scale)

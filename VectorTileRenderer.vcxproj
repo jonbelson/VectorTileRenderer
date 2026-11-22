@@ -264,6 +264,7 @@
     </ClCompile>
     <ClCompile Include="formats\mvt\HttpTileFetcher.cpp" />
     <ClCompile Include="formats\mvt\HttpTileFetcher.ixx" />
+    <ClCompile Include="formats\mvt\Interpolate.ixx" />
     <ClCompile Include="formats\mvt\Layer.cpp" />
     <ClCompile Include="formats\mvt\Layer.ixx" />
     <ClCompile Include="formats\mvt\MBTilesFetcher.cpp" />

@@ -70,9 +70,14 @@ namespace rendering::svg
 		virtual bool UnregisterBitmap(BitmapHandle handle) override { return true; }
 		virtual void SetActiveBitmap(BitmapHandle handle) override {}
 
+		virtual AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap) override { return InvalidAlphaMaskHandle; }
+		virtual bool UnregisterAlphaMask(AlphaMaskHandle handle) override { return true; }
+		virtual void SetActiveAlphaMask(AlphaMaskHandle handle) override {}
+
 		virtual void DrawBitmap(const geometry::Rect& dest) override {}
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override {}
 		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) override {}
+		virtual void FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask) {}
 
 		virtual void PushScale(float scale) override;
 		virtual void PushTranslation(float x, float y) override;

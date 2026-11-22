@@ -31,6 +31,7 @@ namespace mvt::style
 		google::protobuf::ShutdownProtobufLibrary();
 	}
 
+	// Containers for data read from the glyph PBFs.
 	namespace proto
 	{
 		// Raw SDF for glyphs in a block.
@@ -82,12 +83,17 @@ namespace mvt::style
 	{
 		std::map<std::uint32_t, GlyphSpec> glyphs;	// Map of glyph id to spec.
 
-		/////int start{};	// Index of first glyph in block.
-
 		//std::uint32_t threshold{ 192 };
+
 		std::uint32_t haloSize;	// Halo size as std::lround(text-halo-width*10.0f)
 
+		constexpr static int DefaultFontSize{ 24 };
+
 		std::shared_ptr<core::bitmap::Bitmap> bitmap;
+
+		//std::unordered_map<int /*fontSize*/, std::shared_ptr<core::bitmap::Bitmap> /*bitmap*/> bitmaps;
+
+		std::shared_ptr<core::bitmap::AlphaMask> alphaMask;
 	};
 
 
@@ -100,17 +106,17 @@ namespace mvt::style
 
 		if (success)
 		{
-			proto::Glyphs glyphs;
+			proto::Glyphs protoGlyphs;
 
 			const auto& mvtStacks = mvtGlyphs.stacks();
 			int stacksSize = mvtGlyphs.stacks_size();
 
 			for (const auto& mvtStack : mvtStacks)
 			{
-				proto::GlyphFontStack fontStack;
+				proto::GlyphFontStack protoFontStack;
 
-				fontStack.name = mvtStack.name();
-				fontStack.range = mvtStack.range();
+				protoFontStack.name = mvtStack.name();
+				protoFontStack.range = mvtStack.range();
 
 				const auto& mvtGlyphs = mvtStack.glyphs();
 				int glyphsSize = mvtStack.glyphs_size();
@@ -132,21 +138,21 @@ namespace mvt::style
 						const auto& bitmap = mvtGlyph.bitmap();
 						if (!bitmap.empty())
 						{
-							std::size_t size = bitmap.size();//protoGlyph.width* protoGlyph.height;
-							protoGlyph.field.resize(size /*protoGlyph.width * protoGlyph.height*/);
+							std::size_t size = bitmap.size();
+							protoGlyph.field.resize(size);
 
 							std::memcpy(&protoGlyph.field[0], bitmap.data(), size);
 						}
 					}
 
-					fontStack.glyphs.push_back(std::move(protoGlyph));
+					protoFontStack.glyphs.push_back(std::move(protoGlyph));
 
 				}
 
-				glyphs.stacks.push_back(fontStack);
+				protoGlyphs.stacks.push_back(protoFontStack);
 			}
 
-			return glyphs;
+			return protoGlyphs;
 
 		}
 
@@ -189,8 +195,14 @@ namespace mvt::style
 
 		glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 255, 0, 0));
 
+		glyphAtlas.alphaMask = std::make_shared<core::bitmap::AlphaMask>(width, height);
+		glyphAtlas.alphaMask->Fill(0);
+
 		auto& bitmapData = glyphAtlas.bitmap->GetBitmapData();
 		std::uint32_t* pixelData = bitmapData.data();
+
+		auto alphaMaskData = glyphAtlas.alphaMask->GetAlphaMaskData();
+		std::uint8_t* alphaPixelData = alphaMaskData.data();
 
 		std::uint32_t currX{};
 		std::uint32_t currY{};
@@ -230,12 +242,13 @@ namespace mvt::style
 			if (glyph.field.empty()) continue;
 
 			std::uint32_t* dest = &pixelData[currY*width + currX];
-			//std::byte* dest = &pixelData[currY*size*4 + currX];
+			std::uint8_t* alphaDest = &alphaPixelData[currY*width + currX];
 
 			int offset{};
 			for (std::uint32_t y = 0; y < glyphHeight; y++)
 			{
 				std::uint32_t* row = dest;
+				std::uint8_t* alphaRow = alphaDest;
 
 				for (std::uint32_t x = 0; x < glyphWidth; x++)
 				{
@@ -269,6 +282,8 @@ namespace mvt::style
 					*row++ = MakeRGBA(0, 0, 255, a);
 
 
+					*alphaRow++ = a;
+
 
 /*
 					//std::uint8_t alpha = val >= thresh ? 255 : 0;
@@ -283,6 +298,7 @@ namespace mvt::style
 				}
 
 				dest += width;
+				alphaDest += width;
 			}
 
 			currX += glyphWidth;

@@ -506,7 +506,9 @@ namespace mvt::symbol
 
 		if (textColor.Alpha == 0.0f) return;
 
-		float padding = attribs.textLetterSpacing*style::GlyphSize;
+		float textScale = attribs.textScale;
+
+		float padding = textScale*attribs.textLetterSpacing*style::GlyphSize;
 
 		//if (attribs.textField == "Palmer Park Avenue")
 		//{
@@ -522,8 +524,6 @@ namespace mvt::symbol
 			{
 				core::logger::Info(std::format("Label '{}' is upside down\n", attribs.textField));
 			}
-
-			float textScale = attribs.textScale;
 
 			PointArray points = isUpsideDown ? PointArray(pointArray.rbegin(), pointArray.rend()) : pointArray;
 			LineWalker lineWalker(points);
@@ -592,7 +592,7 @@ namespace mvt::symbol
 
 						if (pass == Pass::Halo)
 						{
-							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
+							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
 							renderTarget.SetActiveBitmap(haloHandle);
 							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
 						}
@@ -615,7 +615,7 @@ namespace mvt::symbol
 							DrawDot(&renderTarget, point, Color("blue"), 1.0f);
 						}
 
-						offset += (glyphSpec.advance + padding)*textScale;
+						offset += glyphSpec.advance*textScale + padding;
 					}
 				}
 
@@ -1142,6 +1142,7 @@ namespace mvt::symbol
 
 					auto glyphAtlas = context.glyphs.Lookup(font, blockStart);
 
+					auto glyphAtlasHalo = context.glyphs.Lookup(font, blockStart, attribs.textHaloWidth);
 
 					if (glyphAtlas && glyphAtlas->glyphs.contains(cp))
 					{
@@ -1162,16 +1163,28 @@ namespace mvt::symbol
 						// Get the appropriate BitmapHandles.
 						if (pass == Pass::Halo)
 						{
-							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, 2*attribs.textHaloWidth);
-							renderTarget.SetActiveBitmap(haloHandle);
-							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+							//BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
+							//renderTarget.SetActiveBitmap(haloHandle);
+							//renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+
+							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, attribs.textHaloWidth);
+							renderTarget.SetActiveAlphaMask(glyphHandle);
+
+							renderTarget.FillWithAlphaMask(srcRect, destRect, textHaloColor, glyphAtlasHalo->alphaMask);
+
 						}
 						else
 						{
-							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
+							//BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
 
-							renderTarget.SetActiveBitmap(glyphHandle);
-							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+							//renderTarget.SetActiveBitmap(glyphHandle);
+							//renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+
+							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, 0);
+
+							renderTarget.SetActiveAlphaMask(glyphHandle);
+
+							renderTarget.FillWithAlphaMask(srcRect, destRect, textColor, glyphAtlas->alphaMask);
 
 							if constexpr (mvt::debug::visual::DrawPointLabelGlyphMarker)
 							{

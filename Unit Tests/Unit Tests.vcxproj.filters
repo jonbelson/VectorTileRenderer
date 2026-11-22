@@ -288,6 +288,9 @@
     <ClCompile Include="..\external\sqlite3.c">
       <Filter>Project Modules\external</Filter>
     </ClCompile>
+    <ClCompile Include="..\formats\mvt\Interpolate.ixx">
+      <Filter>Project Modules\formats\mvt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

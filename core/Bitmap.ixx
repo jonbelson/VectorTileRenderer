@@ -7,6 +7,7 @@ export module core.bitmap;
 
 import std;
 
+import core.geometry;
 import io.resource;
 
 
@@ -119,5 +120,51 @@ namespace core::bitmap
 	};
 
 	export std::expected<Bitmap, Status> LoadBitmapFromResource(const io::resource::Data& data);
+
+
+	export using AlphaData = std::vector<std::uint8_t>;
+
+	export class AlphaMask
+	{
+		int mWidth{};
+		int mHeight{};
+
+		AlphaData mData;
+
+	public:
+		AlphaMask() = default;
+		AlphaMask(int width, int height) : mWidth(width), mHeight(height)
+		{
+			mData.resize(width*height);
+		}
+		AlphaMask(int width, int height, std::span<const std::uint8_t> maskData)
+		{
+			if (maskData.size() == width*height)
+			{
+				mWidth = width;
+				mHeight = height;
+
+				mData.resize(width*height);
+
+				std::memcpy(mData.data(), maskData.data(), maskData.size());
+			}
+		}
+
+		void Fill(std::uint8_t alpha)
+		{
+			std::memset(mData.data(), alpha, mData.size());
+		}
+
+		int GetWidth(void) const { return mWidth; }
+		int GetHeight(void) const { return mHeight; }
+		core::geometry::Rect GetRect(void) const { return geometry::Rect(0.0f, 0.0f, static_cast<float>(mWidth), static_cast<float>(mHeight)); }
+
+		//const std::vector<const std::uint8_t>& GetBitmapData(void) const { return mData; }
+		//std::vector<std::uint8_t>& GetBitmapData(void) { return mData; }
+
+		std::span<const std::uint8_t> GetAlphaMaskData(void) const { return mData; }
+		std::span<std::uint8_t> GetAlphaMaskData(void) { return mData; }
+
+	};
 
 };
