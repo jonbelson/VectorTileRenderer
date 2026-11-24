@@ -6,6 +6,7 @@
 module;
 
 #include <QPainter>
+#include <QDebug>
 #include <QBrush>
 #include <QColor>
 #include <QPainter>
@@ -90,7 +91,11 @@ namespace rendering::qt
 		core::rendertarget::BitmapHandle mNextBitmapHandle = InvalidHandle;
 		core::rendertarget::BitmapHandle mBitmapHandle = InvalidHandle;
 
+		core::rendertarget::AlphaMaskHandle mNextAlphaMaskHandle = InvalidAlphaMaskHandle;
+		core::rendertarget::AlphaMaskHandle mAlphaMaskHandle = InvalidAlphaMaskHandle;
+
 		std::map<BitmapHandle, std::unique_ptr<QPixmap>> mPixmaps;
+		std::map<AlphaMaskHandle, std::unique_ptr<QImage> > mAlphaMasks;
 
 		std::stack<QTransform> mTransforms;
 
@@ -369,6 +374,39 @@ namespace rendering::qt
 			mBitmapHandle = handle;
 		}
 
+		AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> alphaMask)
+		{
+			QImage* mask = new QImage(alphaMask->GetAlphaMaskData().data(), alphaMask->GetWidth(), alphaMask->GetHeight(), QImage::Format_Alpha8);
+			
+			if (mask)
+			{
+				AlphaMaskHandle handle = ++mNextAlphaMaskHandle;
+//				mAlphaMasks[handle] = std::make_unique<QImage>(mask);
+				mAlphaMasks[handle] = std::unique_ptr<QImage>(std::move(mask));
+				SetActiveAlphaMask(handle);
+				return handle;
+			}
+
+			return rendertarget::InvalidAlphaMaskHandle;
+		}
+
+		bool UnregisterAlphaMask(AlphaMaskHandle handle)
+		{
+			auto it = mAlphaMasks.find(handle);
+			if (it != mAlphaMasks.end())
+			{
+				mAlphaMasks.erase(it);
+				return true;
+			}
+			return false;
+		}
+
+		void SetActiveAlphaMask(AlphaMaskHandle handle)
+		{
+			mAlphaMaskHandle = handle;
+		}
+
+
 		void FillBackground(void)
 		{
 			if (mPainter)
@@ -504,8 +542,74 @@ namespace rendering::qt
 					}
 				}
 
+				auto hints = mPainter->renderHints();
+				mPainter->setRenderHint(QPainter::SmoothPixmapTransform);
+
 				mPainter->drawPixmap(ToRectF(dest), buffer, buffer.rect());
+				mPainter->setRenderHints(hints);
 			}	
+		}
+
+		QImage ColourizeMask(const QImage& mask, const QColor& colour)
+		{
+			QImage result(mask.size(), QImage::Format_ARGB32_Premultiplied);
+
+			const int red = colour.red();
+			const int green = colour.green();
+			const int blue = colour.blue();
+			const int alpha = colour.alpha();
+
+			for (int y=0; y<mask.height(); y++)
+			{
+				const uchar* src = mask.constScanLine(y);
+				auto* dest = reinterpret_cast<QRgb*>(result.scanLine(y));
+
+				for (int x=0; x<mask.width(); x++)
+				{
+					const int a = (src[x]*alpha + 127)/255;
+
+					dest[x] = qRgba(
+						(red*a + 127)/255,
+						(green*a + 127)/255,
+						(blue*a + 127)/255,
+						a);
+				}
+			}
+
+			return result;
+		}
+
+		void FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask)
+		{
+			if (mAlphaMaskHandle == InvalidHandle) return;
+
+			auto it = mAlphaMasks.find(mAlphaMaskHandle);
+			if (it == mAlphaMasks.end()) return;
+
+			auto alphaMask = it->second.get();
+			if (!alphaMask) return;
+
+			if (mPainter)
+			{
+				QImage alphaSrc = alphaMask->copy(ToRect(src));
+
+#if 0
+				QImage image(alphaSrc.size(), QImage::Format_ARGB32_Premultiplied);
+
+				image.fill(ToQColor(colour));
+
+				image.setAlphaChannel(alphaSrc);
+#else
+
+				QImage image = ColourizeMask(alphaSrc, ToQColor(colour));
+#endif
+
+				auto hints = mPainter->renderHints();
+				mPainter->setRenderHint(QPainter::SmoothPixmapTransform);
+
+				mPainter->drawImage(ToRectF(dest), image);
+				mPainter->setRenderHints(hints);
+			}
 		}
 
 		void PushScale(float scale)
@@ -666,6 +770,25 @@ namespace rendering::qt
 		if (mImpl) mImpl->SetActiveBitmap(handle);
 	}
 
+	AlphaMaskHandle QtRenderTarget::RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> alphaMask)
+	{
+		if (mImpl) return mImpl->RegisterAlphaMask(alphaMask);
+
+		return rendertarget::InvalidAlphaMaskHandle;
+	}
+
+	bool QtRenderTarget::UnregisterAlphaMask(AlphaMaskHandle handle)
+	{
+		if (mImpl) return mImpl->UnregisterAlphaMask(handle);
+
+		return false;
+	}
+
+	void QtRenderTarget::SetActiveAlphaMask(AlphaMaskHandle handle)
+	{
+		if (mImpl) mImpl->SetActiveAlphaMask(handle);
+	}
+
 	void QtRenderTarget::FillBackground(void)
 	{
 		if (mImpl) mImpl->FillBackground();
@@ -718,6 +841,11 @@ namespace rendering::qt
 	void QtRenderTarget::DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour)
 	{
 		if (mImpl) mImpl->DrawSymbolWithRGB(src, dest, colour);
+	}
+
+	void QtRenderTarget::FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask)
+	{
+		if (mImpl) mImpl->FillWithAlphaMask(src, dest, colour, mask);
 	}
 
 	void QtRenderTarget::PushScale(float scale)

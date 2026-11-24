@@ -56,9 +56,9 @@ namespace rendering::qt
 		virtual bool UnregisterBitmap(BitmapHandle handle) override;
 		virtual void SetActiveBitmap(BitmapHandle handle) override;
 
-		virtual AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap) override {}
-		virtual bool UnregisterAlphaMask(AlphaMaskHandle handle) override {}
-		virtual void SetActiveAlphaMask(AlphaMaskHandle handle) override {}
+		virtual AlphaMaskHandle RegisterAlphaMask(std::shared_ptr<core::bitmap::AlphaMask> bitmap) override;
+		virtual bool UnregisterAlphaMask(AlphaMaskHandle handle) override;
+		virtual void SetActiveAlphaMask(AlphaMaskHandle handle) override;
 
 		virtual void FillBackground(void) override;
 
@@ -71,6 +71,7 @@ namespace rendering::qt
 		virtual void DrawBitmap(const geometry::Rect& dest) override;
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override;
 		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) override;
+		virtual void FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask) override;
 
 		virtual void PushScale(float scale) override;
 		virtual void PushTranslation(float x, float y) override;

@@ -1163,28 +1163,31 @@ namespace mvt::symbol
 						// Get the appropriate BitmapHandles.
 						if (pass == Pass::Halo)
 						{
-							//BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
-							//renderTarget.SetActiveBitmap(haloHandle);
-							//renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-
+#if 0
+							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
+							renderTarget.SetActiveBitmap(haloHandle);
+							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+#else
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, attribs.textHaloWidth);
 							renderTarget.SetActiveAlphaMask(glyphHandle);
-
+#endif
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textHaloColor, glyphAtlasHalo->alphaMask);
 
 						}
 						else
 						{
-							//BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
+#if 0
+							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
 
-							//renderTarget.SetActiveBitmap(glyphHandle);
-							//renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
-
+							renderTarget.SetActiveBitmap(glyphHandle);
+							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+#else
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, 0);
 
 							renderTarget.SetActiveAlphaMask(glyphHandle);
 
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textColor, glyphAtlas->alphaMask);
+#endif
 
 							if constexpr (mvt::debug::visual::DrawPointLabelGlyphMarker)
 							{

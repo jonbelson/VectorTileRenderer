@@ -218,7 +218,7 @@ MapWidget::MapWidget(QWidget* parent)
 	///setAutoFillBackground(false);
 
 	mDpiScale = window()->devicePixelRatio();
-	mViewModel = std::make_unique<MapWidgetViewModel>(mDpiScale);
+	mViewModel = std::make_unique<MapWidgetViewModel>(/*mDpiScale*/);
 
 	setMouseTracking(true);
 }

@@ -38,10 +38,6 @@ namespace mvt::renderer
 		// Map of font BitmapHandles.
 		FontMap glyphHandles;
 
-		using StartMap = std::unordered_map<int /*start*/, rendertarget::BitmapHandle>;
-		using HaloSizeMap = std::unordered_map</*float*/ int /*haloSize10*/, StartMap>;
-		using FontMap = std::unordered_map<std::string /*font*/, HaloSizeMap>;
-
 		using AlphaMaskStartMap = std::unordered_map<int /*start*/, rendertarget::AlphaMaskHandle>;
 		using AlphaMaskHaloSizeMap = std::unordered_map</*float*/ int /*haloSize10*/, AlphaMaskStartMap>;
 		using AlphaMaskHandleMap = std::unordered_map<std::string /*font*/, AlphaMaskHaloSizeMap>;
@@ -52,7 +48,7 @@ namespace mvt::renderer
 
 		rendertarget::BitmapHandle GetBitmapHandle(const std::string& font, int start, float haloSize) const
 		{
-			int haloSize10 = lround(haloSize*10.0f);
+			int haloSize10 = std::lround(haloSize*10.0f);
 
 			if (glyphHandles.contains(font) && glyphHandles.at(font).contains(haloSize10) && glyphHandles.at(font).at(haloSize10).contains(start))
 				return glyphHandles.at(font).at(haloSize10).at(start);
@@ -62,7 +58,7 @@ namespace mvt::renderer
 
 		bool SetBitmapHandle(const std::string& font, int start, float haloSize, rendertarget::BitmapHandle handle) 
 		{
-			int haloSize10 = lround(haloSize*10.0f);
+			int haloSize10 = std::lround(haloSize*10.0f);
 
 			glyphHandles[font][haloSize10][start] = handle;
 
@@ -78,7 +74,7 @@ namespace mvt::renderer
 
 		rendertarget::AlphaMaskHandle GetAlphaMaskHandle(const std::string& font, int start, float haloSize) const
 		{
-			int haloSize10 = lround(haloSize*10.0f);
+			int haloSize10 = std::lround(haloSize*10.0f);
 
 			if (alphaMaskHandles.contains(font) && alphaMaskHandles.at(font).contains(haloSize10) && alphaMaskHandles.at(font).at(haloSize10).contains(start))
 				return alphaMaskHandles.at(font).at(haloSize10).at(start);
@@ -88,7 +84,7 @@ namespace mvt::renderer
 
 		bool SetAlphaMaskHandle(const std::string& font, int start, float haloSize, rendertarget::AlphaMaskHandle handle) 
 		{
-			int haloSize10 = lround(haloSize*10.0f);
+			int haloSize10 = std::lround(haloSize*10.0f);
 
 			alphaMaskHandles[font][haloSize10][start] = handle;
 
