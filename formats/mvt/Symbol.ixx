@@ -383,6 +383,7 @@ namespace mvt::symbol
 		}
 		*/
 
+		/*
 		// Get the BitmapHandle for specified glyph block. Bitmap is registered if not already done.
 		BitmapHandle GetGlyphBitmapHandle(renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
 		{
@@ -404,6 +405,7 @@ namespace mvt::symbol
 
 			return glyphHandle;
 		}
+		*/
 
 		// Get the AlphaMaskHandle for specified glyph block. Bitmap is registered if not already done.
 		AlphaMaskHandle GetGlyphAlphaMaskHandle(renderer::RenderContext& context, const std::string& font, int start, float haloWidth = 0)
@@ -449,7 +451,7 @@ namespace mvt::symbol
 						point.x += textWidth - lineWidth;
 						break;
 					case TextJustify::Auto:
-						core::logger::Debug("TextJustify::Auto not implemented");
+						core::logger::Debug("TextJustify::Auto not implemented\n");
 						break;
 				}
 			}

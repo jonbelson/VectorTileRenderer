@@ -89,7 +89,7 @@ namespace mvt::style
 
 		constexpr static int DefaultFontSize{ 24 };
 
-		std::shared_ptr<core::bitmap::Bitmap> bitmap;
+		//std::shared_ptr<core::bitmap::Bitmap> bitmap;
 
 		//std::unordered_map<int /*fontSize*/, std::shared_ptr<core::bitmap::Bitmap> /*bitmap*/> bitmaps;
 
@@ -191,15 +191,15 @@ namespace mvt::style
 		GlyphAtlas glyphAtlas;
 		glyphAtlas.haloSize = haloSize10;
 
-		glyphAtlas.bitmap = std::make_shared<Bitmap>(width, height, Format::RGBA);
+		//glyphAtlas.bitmap = std::make_shared<Bitmap>(width, height, Format::RGBA);
 
-		glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 255, 0, 0));
+		//glyphAtlas.bitmap->Fill(core::bitmap::MakeRGBA(0, 255, 0, 0));
 
 		glyphAtlas.alphaMask = std::make_shared<core::bitmap::AlphaMask>(width, height);
 		glyphAtlas.alphaMask->Fill(0);
 
-		auto& bitmapData = glyphAtlas.bitmap->GetBitmapData();
-		std::uint32_t* pixelData = bitmapData.data();
+		//auto& bitmapData = glyphAtlas.bitmap->GetBitmapData();
+		//std::uint32_t* pixelData = bitmapData.data();
 
 		auto alphaMaskData = glyphAtlas.alphaMask->GetAlphaMaskData();
 		std::uint8_t* alphaPixelData = alphaMaskData.data();
@@ -241,13 +241,13 @@ namespace mvt::style
 
 			if (glyph.field.empty()) continue;
 
-			std::uint32_t* dest = &pixelData[currY*width + currX];
+			//std::uint32_t* dest = &pixelData[currY*width + currX];
 			std::uint8_t* alphaDest = &alphaPixelData[currY*width + currX];
 
 			int offset{};
 			for (std::uint32_t y = 0; y < glyphHeight; y++)
 			{
-				std::uint32_t* row = dest;
+				//std::uint32_t* row = dest;
 				std::uint8_t* alphaRow = alphaDest;
 
 				for (std::uint32_t x = 0; x < glyphWidth; x++)
@@ -279,7 +279,7 @@ namespace mvt::style
 					}
 
 					std::uint8_t a = static_cast<std::uint8_t>(alpha*255.0f);
-					*row++ = MakeRGBA(0, 0, 255, a);
+					//*row++ = MakeRGBA(0, 0, 255, a);
 
 
 					*alphaRow++ = a;
@@ -297,7 +297,7 @@ namespace mvt::style
 */
 				}
 
-				dest += width;
+				//dest += width;
 				alphaDest += width;
 			}
 

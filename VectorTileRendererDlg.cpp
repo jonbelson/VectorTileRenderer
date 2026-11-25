@@ -89,7 +89,7 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
-
+/*
 static void RenderGlyphsToBitmap()
 {
 	//	auto data = io::resource::LoadFromFile(R"(C:\Users\jon\Documents\Projects\OS-Open-Zoomstack-Stylesheets\fonts\Open Sans Regular\0-255.pbf)");
@@ -125,6 +125,7 @@ static void RenderGlyphsToBitmap()
 		}
 	}
 }
+*/
 
 static void RenderTileFromMBTiles()
 {

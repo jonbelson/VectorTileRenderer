@@ -548,8 +548,9 @@ namespace mvt::symbol
 					int blockStart = GetGlyphBlockStart(cp);
 
 					auto glyphAtlas = context.glyphs.Lookup(font, blockStart);
+					auto glyphAtlasHalo = context.glyphs.Lookup(font, blockStart, attribs.textHaloWidth);
 
-					if (glyphAtlas->glyphs.contains(cp))
+					if (glyphAtlas && glyphAtlasHalo && glyphAtlas->glyphs.contains(cp))
 					{
 						const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
 
@@ -592,15 +593,28 @@ namespace mvt::symbol
 
 						if (pass == Pass::Halo)
 						{
+							/*
 							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
 							renderTarget.SetActiveBitmap(haloHandle);
 							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
+							*/
+
+							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, attribs.textHaloWidth);
+							renderTarget.SetActiveAlphaMask(glyphHandle);
+							renderTarget.FillWithAlphaMask(srcRect, destRect, textHaloColor, glyphAtlasHalo->alphaMask);
+
 						}
 						else if (pass == Pass::Text)
 						{
+							/*
 							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
 							renderTarget.SetActiveBitmap(glyphHandle);
 							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
+							*/
+
+							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, 0);
+							renderTarget.SetActiveAlphaMask(glyphHandle);
+							renderTarget.FillWithAlphaMask(srcRect, destRect, textColor, glyphAtlas->alphaMask);
 						}
 
 						if constexpr (!debug::visual::NoGlyphRotation)
@@ -1144,7 +1158,7 @@ namespace mvt::symbol
 
 					auto glyphAtlasHalo = context.glyphs.Lookup(font, blockStart, attribs.textHaloWidth);
 
-					if (glyphAtlas && glyphAtlas->glyphs.contains(cp))
+					if (glyphAtlas && glyphAtlasHalo && glyphAtlas->glyphs.contains(cp))
 					{
 						const auto& glyphSpec = glyphAtlas->glyphs.at(cp);
 
@@ -1170,8 +1184,8 @@ namespace mvt::symbol
 #else
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, attribs.textHaloWidth);
 							renderTarget.SetActiveAlphaMask(glyphHandle);
-#endif
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textHaloColor, glyphAtlasHalo->alphaMask);
+#endif
 
 						}
 						else
@@ -1183,9 +1197,7 @@ namespace mvt::symbol
 							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
 #else
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, 0);
-
 							renderTarget.SetActiveAlphaMask(glyphHandle);
-
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textColor, glyphAtlas->alphaMask);
 #endif
 
