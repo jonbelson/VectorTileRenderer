@@ -64,6 +64,7 @@ namespace rendering::direct2d
 		virtual void DrawBitmap(const geometry::Rect& src, const geometry::Rect& dest) override;
 		virtual void DrawSymbolWithRGB(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour) override;
 		virtual void FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask) override;
+		virtual void DrawSdfGlyph(std::span<const std::uint8_t> sdfData, int width, int height, float widthPx, const geometry::Point& position, const Color& colour) override;
 
 		virtual void PushScale(float scale) override;
 		virtual void PushTranslation(float x, float y) override;

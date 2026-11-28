@@ -593,12 +593,6 @@ namespace mvt::symbol
 
 						if (pass == Pass::Halo)
 						{
-							/*
-							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
-							renderTarget.SetActiveBitmap(haloHandle);
-							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-							*/
-
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, attribs.textHaloWidth);
 							renderTarget.SetActiveAlphaMask(glyphHandle);
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textHaloColor, glyphAtlasHalo->alphaMask);
@@ -606,12 +600,6 @@ namespace mvt::symbol
 						}
 						else if (pass == Pass::Text)
 						{
-							/*
-							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
-							renderTarget.SetActiveBitmap(glyphHandle);
-							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
-							*/
-
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, 0);
 							renderTarget.SetActiveAlphaMask(glyphHandle);
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textColor, glyphAtlas->alphaMask);
@@ -1177,29 +1165,15 @@ namespace mvt::symbol
 						// Get the appropriate BitmapHandles.
 						if (pass == Pass::Halo)
 						{
-#if 0
-							BitmapHandle haloHandle = GetGlyphBitmapHandle(context, font, blockStart, attribs.textHaloWidth);
-							renderTarget.SetActiveBitmap(haloHandle);
-							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textHaloColor);
-#else
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, attribs.textHaloWidth);
 							renderTarget.SetActiveAlphaMask(glyphHandle);
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textHaloColor, glyphAtlasHalo->alphaMask);
-#endif
-
 						}
 						else
 						{
-#if 0
-							BitmapHandle glyphHandle = GetGlyphBitmapHandle(context, font, blockStart, 0);
-
-							renderTarget.SetActiveBitmap(glyphHandle);
-							renderTarget.DrawSymbolWithRGB(srcRect, destRect, textColor);
-#else
 							AlphaMaskHandle glyphHandle = GetGlyphAlphaMaskHandle(context, font, blockStart, 0);
 							renderTarget.SetActiveAlphaMask(glyphHandle);
 							renderTarget.FillWithAlphaMask(srcRect, destRect, textColor, glyphAtlas->alphaMask);
-#endif
 
 							if constexpr (mvt::debug::visual::DrawPointLabelGlyphMarker)
 							{
@@ -1239,13 +1213,5 @@ namespace mvt::symbol
 			DrawRect(&renderTarget, bbox, Color("hotpink"));
 		}
 	}
-
-
-
-
-
-
-
-
 };
 

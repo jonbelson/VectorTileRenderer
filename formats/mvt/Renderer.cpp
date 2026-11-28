@@ -816,6 +816,19 @@ namespace mvt::renderer
 			RenderVectorTileSymbols(tileFeatureSymbols[j], renderContext, WorldContext { .x = offx, .y = offy }, placedSymbols, zoom);
 		}
 
+
+		//auto atlas = mStyle->mGlyphs.Lookup("Arial Unicode MS Regular", 0, 0);
+		//if (atlas)
+		//{
+		//	if (atlas->glyphs.contains('A'))
+		//	{
+		//		auto styleSpec = atlas->glyphs.at('A');
+
+		//		renderContext.renderTarget.DrawSdfGlyph(styleSpec.sdfField, styleSpec.width, styleSpec.height, 0.0f, geometry::Point(500.0f, 500.0f), color::Color("red"));
+		//	}
+		//}
+
+
 		if constexpr (mvt::debug::visual::DrawPlacedSymbols)
 		{
 			placedSymbols.DrawSymbolPositions(&renderTarget);

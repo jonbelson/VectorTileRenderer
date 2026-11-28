@@ -76,6 +76,8 @@ namespace mvt::style
 		std::uint32_t width{};
 
 		std::uint32_t advance{};
+
+		std::vector<std::uint8_t> sdfField;
 	};
 
 	// Represent a decoded glyph PBF.
@@ -237,17 +239,17 @@ namespace mvt::style
 				.height = glyphHeight, .width = glyphWidth,
 				.advance = glyph.advance };
 
+			spec.sdfField = glyph.field;	// Copy raw SDF data for glyph.
+
 			glyphAtlas.glyphs[glyph.id] = spec;
 
 			if (glyph.field.empty()) continue;
 
-			//std::uint32_t* dest = &pixelData[currY*width + currX];
 			std::uint8_t* alphaDest = &alphaPixelData[currY*width + currX];
 
 			int offset{};
 			for (std::uint32_t y = 0; y < glyphHeight; y++)
 			{
-				//std::uint32_t* row = dest;
 				std::uint8_t* alphaRow = alphaDest;
 
 				for (std::uint32_t x = 0; x < glyphWidth; x++)
@@ -279,8 +281,6 @@ namespace mvt::style
 					}
 
 					std::uint8_t a = static_cast<std::uint8_t>(alpha*255.0f);
-					//*row++ = MakeRGBA(0, 0, 255, a);
-
 
 					*alphaRow++ = a;
 
@@ -297,7 +297,6 @@ namespace mvt::style
 */
 				}
 
-				//dest += width;
 				alphaDest += width;
 			}
 

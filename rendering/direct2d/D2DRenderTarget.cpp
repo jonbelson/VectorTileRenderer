@@ -155,7 +155,8 @@ namespace rendering::direct2d
 		std::map<BitmapHandle, ComPtr<ID2D1Bitmap> > mBitmaps;
 		std::map<AlphaMaskHandle, ComPtr<ID2D1Bitmap> > mAlphaMasks;
 
-		//ComPtr<ID2D1Bitmap> mBitmap;
+		ComPtr<ID2D1Bitmap1> mGlyphBitmap;
+
 		ComPtr<ID2D1BitmapBrush> mBitmapBrush;
 
 		ComPtr<ID2D1SolidColorBrush> mSolidBrush;
@@ -198,7 +199,8 @@ namespace rendering::direct2d
 
 				if (SUCCEEDED(hr))
 				{
-					D2D1_FACTORY_OPTIONS fo{ /*D2D1_DEBUG_LEVEL_INFORMATION*/ };
+//					D2D1_FACTORY_OPTIONS fo{ D2D1_DEBUG_LEVEL_INFORMATION };
+					D2D1_FACTORY_OPTIONS fo{ };
 					hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, fo, mFactory.GetAddressOf());
 
 					if (SUCCEEDED(hr))
@@ -215,6 +217,15 @@ namespace rendering::direct2d
 																							  D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
 
 								hr = mRenderTarget->CreateBitmap(D2D1::SizeU(mWidth, mHeight), nullptr, 0, bitmapProps, mTargetBitmap.GetAddressOf());
+
+								if (SUCCEEDED(hr))
+								{
+									D2D1_BITMAP_PROPERTIES1 bp = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE /*D2D1_BITMAP_OPTIONS_TARGET |D2D1_BITMAP_OPTIONS_CPU_READ*/,
+																								  D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
+
+									hr = mRenderTarget->CreateBitmap(D2D1::SizeU(100, 100), nullptr, 0, bp, mGlyphBitmap.GetAddressOf());
+
+								}
 
 								if (SUCCEEDED(hr))
 								{
@@ -1056,6 +1067,86 @@ namespace rendering::direct2d
 			}
 		}
 
+		static float Smoothstep(float f1, float f2, float x)
+		{
+			float diff = f2 - f1;
+
+			if (std::abs(diff) < 1e-6f) return x < f1 ? 0.0f : 1.0f;
+
+			float t = std::clamp((x - f1)/diff, 0.0f, 1.0f);
+
+			return t*t*(3.0f - 2.0f*t);
+		}
+
+		void DrawSdfGlyph(std::span<const std::uint8_t> sdfData, int width, int height, float widthPx, const geometry::Point& position, const Color& colour)
+		{
+			if (!mRenderTarget) return;
+			if (!colour.IsValid()) return;
+			if (sdfData.size() != width*height) return;
+
+			std::vector<std::uint32_t> rgbaData(width*height);
+
+			constexpr auto ToUint8 = [](float value) -> std::uint8_t
+				{
+					if (value < 0.0f) return 0;
+					if (value > 1.0f) return 255;
+					return static_cast<std::uint8_t>(value*255.0f + 0.5f);
+				};
+
+			constexpr float PixelsPerUnit = 255.0f/32.0f;
+			constexpr float gamma = 0.1f;//2.0f/255.0f;//PixelsPerUnit;//0.01f;
+
+			float buffer = 192.0f/255.0f;// (192 - haloSize/PixelsPerUnit)/255.0f;//32.0f;
+			buffer -= widthPx/PixelsPerUnit;
+
+			for (int y=0; y<height; y++)
+			{
+				const std::uint8_t* src = sdfData.data() + y*width;
+				std::uint32_t* dest = rgbaData.data() + y*width;
+
+				for (int x = 0; x<width; x++)
+				{
+					std::uint8_t val = *src++;
+
+					float sdf = val/255.0f;
+
+					float alpha = Smoothstep(buffer - gamma, buffer + gamma, sdf);
+
+					if (alpha < 0.0f || alpha > 1.0f)
+					{
+						int i{};
+					}
+
+					alpha *= colour.Alpha;
+
+					std::uint8_t r = ToUint8(colour.Blue*alpha);
+					std::uint8_t g = ToUint8(colour.Green*alpha);
+					std::uint8_t b = ToUint8(colour.Red*alpha);
+					std::uint8_t a = ToUint8(alpha);
+
+					*dest++ = (a << 24) | (b << 16) | (g << 8) | r;
+				}
+			}
+
+			ComPtr<ID2D1Bitmap1> glyphBitmap;
+			D2D1_BITMAP_PROPERTIES1 bp = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE /*D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CPU_READ*/,
+																 D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED), 96.0f, 96.0f);
+
+			HRESULT hr = mRenderTarget->CreateBitmap(D2D1::SizeU(100, 100), nullptr, 0, bp, glyphBitmap.GetAddressOf());
+
+			D2D1_RECT_U destRect = ToRectU(geometry::Rect(0.0f, 0.0f, (float)width, (float)height));
+			hr = glyphBitmap->CopyFromMemory(&destRect, rgbaData.data(), width*4);
+
+			if (SUCCEEDED(hr))
+			{
+				D2D1_RECT_F dest = ToRectF(geometry::Rect(position.x, position.y, static_cast<float>(width), static_cast<float>(height)));
+				D2D1_RECT_F src = ToRectF(geometry::Rect(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)));
+
+				mRenderTarget->DrawBitmap(glyphBitmap.Get(), dest, 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, src);
+			}
+
+		}
+
 		void PushScale(float scale)
 		{
 			mScale = scale;
@@ -1425,6 +1516,11 @@ namespace rendering::direct2d
 	void D2DRenderTarget::FillWithAlphaMask(const geometry::Rect& src, const geometry::Rect& dest, const Color& colour, std::shared_ptr<const core::bitmap::AlphaMask> mask)
 	{
 		if (mImpl) mImpl->FillWithAlphaMask(src, dest, colour, mask);
+	}
+
+	void D2DRenderTarget::DrawSdfGlyph(std::span<const std::uint8_t> sdfData, int width, int height, float widthPx, const geometry::Point& position, const Color& colour)
+	{
+		if (mImpl) mImpl->DrawSdfGlyph(sdfData, width, height, widthPx, position, colour);
 	}
 
 	void D2DRenderTarget::PushScale(float scale)
